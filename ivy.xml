@@ -1,0 +1,26 @@
+<ivy-module version="2.0">
+  <info organisation="org.jwiemer" module="jacis" revision="0.0.1" status="startup"/>
+ <configurations>
+    <conf name="compile" />
+    <conf name="runtime" extends="compile" />
+    <conf name="test" extends="runtime" />
+	<conf name="optional" />
+    <conf name="win32" />
+    <conf name="win64" />
+    <conf name="linux64" />
+    <conf name="macos" />
+    <conf name="aix" />
+    <conf name="ant" />
+  </configurations>
+  <dependencies defaultconf="compile"
+    defaultconfmapping="compile->default;runtime->default;test->default;win32->default;win64->default;linux64->default;macos->default;aix->default;ant->default;docbook->default"
+  >
+    <dependency org="org.slf4j" name="slf4j-api" rev="1.7.7" />
+    <dependency org="org.slf4j" name="slf4j-ext" rev="1.7.7" />
+    <dependency org="ch.qos.logback" name="logback-core" rev="1.1.2" />
+    <dependency org="ch.qos.logback" name="logback-classic" rev="1.1.2"/>
+    <dependency org="junit" name="junit" rev="4.11"/>
+    <dependency org="org.hamcrest" name="hamcrest-library" rev="1.3"/> 
+    <dependency org="org.mockito" name="mockito-all" rev="1.9.5"/>
+  </dependencies>
+</ivy-module> 
