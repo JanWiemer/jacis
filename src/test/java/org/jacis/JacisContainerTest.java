@@ -25,7 +25,7 @@ public class JacisContainerTest {
   public void testRegisterStore() {
     JacisContainer container = new JacisContainer();
     JacisObjectTypeSpec<String, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class);
-    container.registerStore(objectTypeSpec);
+    container.createStore(objectTypeSpec);
     JacisStore<String, TestObject> store = container.getStore(String.class, TestObject.class);
     assertNotNull(store);
   }

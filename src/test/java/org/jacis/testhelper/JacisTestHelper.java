@@ -20,7 +20,7 @@ public class JacisTestHelper {
 
   public JacisStore<String, TestObject> createTestStore(JacisContainer container) {
     JacisObjectTypeSpec<String, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class);
-    container.registerStore(objectTypeSpec);
+    container.createStore(objectTypeSpec);
     JacisStore<String, TestObject> store = container.getStore(String.class, TestObject.class);
     return store;
   }

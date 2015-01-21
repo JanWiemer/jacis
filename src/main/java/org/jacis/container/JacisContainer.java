@@ -45,7 +45,7 @@ public class JacisContainer {
     return this;
   }
 
-  public <K, V> JacisStore<K, V> registerStore(JacisObjectTypeSpec<K, V> objectTypeSpec) {
+  public <K, V> JacisStore<K, V> createStore(JacisObjectTypeSpec<K, V> objectTypeSpec) {
     StoreIdentifier storeIdentifier = new StoreIdentifier(objectTypeSpec.getKeyClass(), objectTypeSpec.getValueClass());
     JacisStore<K, V> store = new JacisStore<K, V>(this, storeIdentifier, objectTypeSpec);
     storeMap.put(storeIdentifier, store);
