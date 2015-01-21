@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2014 SSI Schaefer Noell GmbH
- */
-
 package org.jacis.plugin.readonly;
 
 /**
