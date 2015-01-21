@@ -83,14 +83,24 @@ public class JacisContainer {
 
   public void withLocalTx(Runnable task) {
     JacisLocalTransaction tx = beginLocalTransaction();
+    Throwable txException = null;
     try {
       task.run();
       tx.prepare();
       tx.commit();
       tx = null;
+    } catch (Throwable e) {
+      txException = e;
+      throw e;
     } finally {
       if (tx != null) {
-        tx.rollback();
+        try {
+          tx.rollback();
+        } catch (Throwable rollbackException) {
+          RuntimeException exceptionToThrow = new RuntimeException("Rollback failed after " + txException, txException);
+          exceptionToThrow.addSuppressed(rollbackException);
+          throw exceptionToThrow;
+        }
       }
     }
   }
