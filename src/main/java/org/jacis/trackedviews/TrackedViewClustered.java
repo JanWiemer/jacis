@@ -9,7 +9,7 @@ import java.util.Collection;
  *
  * @param <V> The type of the original values / objects from the store
  * @param <SVK> The key type for the sub views
- * @param <SVC> The type of the sub views
+ * @param <SVT> The type of the sub views
  */
 public interface TrackedViewClustered<V, SVK, SVT extends TrackedView<V>> extends TrackedView<V> {
 

@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Jan Wiemer
  *
- * The main class of the >Java ACI Store<.
+ * The main class of the Java ACI Store.
  * It provides methods to create stores for different object types and provides access to those stores.
  */
 public class JacisContainer {

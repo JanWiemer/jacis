@@ -7,9 +7,6 @@ import org.jacis.container.JacisTransactionHandle;
  * @author Jan Wiemer
  *
  * Callback methods before and after prepare, commit and rollback.
- * 
- * @param <K> Key type of the store entry
- * @param <V> Value type of the store entry
  */
 public interface JacisTransactionListener {
 
