@@ -1,8 +1,10 @@
 apply plugin: 'java'
-apply plugin: 'eclipse'
+apply plugin: 'maven'
 
 sourceCompatibility = 1.8
 version = '1.0'
+group = 'org.jacis'
+
 jar {
     manifest {
         attributes 'Implementation-Title': 'Jacis',
@@ -24,6 +26,21 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 artifacts {
     archives sourcesJar
     archives javadocJar
+}
+
+
+dist {
+    repositories.mavenDeployer {
+        repository(url: "file:///"+getProject().getBuildDir()+"/../dist/maven-repository/")
+        pom.project {
+          licenses {
+            license {
+                name 'GNU GENERAL PUBLIC LICENSE, Version 2'
+                url 'https://github.com/JanWiemer/jacis/blob/master/LICENSE'
+            }
+          }
+        }        
+    }
 }
 
 repositories {
