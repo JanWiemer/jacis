@@ -1,5 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.8
 version = '1.0'
@@ -28,8 +29,7 @@ artifacts {
     archives javadocJar
 }
 
-
-dist {
+uploadArchives {
     repositories.mavenDeployer {
         repository(url: "file:///"+getProject().getBuildDir()+"/../dist/maven-repository/")
         pom.project {
