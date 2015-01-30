@@ -31,7 +31,7 @@ artifacts {
 
 uploadArchives {
     repositories.mavenDeployer {
-        repository(url: "file:///"+getProject().getBuildDir()+"/../dist/maven-repository/")
+        repository(url: "file:///"+getProject().getBuildDir()+"/../dist/jacisreleases/maven-repository/")
         pom.project {
           licenses {
             license {
