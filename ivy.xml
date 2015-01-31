@@ -1,5 +1,5 @@
 <ivy-module version="2.0">
-  <info organisation="org.jwiemer" module="jacis" revision="0.0.1" status="startup"/>
+  <info organisation="org.jacis" module="jacis" revision="1.0" status="release"/>
  <configurations>
     <conf name="compile" />
     <conf name="runtime" extends="compile" />
