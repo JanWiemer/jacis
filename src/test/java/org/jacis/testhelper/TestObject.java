@@ -1,7 +1,7 @@
 package org.jacis.testhelper;
 
-import org.jacis.plugin.cloning.JacisCloneable;
-import org.jacis.plugin.readonly.AbstractReadOnlyModeSupportingObject;
+import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
+import org.jacis.plugin.objectadapter.cloning.readonly.AbstractReadOnlyModeSupportingObject;
 
 /**
  * @author Jan Wiemer

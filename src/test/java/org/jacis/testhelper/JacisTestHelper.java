@@ -5,6 +5,7 @@ import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisNoTransactionException;
 import org.jacis.exception.JacisTransactionAlreadyStartedException;
+import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.plugin.txadapter.JacisTransactionAdapterLocal;
 import org.jacis.store.JacisStore;
 
@@ -12,16 +13,16 @@ public class JacisTestHelper {
 
   private TestTxAdapter testTxAdapter;
 
-  public JacisStore<String, TestObject> createTestStore() {
+  public JacisStore<String, TestObject, TestObject> createTestStore() {
     testTxAdapter = new TestTxAdapter();
     JacisContainer container = new JacisContainer(testTxAdapter);
     return createTestStore(container);
   }
 
-  public JacisStore<String, TestObject> createTestStore(JacisContainer container) {
-    JacisObjectTypeSpec<String, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class);
+  public JacisStore<String, TestObject, TestObject> createTestStore(JacisContainer container) {
+    JacisObjectTypeSpec<String, TestObject, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class, new JacisCloningObjectAdapter<TestObject>());
     container.createStore(objectTypeSpec);
-    JacisStore<String, TestObject> store = container.getStore(String.class, TestObject.class);
+    JacisStore<String, TestObject, TestObject> store = container.getStore(String.class, TestObject.class);
     return store;
   }
 

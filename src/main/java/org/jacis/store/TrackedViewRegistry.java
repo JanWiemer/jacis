@@ -20,12 +20,12 @@ import org.jacis.trackedviews.TrackedViewClustered;
  * Registry where tracked views can be registered for an object store.
  *
  * @param <K> Key type of the store entry
- * @param <V> Value type of the store entry
+ * @param <TV> Value type of the store entry
  */
-public class TrackedViewRegistry<K, V> implements JacisModificationListener<K, V> {
+public class TrackedViewRegistry<K, TV, CV> implements JacisModificationListener<K, TV> {
 
-  private final JacisStore<K, V> store;
-  private final Map<Class<? extends TrackedView<V>>, TrackedView<V>> viewMap = new HashMap<>();
+  private final JacisStore<K, TV, CV> store;
+  private final Map<Class<? extends TrackedView<TV>>, TrackedView<TV>> viewMap = new HashMap<>();
   private final JacisTransactionListener txListener = new JacisTransactionListenerAdapter() {
 
     @Override
@@ -35,7 +35,7 @@ public class TrackedViewRegistry<K, V> implements JacisModificationListener<K, V
 
   };
 
-  public TrackedViewRegistry(JacisStore<K, V> store, boolean checkConsistencAfterCommit) {
+  public TrackedViewRegistry(JacisStore<K, TV, CV> store, boolean checkConsistencAfterCommit) {
     this.store = store;
     if (checkConsistencAfterCommit) {
       store.getContainer().registerTransactionListener(txListener);
@@ -44,51 +44,51 @@ public class TrackedViewRegistry<K, V> implements JacisModificationListener<K, V
   }
 
   @SuppressWarnings("unchecked")
-  public void registerTrackedView(TrackedView<V> view) {
+  public void registerTrackedView(TrackedView<TV> view) {
     if (!store.getObjectTypeSpec().isTrackOriginalValueEnabled()) {
       throw new IllegalStateException("Registering tracked views is only possible if the store is keeping track of the original values of a transactional view.");
     }
     store.executeAtomic(() -> initTrackedView(view));
-    viewMap.put((Class<? extends TrackedView<V>>) view.getClass(), view);
+    viewMap.put((Class<? extends TrackedView<TV>>) view.getClass(), view);
   }
 
-  public Collection<TrackedView<V>> getAllViews() {
+  public Collection<TrackedView<TV>> getAllViews() {
     return viewMap.values();
   }
 
-  public Set<Class<? extends TrackedView<V>>> getAllViewClasses() {
+  public Set<Class<? extends TrackedView<TV>>> getAllViewClasses() {
     return viewMap.keySet();
   }
 
-  public boolean containsView(Class<? extends TrackedView<V>> viewType) {
+  public boolean containsView(Class<? extends TrackedView<TV>> viewType) {
     return viewMap.containsKey(viewType);
   }
 
   @Override
-  public void onModification(K key, V oldValue, V newValue, JacisTransactionHandle tx) {
-    for (TrackedView<V> view : viewMap.values()) {
+  public void onModification(K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
+    for (TrackedView<TV> view : viewMap.values()) {
       view.trackModification(oldValue, newValue);
     }
   }
 
   public void checkTrackedViewsAfterCommit() {
-    List<V> values = store.getAllReadOnly(null);
-    for (TrackedView<V> view : viewMap.values()) {
+    List<TV> values = store.getAllReadOnly(null);
+    for (TrackedView<TV> view : viewMap.values()) {
       view.checkView(values);
     }
   }
 
   public void clearViews() {
-    for (TrackedView<V> view : viewMap.values()) {
+    for (TrackedView<TV> view : viewMap.values()) {
       view.clear();
     }
   }
 
-  public <VT extends TrackedView<V>> VT getView(Class<VT> viewType) {
+  public <VT extends TrackedView<TV>> VT getView(Class<VT> viewType) {
     VT view = store.computeAtomic(() -> getAndCloneView(viewType));
-    JacisStoreTxView<K, V> txView = store.getTxView();
+    JacisStoreTxView<K, TV, CV> txView = store.getTxView();
     if (txView != null) {
-      for (StoreEntryTxView<K, V> entryTxView : txView.getAllEntryTxViews()) {
+      for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
         view.trackModification(entryTxView.getOrigValue(), entryTxView.getValue());
       }
     }
@@ -96,9 +96,9 @@ public class TrackedViewRegistry<K, V> implements JacisModificationListener<K, V
   }
 
   @SuppressWarnings("unchecked")
-  public <SVK> Collection<SVK> getSubViewKeys(Class<? extends TrackedViewClustered<V, SVK, ? extends TrackedView<V>>> viewType) {
+  public <SVK> Collection<SVK> getSubViewKeys(Class<? extends TrackedViewClustered<TV, SVK, ? extends TrackedView<TV>>> viewType) {
     return store.computeAtomic(() -> {
-      TrackedView<V> view = viewMap.get(viewType);
+      TrackedView<TV> view = viewMap.get(viewType);
       if (view == null) {
         throw new IllegalArgumentException("No tracked view of type " + viewType + " registered! All registered views: " + viewMap.keySet());
       } else if (!viewType.isInstance(view)) {
@@ -106,15 +106,15 @@ public class TrackedViewRegistry<K, V> implements JacisModificationListener<K, V
       } else if (!TrackedViewClustered.class.isInstance(view)) {
         throw new IllegalArgumentException("The view registered for the type " + viewType + " is no instance of " + TrackedViewClustered.class + "! view: " + view);
       }
-      TrackedViewClustered<V, SVK, ? extends TrackedView<V>> clusteredView = (TrackedViewClustered<V, SVK, ? extends TrackedView<V>>) view;
+      TrackedViewClustered<TV, SVK, ? extends TrackedView<TV>> clusteredView = (TrackedViewClustered<TV, SVK, ? extends TrackedView<TV>>) view;
       return clusteredView.getSubViewKeys();
     });
   }
 
   @SuppressWarnings("unchecked")
-  public <VT extends TrackedView<V>, VK> VT getSubView(Class<? extends TrackedViewClustered<V, VK, VT>> viewType, VK subviewKey) {
+  public <VT extends TrackedView<TV>, VK> VT getSubView(Class<? extends TrackedViewClustered<TV, VK, VT>> viewType, VK subviewKey) {
     VT subViewClone = store.computeAtomic(() -> {
-      TrackedView<V> view = viewMap.get(viewType);
+      TrackedView<TV> view = viewMap.get(viewType);
       if (view == null) {
         throw new IllegalArgumentException("No tracked view of type " + viewType + " registered! All registered views: " + viewMap.keySet());
       } else if (!viewType.isInstance(view)) {
@@ -122,13 +122,13 @@ public class TrackedViewRegistry<K, V> implements JacisModificationListener<K, V
       } else if (!TrackedViewClustered.class.isInstance(view)) {
         throw new IllegalArgumentException("The view registered for the type " + viewType + " is no instance of " + TrackedViewClustered.class + "! view: " + view);
       }
-      TrackedViewClustered<V, VK, TrackedView<V>> clusteredView = (TrackedViewClustered<V, VK, TrackedView<V>>) view;
-      TrackedView<V> subView = clusteredView.getSubView(subviewKey);
+      TrackedViewClustered<TV, VK, TrackedView<TV>> clusteredView = (TrackedViewClustered<TV, VK, TrackedView<TV>>) view;
+      TrackedView<TV> subView = clusteredView.getSubView(subviewKey);
       return (VT) subView.clone();
     });
-    JacisStoreTxView<K, V> txView = store.getTxView();
+    JacisStoreTxView<K, TV, CV> txView = store.getTxView();
     if (txView != null) {
-      for (StoreEntryTxView<K, V> entryTxView : txView.getAllEntryTxViews()) {
+      for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
         subViewClone.trackModification(entryTxView.getOrigValue(), entryTxView.getValue());
       }
     }
@@ -136,7 +136,7 @@ public class TrackedViewRegistry<K, V> implements JacisModificationListener<K, V
   }
 
   @SuppressWarnings("unchecked")
-  private <VT extends TrackedView<V>> VT getAndCloneView(Class<? extends TrackedView<V>> viewType) {
+  private <VT extends TrackedView<TV>> VT getAndCloneView(Class<? extends TrackedView<TV>> viewType) {
     VT view = (VT) viewMap.get(viewType);
     if (view == null) {
       throw new IllegalArgumentException("No tracked view of type " + viewType + " registered! All registered views: " + viewMap.keySet());
@@ -147,8 +147,8 @@ public class TrackedViewRegistry<K, V> implements JacisModificationListener<K, V
     return viewClone;
   }
 
-  private void initTrackedView(TrackedView<V> view) {
-    for (V val : store.getAllReadOnly(null)) {
+  private void initTrackedView(TrackedView<TV> view) {
+    for (TV val : store.getAllReadOnly(null)) {
       view.trackModification(null, val);
     }
   }

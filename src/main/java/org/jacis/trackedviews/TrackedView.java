@@ -2,7 +2,7 @@ package org.jacis.trackedviews;
 
 import java.util.List;
 
-import org.jacis.plugin.cloning.JacisCloneable;
+import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
 
 /**
  * A tracked view can be registered at a JACIS store to automatically keep a view (typically some cummulated values) up to date.

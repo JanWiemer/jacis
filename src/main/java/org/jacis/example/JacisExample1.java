@@ -2,8 +2,9 @@ package org.jacis.example;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
-import org.jacis.plugin.cloning.JacisCloneable;
-import org.jacis.plugin.readonly.AbstractReadOnlyModeSupportingObject;
+import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
+import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
+import org.jacis.plugin.objectadapter.cloning.readonly.AbstractReadOnlyModeSupportingObject;
 import org.jacis.plugin.txadapter.JacisLocalTransaction;
 import org.jacis.store.JacisStore;
 
@@ -70,8 +71,8 @@ public class JacisExample1 {
     JacisContainer container = new JacisContainer();
 
     // now we create a store for our example object:
-    JacisObjectTypeSpec<String, Account> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, Account.class);
-    JacisStore<String, Account> store = container.createStore(objectTypeSpec);
+    JacisObjectTypeSpec<String, Account, Account> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, Account.class, new JacisCloningObjectAdapter<Account>());
+    JacisStore<String, Account, Account> store = container.createStore(objectTypeSpec);
 
     // now we start a transaction
     JacisLocalTransaction tx = container.beginLocalTransaction();

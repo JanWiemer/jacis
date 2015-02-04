@@ -26,7 +26,7 @@ public class MultithreadedJacisStoreWithTrackedViewTest {
   public void testMultiThreadedAccess() {
     JacisTestHelper testHelper = new JacisTestHelper();
     AtomicReference<Throwable> exception = new AtomicReference<>();
-    final JacisStore<String, TestObject> store = testHelper.createTestStore();
+    final JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
     final JacisContainer container = store.getContainer();
     final TestJacisTransactionListenerAdapter txListener = new TestJacisTransactionListenerAdapter(store);
     container.registerTransactionListener(txListener);
@@ -65,7 +65,7 @@ public class MultithreadedJacisStoreWithTrackedViewTest {
                   totalInc = (int) inc;
                 }
                 if (inc < 5) {
-                  TrackedViewRegistry<String, TestObject> tvr = store.getTrackedViewRegistry();
+                  TrackedViewRegistry<String, TestObject, TestObject> tvr = store.getTrackedViewRegistry();
                   log.debug("... read current view values: count={}, sum={}", tvr.getView(TrackedTestView.class).getCount(), tvr.getView(TrackedTestView.class).getSum());
                 }
                 String updateTxt = object.getName() + " form " + oldVal + " to " + (oldVal + inc);
@@ -139,11 +139,11 @@ public class MultithreadedJacisStoreWithTrackedViewTest {
   public static class TestJacisTransactionListenerAdapter extends JacisTransactionListenerAdapter {
 
     private final AtomicLong sum = new AtomicLong(0l);
-    private JacisStore<String, TestObject> store;
+    private JacisStore<String, TestObject, TestObject> store;
     private ThreadLocal<Long> totalInc = new ThreadLocal<>();
     private ThreadLocal<String> updateTxt = new ThreadLocal<>();
 
-    public TestJacisTransactionListenerAdapter(JacisStore<String, TestObject> store) {
+    public TestJacisTransactionListenerAdapter(JacisStore<String, TestObject, TestObject> store) {
       this.store = store;
     }
 

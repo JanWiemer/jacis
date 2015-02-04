@@ -15,7 +15,7 @@ public class JacisTrackedViewTest {
   @Test
   public void testTrackedView() {
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
     JacisContainer container = store.getContainer();
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1"));

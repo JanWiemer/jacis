@@ -1,9 +1,6 @@
 package org.jacis.container;
 
-import org.jacis.plugin.cloning.DefaultJacisStoreEntryCloneAdapter;
-import org.jacis.plugin.cloning.JacisStoreEntryCloneAdapter;
-import org.jacis.plugin.readonly.DefaultJacisStoreEntryReadOnlyModeAdapter;
-import org.jacis.plugin.readonly.JacisStoreEntryReadOnlyModeAdapter;
+import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
  * @author Jan Wiemer
@@ -11,20 +8,21 @@ import org.jacis.plugin.readonly.JacisStoreEntryReadOnlyModeAdapter;
  * Specification for an object type that shall be stored.
  *
  * @param <K> Key type of the store entry
- * @param <V> Value type of the store entry
+ * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
+ * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  */
-public class JacisObjectTypeSpec<K, V> {
+public class JacisObjectTypeSpec<K, TV, CV> {
 
   private final Class<K> keyClass;
-  private final Class<V> valueClass;
+  private final Class<TV> valueClass;
+  private final JacisObjectAdapter<TV, CV> objectAdapter;
   private boolean trackOriginalValue;
   private boolean checkViewsOnCommit;
-  private JacisStoreEntryCloneAdapter<V> cloneAdapter = new DefaultJacisStoreEntryCloneAdapter<>();
-  private JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapter = new DefaultJacisStoreEntryReadOnlyModeAdapter<>();
 
-  public JacisObjectTypeSpec(Class<K> keyClass, Class<V> valueClass) {
+  public JacisObjectTypeSpec(Class<K> keyClass, Class<TV> valueClass, JacisObjectAdapter<TV, CV> objectAdapter) {
     this.keyClass = keyClass;
     this.valueClass = valueClass;
+    this.objectAdapter = objectAdapter;
     trackOriginalValue = true;
     checkViewsOnCommit = false;
   }
@@ -33,16 +31,12 @@ public class JacisObjectTypeSpec<K, V> {
     return keyClass;
   }
 
-  public Class<V> getValueClass() {
+  public Class<TV> getValueClass() {
     return valueClass;
   }
 
-  public JacisStoreEntryCloneAdapter<V> getCloneAdapter() {
-    return cloneAdapter;
-  }
-
-  public JacisStoreEntryReadOnlyModeAdapter<V> getReadOnlyModeAdapter() {
-    return readOnlyModeAdapter;
+  public JacisObjectAdapter<TV, CV> getObjectAdapter() {
+    return objectAdapter;
   }
 
   public boolean isTrackOriginalValueEnabled() {
@@ -53,23 +47,13 @@ public class JacisObjectTypeSpec<K, V> {
     return checkViewsOnCommit;
   }
 
-  public JacisObjectTypeSpec<K, V> setTrackOriginalValue(boolean trackOriginalValue) {
+  public JacisObjectTypeSpec<K, TV, CV> setTrackOriginalValue(boolean trackOriginalValue) {
     this.trackOriginalValue = trackOriginalValue;
     return this;
   }
 
-  public JacisObjectTypeSpec<K, V> setCheckViewsOnCommit(boolean checkViewsOnCommit) {
+  public JacisObjectTypeSpec<K, TV, CV> setCheckViewsOnCommit(boolean checkViewsOnCommit) {
     this.checkViewsOnCommit = checkViewsOnCommit;
-    return this;
-  }
-
-  public JacisObjectTypeSpec<K, V> setCloneAdapter(JacisStoreEntryCloneAdapter<V> cloneAdapter) {
-    this.cloneAdapter = cloneAdapter;
-    return this;
-  }
-
-  public JacisObjectTypeSpec<K, V> setReadOnlyModeAdapter(JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapter) {
-    this.readOnlyModeAdapter = readOnlyModeAdapter;
     return this;
   }
 

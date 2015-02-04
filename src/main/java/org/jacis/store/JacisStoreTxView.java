@@ -13,18 +13,19 @@ import org.jacis.container.JacisTransactionHandle;
  * Representing a committed version of an entry in the store.
  *
  * @param <K> Key type of the store entry
- * @param <V> Value type of the store entry
+ * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
+ * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  */
-class JacisStoreTxView<K, V> {
+class JacisStoreTxView<K, TV, CV> {
 
-  private JacisStore<K, V> store; // main store
+  private JacisStore<K, TV, CV> store; // main store
   private final JacisTransactionHandle tx; // the transaction 
   private final long creationTimestamp; // in system milliseconds (timestamp usually set at first access returning a TX view)
-  private final Map<K, StoreEntryTxView<K, V>> storeTxView; // entries with an own view in this TX
+  private final Map<K, StoreEntryTxView<K, TV, CV>> storeTxView; // entries with an own view in this TX
   private boolean commitPending = false; // commit pending / prepare already called
   private final String readOnlyTxName; // the name of the TX if this is a read only snapshot (null <-> writable)
 
-  public JacisStoreTxView(JacisStore<K, V> store, JacisTransactionHandle transaction) {
+  public JacisStoreTxView(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
     this.store = store;
     this.tx = transaction;
     this.readOnlyTxName = null;
@@ -32,14 +33,14 @@ class JacisStoreTxView<K, V> {
     this.storeTxView = new HashMap<>();
   }
 
-  public JacisStoreTxView(String readOnlyTxName, JacisStoreTxView<K, V> orig) { // only to create a read only snapshot
+  public JacisStoreTxView(String readOnlyTxName, JacisStoreTxView<K, TV, CV> orig) { // only to create a read only snapshot
     this.tx = orig.tx;
     this.readOnlyTxName = readOnlyTxName;
     this.creationTimestamp = orig.creationTimestamp;
-    Map<K, StoreEntryTxView<K, V>> origCache = orig.storeTxView;
-    Map<K, StoreEntryTxView<K, V>> readOnlyCache = new HashMap<>(origCache.size());
-    for (Entry<K, StoreEntryTxView<K, V>> mapEntry : origCache.entrySet()) {
-      StoreEntryTxView<K, V> cacheEntry = new StoreEntryTxView<>(mapEntry.getValue());
+    Map<K, StoreEntryTxView<K, TV, CV>> origCache = orig.storeTxView;
+    Map<K, StoreEntryTxView<K, TV, CV>> readOnlyCache = new HashMap<>(origCache.size());
+    for (Entry<K, StoreEntryTxView<K, TV, CV>> mapEntry : origCache.entrySet()) {
+      StoreEntryTxView<K, TV, CV> cacheEntry = new StoreEntryTxView<>(mapEntry.getValue());
       readOnlyCache.put(mapEntry.getKey(), cacheEntry);
     }
     storeTxView = readOnlyCache;
@@ -65,7 +66,7 @@ class JacisStoreTxView<K, V> {
     return commitPending;
   }
 
-  public JacisStoreTxView<K, V> assertWritable() {
+  public JacisStoreTxView<K, TV, CV> assertWritable() {
     if (commitPending) {
       throw new IllegalStateException("Commit already started for transaction " + this);
     } else if (isReadOnly()) {
@@ -78,22 +79,22 @@ class JacisStoreTxView<K, V> {
     return storeTxView.containsKey(key);
   }
 
-  public StoreEntryTxView<K, V> getEntryTxView(K key) {
+  public StoreEntryTxView<K, TV, CV> getEntryTxView(K key) {
     return storeTxView.get(key);
   }
 
-  public Collection<StoreEntryTxView<K, V>> getAllEntryTxViews() {
+  public Collection<StoreEntryTxView<K, TV, CV>> getAllEntryTxViews() {
     return storeTxView.values();
   }
 
-  public StoreEntryTxView<K, V> createTxViewEntry(StoreEntry<K, V> commitedEntry) {
-    StoreEntryTxView<K, V> entry = new StoreEntryTxView<>(commitedEntry, store.getObjectTypeSpec().isTrackOriginalValueEnabled());
+  public StoreEntryTxView<K, TV, CV> createTxViewEntry(StoreEntry<K, TV, CV> commitedEntry) {
+    StoreEntryTxView<K, TV, CV> entry = new StoreEntryTxView<>(commitedEntry, store.getObjectTypeSpec().isTrackOriginalValueEnabled());
     storeTxView.put(entry.getKey(), entry);
     return entry;
   }
 
   public boolean removeTxViewEntry(K key, boolean forceIfUpdated) {
-    StoreEntryTxView<K, V> entry = storeTxView.get(key);
+    StoreEntryTxView<K, TV, CV> entry = storeTxView.get(key);
     if (entry.isUpdated() && !forceIfUpdated) {
       return false;
     }

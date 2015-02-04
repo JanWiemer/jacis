@@ -19,7 +19,7 @@ public class JacisStoreTest {
 
   @Test
   public void testInsert() {
-    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStore();
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore();
     TestObject testObject = new TestObject("obj-1", 1);
     assertEquals(0, store.size());
     store.getContainer().withLocalTx(() -> {
@@ -31,7 +31,7 @@ public class JacisStoreTest {
 
   @Test
   public void testInsertReadSameTx() {
-    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStore();
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore();
     TestObject testObject = new TestObject("obj-1", 1);
     assertEquals(0, store.size());
     store.getContainer().withLocalTx(() -> {
@@ -44,7 +44,7 @@ public class JacisStoreTest {
 
   @Test
   public void testInsertReadDifferentTx() {
-    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStore();
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore();
     TestObject testObject = new TestObject("obj-1", 1);
     assertEquals(0, store.size());
     store.getContainer().withLocalTx(() -> {
@@ -61,7 +61,7 @@ public class JacisStoreTest {
 
   @Test
   public void testInsertUpdateReadSameTx() {
-    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStore();
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore();
     TestObject testObject = new TestObject("obj-1", 1);
     assertEquals(0, store.size());
     store.getContainer().withLocalTx(() -> {
@@ -75,7 +75,7 @@ public class JacisStoreTest {
 
   @Test
   public void testInsertUpdateReadDifferentTx() {
-    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStore();
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore();
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     assertEquals(0, store.size());
@@ -102,7 +102,7 @@ public class JacisStoreTest {
 
   @Test
   public void testStream() {
-    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStore();
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore();
     store.getContainer().withLocalTx(() -> {
       store.update("1", new TestObject("A1", 1));
       store.update("2", new TestObject("A2", 2));
@@ -118,7 +118,7 @@ public class JacisStoreTest {
 
   @Test
   public void testCollect() {
-    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStore();
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore();
     store.getContainer().withLocalTx(() -> {
       store.update("1", new TestObject("A1", 1));
       store.update("2", new TestObject("A2", 2));
@@ -138,7 +138,7 @@ public class JacisStoreTest {
 
   @Test
   public void testTrackOriginalVersion() {
-    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStore();
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore();
     String testObjectName = "obj-1";
     TestObject testObject1 = new TestObject(testObjectName, 1);
     store.getContainer().withLocalTx(() -> {

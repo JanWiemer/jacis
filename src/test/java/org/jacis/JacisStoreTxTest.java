@@ -23,7 +23,7 @@ public class JacisStoreTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
     JacisLocalTransaction writingTx = store.getContainer().beginLocalTransaction();
     JacisTransactionHandle writingTxHandle = testHelper.suspendTx();
     JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
@@ -64,7 +64,7 @@ public class JacisStoreTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
     store.getContainer().withLocalTx(() -> {
       store.update(testObject.getName(), testObject);
     });
@@ -112,7 +112,7 @@ public class JacisStoreTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
     JacisLocalTransaction writingTx = store.getContainer().beginLocalTransaction();
     JacisTransactionHandle writingTxHandle = testHelper.suspendTx();
     JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
@@ -133,7 +133,7 @@ public class JacisStoreTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
     store.getContainer().withLocalTx(() -> {
       store.update(testObject.getName(), testObject);
     });
@@ -158,7 +158,7 @@ public class JacisStoreTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
     store.getContainer().withLocalTx(() -> {
       store.update(testObject.getName(), testObject);
     });
@@ -194,7 +194,7 @@ public class JacisStoreTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
     store.getContainer().withLocalTx(() -> {
       store.update(testObject.getName(), testObject);
     });

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.example.JacisExample1.Account;
+import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.store.JacisStore;
 
 /**
@@ -20,8 +21,8 @@ public class JacisExample2 {
 
   public static void main(String[] args) {
     JacisContainer container = new JacisContainer();
-    JacisObjectTypeSpec<String, Account> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, Account.class);
-    JacisStore<String, Account> store = container.createStore(objectTypeSpec);
+    JacisObjectTypeSpec<String, Account, Account> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, Account.class, new JacisCloningObjectAdapter<Account>());
+    JacisStore<String, Account, Account> store = container.createStore(objectTypeSpec);
 
     // First we create some accounts to have some test data...
 

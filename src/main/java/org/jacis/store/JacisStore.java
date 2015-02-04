@@ -20,10 +20,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.jacis.container.JacisContainer;
+import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.container.JacisTransactionHandle;
-import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.plugin.JacisModificationListener;
+import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
  * @author Jan Wiemer
@@ -31,25 +32,26 @@ import org.jacis.plugin.JacisModificationListener;
  * Storing a single type of objects.
  *
  * @param <K> Key type of the store entry
- * @param <V> Value type of the store entry
+ * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
+ * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  */
-public class JacisStore<K, V> {
+public class JacisStore<K, TV, CV> {
 
   private final JacisContainer container;
   private final StoreIdentifier storeIdentifier;
-  private final JacisObjectTypeSpec<K, V> spec;
-  private final ConcurrentHashMap<K, StoreEntry<K, V>> store = new ConcurrentHashMap<>();
-  private final Map<JacisTransactionHandle, JacisStoreTxView<K, V>> txViewMap = Collections.synchronizedMap(new WeakHashMap<JacisTransactionHandle, JacisStoreTxView<K, V>>());
+  private final JacisObjectTypeSpec<K, TV, CV> spec;
+  private final ConcurrentHashMap<K, StoreEntry<K, TV, CV>> store = new ConcurrentHashMap<>();
+  private final Map<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>> txViewMap = Collections.synchronizedMap(new WeakHashMap<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>>());
   private final ReadWriteLock storeAccessLock = new ReentrantReadWriteLock(true); // lock to synchronize changes on the committed entries of the store (specially during commit)
-  private final StoreEntryCloneHelper<V> cloneHelper;
-  private final TrackedViewRegistry<K, V> trackedViewRegistry;
-  private final List<JacisModificationListener<K, V>> modificationListeners = new ArrayList<>();
+  private final JacisObjectAdapter<TV, CV> objectAdapter;
+  private final TrackedViewRegistry<K, TV, CV> trackedViewRegistry;
+  private final List<JacisModificationListener<K, TV>> modificationListeners = new ArrayList<>();
 
-  public JacisStore(JacisContainer container, StoreIdentifier storeIdentifier, JacisObjectTypeSpec<K, V> spec) {
+  public JacisStore(JacisContainer container, StoreIdentifier storeIdentifier, JacisObjectTypeSpec<K, TV, CV> spec) {
     this.container = container;
     this.storeIdentifier = storeIdentifier;
     this.spec = spec;
-    this.cloneHelper = new StoreEntryCloneHelper<>(spec);
+    this.objectAdapter = spec.getObjectAdapter();
     this.trackedViewRegistry = new TrackedViewRegistry<>(this, spec.isCheckViewsOnCommit());
     registerModificationListener(trackedViewRegistry);
   }
@@ -62,24 +64,24 @@ public class JacisStore<K, V> {
     return container;
   }
 
-  public JacisObjectTypeSpec<K, V> getObjectTypeSpec() {
+  public JacisObjectTypeSpec<K, TV, CV> getObjectTypeSpec() {
     return spec;
   }
 
-  public JacisStore<K, V> registerModificationListener(JacisModificationListener<K, V> listener) {
+  public JacisStore<K, TV, CV> registerModificationListener(JacisModificationListener<K, TV> listener) {
     modificationListeners.add(listener);
     return this;
   }
 
-  public List<JacisModificationListener<K, V>> getModificationListeners() {
+  public List<JacisModificationListener<K, TV>> getModificationListeners() {
     return modificationListeners;
   }
 
-  public StoreEntryCloneHelper<V> getCloneHelper() {
-    return cloneHelper;
+  public JacisObjectAdapter<TV, CV> getObjectAdapter() {
+    return objectAdapter;
   }
 
-  public TrackedViewRegistry<K, V> getTrackedViewRegistry() {
+  public TrackedViewRegistry<K, TV, CV> getTrackedViewRegistry() {
     return trackedViewRegistry;
   }
 
@@ -96,43 +98,43 @@ public class JacisStore<K, V> {
   }
 
   public boolean containsKey(K key) {
-    JacisStoreTxView<K, V> txView = getTxView();
-    StoreEntryTxView<K, V> entryTxView = txView == null ? null : txView.getEntryTxView(key);
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     if (entryTxView != null) {
       return entryTxView.isNotNull();
     }
-    StoreEntry<K, V> coreEntry = store.get(key);
+    StoreEntry<K, TV, CV> coreEntry = store.get(key);
     return coreEntry != null && coreEntry.isNotNull();
   }
 
   public boolean isUpdated(K key) {
-    JacisStoreTxView<K, V> txView = getTxView();
-    StoreEntryTxView<K, V> entryTxView = txView == null ? null : txView.getEntryTxView(key);
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     return entryTxView != null && entryTxView.isUpdated();
   }
 
   public boolean isStale(K key) {
-    JacisStoreTxView<K, V> txView = getTxView();
-    StoreEntryTxView<K, V> entryTxView = txView == null ? null : txView.getEntryTxView(key);
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     return entryTxView != null && entryTxView.isStale(txView);
   }
 
-  public V get(K key) {
+  public TV get(K key) {
     return getOrCreateEntryTxView(getOrCreateTxView(), key).getValue();
   }
 
-  public V getReadOnly(K key) {
-    JacisStoreTxView<K, V> txView = getTxView();
-    StoreEntryTxView<K, V> entryTxView = txView == null ? null : txView.getEntryTxView(key);
+  public TV getReadOnly(K key) {
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     if (entryTxView != null) {
       return entryTxView.getValue();
     } else {
-      StoreEntry<K, V> committedEntry = getCommittedEntry(key);
-      return committedEntry == null ? null : committedEntry.getValue();
+      StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
+      return committedEntry == null ? null : objectAdapter.cloneCommitted2ReadOnlyTxView(committedEntry.getValue());
     }
   }
 
-  public <P> P getProjectionReadOnly(K key, Function<V, P> projection) {
+  public <P> P getProjectionReadOnly(K key, Function<TV, P> projection) {
     return projection.apply(getReadOnly(key));
   }
 
@@ -140,15 +142,15 @@ public class JacisStore<K, V> {
     return store.keySet().stream(); // store contains also new entries (with null value)! Therefore iterating the keys is usually enough
   }
 
-  public Stream<V> stream() { // Note this method will clone all objects into the TX view!
+  public Stream<TV> stream() { // Note this method will clone all objects into the TX view!
     return keyStream().map(k -> get(k)).filter(v -> v != null);
   }
 
-  public Stream<V> streamReadOnly() {
+  public Stream<TV> streamReadOnly() {
     return keyStream().map(k -> getReadOnly(k)).filter(v -> v != null);
   }
 
-  public Stream<V> stream(Predicate<V> filter) {
+  public Stream<TV> stream(Predicate<TV> filter) {
     if (filter != null) {
       return keyStream().map(k -> pair(k, getReadOnly(k))).filter(e -> e.val != null && filter.test(e.val)).map(e -> get(e.key));
     } else {
@@ -156,7 +158,7 @@ public class JacisStore<K, V> {
     }
   }
 
-  public Stream<V> streamReadOnly(Predicate<V> filter) {
+  public Stream<TV> streamReadOnly(Predicate<TV> filter) {
     if (filter != null) {
       return keyStream().map(k -> getReadOnly(k)).filter(v -> v != null && filter.test(v));
     } else {
@@ -164,25 +166,25 @@ public class JacisStore<K, V> {
     }
   }
 
-  public List<V> getAll(Predicate<V> filter) {
+  public List<TV> getAll(Predicate<TV> filter) {
     return stream(filter).collect(Collectors.toList());
   }
 
-  public List<V> getAllReadOnly(Predicate<V> filter) {
+  public List<TV> getAllReadOnly(Predicate<TV> filter) {
     return streamReadOnly(filter).collect(Collectors.toList());
   }
 
-  public List<V> getAllAtomic(Predicate<V> filter) {
+  public List<TV> getAllAtomic(Predicate<TV> filter) {
     return computeAtomic(() -> getAll(filter));
   }
 
-  public List<V> getAllReadOnlyAtomic(Predicate<V> filter) {
+  public List<TV> getAllReadOnlyAtomic(Predicate<TV> filter) {
     return computeAtomic(() -> getAllReadOnly(filter));
   }
 
-  public void update(K key, V value) {
-    JacisStoreTxView<K, V> txView = getOrCreateTxView().assertWritable();
-    StoreEntryTxView<K, V> entryTxView = getOrCreateEntryTxView(txView, key);
+  public void update(K key, TV value) {
+    JacisStoreTxView<K, TV, CV> txView = getOrCreateTxView().assertWritable();
+    StoreEntryTxView<K, TV, CV> entryTxView = getOrCreateEntryTxView(txView, key);
     entryTxView.updateValue(value);
   }
 
@@ -190,14 +192,14 @@ public class JacisStore<K, V> {
     update(key, null);
   }
 
-  public V refresh(K key) { // refresh with committed version -> discard all changes made by the current TX
-    JacisStoreTxView<K, V> txView = getTxView();
+  public TV refresh(K key) { // refresh with committed version -> discard all changes made by the current TX
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
     txView.removeTxViewEntry(key, true);
     return get(key);
   }
 
-  public V refreshIfNotUpdated(K key) { // if not updated: refresh with committed version -> discard all changes made by the current TX
-    JacisStoreTxView<K, V> txView = getTxView();
+  public TV refreshIfNotUpdated(K key) { // if not updated: refresh with committed version -> discard all changes made by the current TX
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
     txView.removeTxViewEntry(key, false);
     return get(key);
   }
@@ -214,37 +216,37 @@ public class JacisStore<K, V> {
     return withReadLock(atomicOperation);
   }
 
-  public <C> C collect(C target, BiConsumer<C, V> accumulator) {
-    for (V entryTxView : getAllReadOnly(null)) {
+  public <C> C collect(C target, BiConsumer<C, TV> accumulator) {
+    for (TV entryTxView : getAllReadOnly(null)) {
       accumulator.accept(target, entryTxView);
     }
     return target;
   }
 
-  public <C> C collectAtomic(C target, BiConsumer<C, V> accumulator) {
+  public <C> C collectAtomic(C target, BiConsumer<C, TV> accumulator) {
     return computeAtomic(() -> collect(target, accumulator));
   }
 
-  public V getTransactionStartValue(K key) { // value that was valid as the object was first accessed by the current TX (null if untouched).
+  public TV getTransactionStartValue(K key) { // value that was valid as the object was first accessed by the current TX (null if untouched).
     assertTrackOriginalValue();
-    JacisStoreTxView<K, V> txView = getTxView();
-    StoreEntryTxView<K, V> entryTxView = txView == null ? null : txView.getEntryTxView(key);
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     return entryTxView == null ? null : entryTxView.getOrigValue(); // if TX never touched the object we return null
   }
 
-  public StoreEntryInfo<K, V> getObjectInfo(K key) {
-    JacisStoreTxView<K, V> txView = getTxView();
-    StoreEntry<K, V> committedEntry = getCommittedEntry(key);
-    StoreEntryTxView<K, V> entryTxView = txView == null ? null : txView.getEntryTxView(key);
-    return new StoreEntryInfo<K, V>(key, committedEntry, entryTxView, txView);
+  public StoreEntryInfo<K, TV, CV> getObjectInfo(K key) {
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
+    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
+    return new StoreEntryInfo<K, TV, CV>(key, committedEntry, entryTxView, txView);
   }
 
   //======================================================================================
   // helper methods to deal with transaction views of entries
   //======================================================================================
 
-  private StoreEntryTxView<K, V> getOrCreateEntryTxView(JacisStoreTxView<K, V> txView, K key) {
-    StoreEntryTxView<K, V> entryTxView = txView.getEntryTxView(key);
+  private StoreEntryTxView<K, TV, CV> getOrCreateEntryTxView(JacisStoreTxView<K, TV, CV> txView, K key) {
+    StoreEntryTxView<K, TV, CV> entryTxView = txView.getEntryTxView(key);
     if (entryTxView == null) {
       entryTxView = withWriteLock(() -> txView.createTxViewEntry(getOrCreateCommittedEntry(key)));
     }
@@ -255,34 +257,34 @@ public class JacisStore<K, V> {
   // helper methods to deal with committed entries
   //======================================================================================
 
-  private StoreEntry<K, V> createCommittedEntry(K key) {
-    StoreEntry<K, V> newCommittedEntry = new StoreEntry<>(this, key);
-    StoreEntry<K, V> oldCommittedEntry = store.putIfAbsent(key, newCommittedEntry); // safe if another TX created one in the meantime
+  private StoreEntry<K, TV, CV> createCommittedEntry(K key) {
+    StoreEntry<K, TV, CV> newCommittedEntry = new StoreEntry<>(this, key);
+    StoreEntry<K, TV, CV> oldCommittedEntry = store.putIfAbsent(key, newCommittedEntry); // safe if another TX created one in the meantime
     return oldCommittedEntry != null ? oldCommittedEntry : newCommittedEntry;
   }
 
-  private StoreEntry<K, V> getCommittedEntry(K key) {
+  private StoreEntry<K, TV, CV> getCommittedEntry(K key) {
     return store.get(key);
   }
 
-  private StoreEntry<K, V> getOrCreateCommittedEntry(K key) {
-    StoreEntry<K, V> committedEntry = store.get(key);
+  private StoreEntry<K, TV, CV> getOrCreateCommittedEntry(K key) {
+    StoreEntry<K, TV, CV> committedEntry = store.get(key);
     if (committedEntry == null) {
       committedEntry = createCommittedEntry(key);
     }
     return committedEntry;
   }
 
-  void checkRemoveCommittedEntry(StoreEntry<K, V> entryCommitted, JacisStoreTxView<K, V> currTxView) {
+  void checkRemoveCommittedEntry(StoreEntry<K, TV, CV> entryCommitted, JacisStoreTxView<K, TV, CV> currTxView) {
     if (entryCommitted.getValue() != null || entryCommitted.isLocked()) {
       return; // cannot remove
     }
     K key = entryCommitted.getKey();
-    Collection<JacisStoreTxView<K, V>> txs;
+    Collection<JacisStoreTxView<K, TV, CV>> txs;
     synchronized (txViewMap) {
       txs = new ArrayList<>(txViewMap.values());
     }
-    for (JacisStoreTxView<K, V> txCtx : txs) {
+    for (JacisStoreTxView<K, TV, CV> txCtx : txs) {
       if (txCtx.isReadOnly()) {
         continue;
       } else if (currTxView.getTransaction().equals(txCtx.getTransaction())) {
@@ -328,29 +330,29 @@ public class JacisStore<K, V> {
   // private methods to maintain the TX view
   //======================================================================================
 
-  JacisStoreTxView<K, V> getTxView() {
+  JacisStoreTxView<K, TV, CV> getTxView() {
     return getTxView(false);
   }
 
-  JacisStoreTxView<K, V> getOrCreateTxView() {
+  JacisStoreTxView<K, TV, CV> getOrCreateTxView() {
     return getTxView(true);
   }
 
-  private JacisStoreTxView<K, V> getTxView(boolean createIfAbsent) {
+  private JacisStoreTxView<K, TV, CV> getTxView(boolean createIfAbsent) {
     JacisTransactionHandle transaction = container.getCurrentTransaction(createIfAbsent);
     return getTxView(transaction, createIfAbsent);
   }
 
-  JacisStoreTxView<K, V> getTxView(JacisTransactionHandle transaction, boolean createIfAbsent) {
-    JacisStoreTxView<K, V> txView = txViewMap.get(transaction);
+  JacisStoreTxView<K, TV, CV> getTxView(JacisTransactionHandle transaction, boolean createIfAbsent) {
+    JacisStoreTxView<K, TV, CV> txView = txViewMap.get(transaction);
     if (txView == null && createIfAbsent) {
-      txView = new JacisStoreTxView<K, V>(this, transaction);
+      txView = new JacisStoreTxView<K, TV, CV>(this, transaction);
       txViewMap.put(transaction, txView);
     }
     return txView;
   }
 
-  void notifyTxViewDestroyed(JacisStoreTxView<K, V> txView) {
+  void notifyTxViewDestroyed(JacisStoreTxView<K, TV, CV> txView) {
     txViewMap.remove(txView.getTransaction());
   }
 
@@ -364,15 +366,15 @@ public class JacisStore<K, V> {
     }
   }
 
-  private KeyValuePair<K, V> pair(K key, V val) {
-    return new KeyValuePair<K, V>(key, val);
+  private KeyValuePair<K, TV> pair(K key, TV val) {
+    return new KeyValuePair<K, TV>(key, val);
   }
 
-  private static class KeyValuePair<K, V> {
-    public K key;
-    public V val;
+  private static class KeyValuePair<PK, PV> {
+    public PK key;
+    public PV val;
 
-    public KeyValuePair(K key, V val) {
+    public KeyValuePair(PK key, PV val) {
       this.key = key;
       this.val = val;
     }

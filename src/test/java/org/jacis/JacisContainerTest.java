@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotNull;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
+import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.store.JacisStore;
 import org.jacis.testhelper.TestObject;
 import org.junit.Test;
@@ -24,9 +25,9 @@ public class JacisContainerTest {
   @Test
   public void testRegisterStore() {
     JacisContainer container = new JacisContainer();
-    JacisObjectTypeSpec<String, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class);
+    JacisObjectTypeSpec<String, TestObject, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class, new JacisCloningObjectAdapter<TestObject>());
     container.createStore(objectTypeSpec);
-    JacisStore<String, TestObject> store = container.getStore(String.class, TestObject.class);
+    JacisStore<String, TestObject, TestObject> store = container.getStore(String.class, TestObject.class);
     assertNotNull(store);
   }
 

@@ -120,14 +120,14 @@ public class JacisContainerLocalTxTest {
   @Test(expected = JacisNoTransactionException.class)
   public void testInsertWithoutTransaction() {
     JacisContainer container = new JacisContainer();
-    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStore(container);
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore(container);
     store.update("obj-1", new TestObject("obj-1", 1));
   }
 
   @Test()
   public void testInsertWithinTransaction() {
     JacisContainer container = new JacisContainer();
-    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStore(container);
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore(container);
     JacisLocalTransaction tx = container.beginLocalTransaction();
     store.update("obj-1", new TestObject("obj-1", 1));
     tx.commit();

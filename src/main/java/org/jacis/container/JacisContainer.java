@@ -29,7 +29,7 @@ public class JacisContainer {
   private static final Logger log = LoggerFactory.getLogger(JacisContainer.class);
 
   protected final JacisTransactionAdapter txAdapter;
-  protected final Map<StoreIdentifier, JacisStore<?, ?>> storeMap = new ConcurrentHashMap<>();
+  protected final Map<StoreIdentifier, JacisStore<?, ?, ?>> storeMap = new ConcurrentHashMap<>();
   protected final List<JacisTransactionListener> txListeners = new ArrayList<>();
 
   public JacisContainer(JacisTransactionAdapter txAdapter) {
@@ -45,17 +45,17 @@ public class JacisContainer {
     return this;
   }
 
-  public <K, V> JacisStore<K, V> createStore(JacisObjectTypeSpec<K, V> objectTypeSpec) {
+  public <K, TV, CV> JacisStore<K, TV, CV> createStore(JacisObjectTypeSpec<K, TV, CV> objectTypeSpec) {
     StoreIdentifier storeIdentifier = new StoreIdentifier(objectTypeSpec.getKeyClass(), objectTypeSpec.getValueClass());
-    JacisStore<K, V> store = new JacisStore<K, V>(this, storeIdentifier, objectTypeSpec);
+    JacisStore<K, TV, CV> store = new JacisStore<K, TV, CV>(this, storeIdentifier, objectTypeSpec);
     storeMap.put(storeIdentifier, store);
     return store;
   }
 
   @SuppressWarnings("unchecked")
-  public <K, V> JacisStore<K, V> getStore(Class<K> keyClass, Class<V> valueClass) {
+  public <K, TV, CV> JacisStore<K, TV, CV> getStore(Class<K> keyClass, Class<TV> valueClass) {
     StoreIdentifier storeIdentifier = new StoreIdentifier(keyClass, valueClass);
-    return (JacisStore<K, V>) storeMap.get(storeIdentifier);
+    return (JacisStore<K, TV, CV>) storeMap.get(storeIdentifier);
   }
 
   public JacisLocalTransaction beginLocalTransaction() {
@@ -115,7 +115,7 @@ public class JacisContainer {
 
   public synchronized void prepare(JacisTransactionHandle transaction) {
     txListeners.stream().forEach(l -> l.beforePrepare(this, transaction));
-    for (JacisStore<?, ?> store : storeMap.values()) {
+    for (JacisStore<?, ?, ?> store : storeMap.values()) {
       store.prepare(transaction);
     }
     txListeners.stream().forEach(l -> l.afterPrepare(this, transaction));
@@ -123,7 +123,7 @@ public class JacisContainer {
 
   public synchronized void commit(JacisTransactionHandle transaction) {
     txListeners.stream().forEach(l -> l.beforeCommit(this, transaction));
-    for (JacisStore<?, ?> store : storeMap.values()) {
+    for (JacisStore<?, ?, ?> store : storeMap.values()) {
       store.commit(transaction);
     }
     txListeners.stream().forEach(l -> l.afterCommit(this, transaction));
@@ -132,7 +132,7 @@ public class JacisContainer {
 
   public synchronized void rollback(JacisTransactionHandle transaction) {
     txListeners.stream().forEach(l -> l.beforeRollback(this, transaction));
-    for (JacisStore<?, ?> store : storeMap.values()) {
+    for (JacisStore<?, ?, ?> store : storeMap.values()) {
       store.rollback(transaction);
     }
     txListeners.stream().forEach(l -> l.afterRollback(this, transaction));

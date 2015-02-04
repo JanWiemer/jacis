@@ -15,8 +15,8 @@ public class StoreTxDemarcationExecutor {
 
   Logger logger = LoggerFactory.getLogger(StoreTxDemarcationExecutor.class);
 
-  public <K, V> void executePrepare(JacisStore<K, V> store, JacisTransactionHandle transaction) {
-    JacisStoreTxView<K, V> txView = store.getTxView(transaction, false);
+  public <K, TV, CV> void executePrepare(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
+    JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
       return;
     } else if (txView.isReadOnly()) {
@@ -24,8 +24,8 @@ public class StoreTxDemarcationExecutor {
     }
     logger.trace("prepare {} on {} by Thread {}", txView, this, Thread.currentThread().getName());
     txView.startCommitPhase();
-    for (StoreEntryTxView<K, V> entryTxView : txView.getAllEntryTxViews()) {
-      StoreEntry<K, V> entryCommitted = entryTxView.getCommitedEntry();
+    for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+      StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommitedEntry();
       if (entryTxView.isUpdated()) {
         entryTxView.assertNotStale(txView);
         entryCommitted.lockedFor(txView);
@@ -33,8 +33,8 @@ public class StoreTxDemarcationExecutor {
     }
   }
 
-  public <K, V> void executeCommit(JacisStore<K, V> store, JacisTransactionHandle transaction) {
-    JacisStoreTxView<K, V> txView = store.getTxView(transaction, false);
+  public <K, TV, CV> void executeCommit(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
+    JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
       return;
     } else if (txView.isReadOnly()) {
@@ -47,9 +47,9 @@ public class StoreTxDemarcationExecutor {
     if (trace) {
       logger.trace("commit {} on {} by Thread {}", txView, this, Thread.currentThread().getName());
     }
-    for (StoreEntryTxView<K, V> entryTxView : txView.getAllEntryTxViews()) {
+    for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
       K key = entryTxView.getKey();
-      StoreEntry<K, V> entryCommitted = entryTxView.getCommitedEntry();
+      StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommitedEntry();
       if (entryTxView.isUpdated()) {
         if (trace) {
           logger.trace("... commit {}, Store: {}", store.getObjectInfo(key), store);
@@ -63,8 +63,8 @@ public class StoreTxDemarcationExecutor {
     txView.destroy();
   }
 
-  public <K, V> void executeRollback(JacisStore<K, V> store, JacisTransactionHandle transaction) {
-    JacisStoreTxView<K, V> txView = store.getTxView(transaction, false);
+  public <K, TV, CV> void executeRollback(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
+    JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
       return;
     }
@@ -76,9 +76,9 @@ public class StoreTxDemarcationExecutor {
     if (trace) {
       logger.trace("rollback {} on {} by Thread {}", txView, this, Thread.currentThread().getName());
     }
-    for (StoreEntryTxView<K, V> entryTxView : txView.getAllEntryTxViews()) {
+    for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
       K key = entryTxView.getKey();
-      StoreEntry<K, V> entryCommitted = entryTxView.getCommitedEntry();
+      StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommitedEntry();
       if (trace) {
         logger.trace("... rollback {}, Store: {}", store.getObjectInfo(key), this);
       }
@@ -88,8 +88,8 @@ public class StoreTxDemarcationExecutor {
     txView.destroy();
   }
 
-  private <K, V> void trackModification(JacisStore<K, V> store, K key, V oldValue, V newValue, JacisTransactionHandle tx) {
-    for (JacisModificationListener<K, V> listener : store.getModificationListeners()) {
+  private <K, TV, CV> void trackModification(JacisStore<K, TV, CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
+    for (JacisModificationListener<K, TV> listener : store.getModificationListeners()) {
       listener.onModification(key, oldValue, newValue, tx);
     }
   }

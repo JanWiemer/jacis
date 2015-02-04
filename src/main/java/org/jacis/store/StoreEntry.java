@@ -6,38 +6,39 @@ package org.jacis.store;
  * Representing a committed version of an entry in the store.
  *
  * @param <K> Key type of the store entry
- * @param <V> Value type of the store entry
+ * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
+ * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  */
-class StoreEntry<K, V> {
+class StoreEntry<K, TV, CV> {
 
-  private final JacisStore<K, V> store;
+  private final JacisStore<K, TV, CV> store;
   private final K key;
-  private V value = null;
+  private CV value = null;
   private long version = 0; // version counter will be increased when an updated view of the entry is committed (used for optimistic locking)
   private String updatedBy = null; // transaction that has committed the current version (for logging / debugging only) 
-  private JacisStoreTxView<K, V> lockedFor = null; // transaction this object is locked for (in the time between prepare and commit)
+  private JacisStoreTxView<K, TV, CV> lockedFor = null; // transaction this object is locked for (in the time between prepare and commit)
 
-  public StoreEntry(JacisStore<K, V> store, K key) {
+  public StoreEntry(JacisStore<K, TV, CV> store, K key) {
     this.store = store;
     this.key = key;
   }
 
-  public void update(StoreEntryTxView<K, V> entryTxView, String byTxName) {
-    V txVal = entryTxView.getValue();
+  public void update(StoreEntryTxView<K, TV, CV> entryTxView, String byTxName) {
+    TV txVal = entryTxView.getValue();
     if (txVal == null) { // deleted
       value = null;
     } else if (txVal != value) { // intentionally checked if both instances are different (and not used equals!)
-      value = store.getCloneHelper().cloneTxView2Committed(txVal);
+      value = store.getObjectAdapter().cloneTxView2Committed(txVal);
     }
     version++;
     updatedBy = byTxName;
   }
 
-  public void lockedFor(JacisStoreTxView<K, V> lockingTx) {
+  public void lockedFor(JacisStoreTxView<K, TV, CV> lockingTx) {
     lockedFor = lockingTx;
   }
 
-  public void releaseLockedFor(JacisStoreTxView<K, V> releasingTx) {
+  public void releaseLockedFor(JacisStoreTxView<K, TV, CV> releasingTx) {
     if (releasingTx.equals(getLockedFor())) {
       lockedFor = null;
     }
@@ -47,11 +48,11 @@ class StoreEntry<K, V> {
     return lockedFor != null;
   }
 
-  public boolean isLockedForOtherThan(JacisStoreTxView<K, V> txView) {
+  public boolean isLockedForOtherThan(JacisStoreTxView<K, TV, CV> txView) {
     return lockedFor != null && !lockedFor.equals(txView);
   }
 
-  public JacisStore<K, V> getStore() {
+  public JacisStore<K, TV, CV> getStore() {
     return store;
   }
 
@@ -59,7 +60,7 @@ class StoreEntry<K, V> {
     return key;
   }
 
-  public V getValue() {
+  public CV getValue() {
     return value;
   }
 
@@ -79,7 +80,7 @@ class StoreEntry<K, V> {
     return updatedBy;
   }
 
-  public JacisStoreTxView<K, V> getLockedFor() {
+  public JacisStoreTxView<K, TV, CV> getLockedFor() {
     return lockedFor;
   }
 
@@ -97,7 +98,7 @@ class StoreEntry<K, V> {
     } else if (getClass() != obj.getClass()) {
       return false;
     }
-    StoreEntry<?, ?> that = (StoreEntry<?, ?>) obj;
+    StoreEntry<?, ?, ?> that = (StoreEntry<?, ?, ?>) obj;
     return key == null ? that.key == null : key.equals(that.key);
   }
 

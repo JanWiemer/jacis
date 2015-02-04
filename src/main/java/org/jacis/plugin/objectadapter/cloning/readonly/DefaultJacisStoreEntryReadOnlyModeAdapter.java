@@ -1,4 +1,4 @@
-package org.jacis.plugin.readonly;
+package org.jacis.plugin.objectadapter.cloning.readonly;
 
 public class DefaultJacisStoreEntryReadOnlyModeAdapter<V> implements JacisStoreEntryReadOnlyModeAdapter<V> {
 

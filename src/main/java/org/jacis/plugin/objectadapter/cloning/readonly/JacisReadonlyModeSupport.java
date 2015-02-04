@@ -1,4 +1,4 @@
-package org.jacis.plugin.readonly;
+package org.jacis.plugin.objectadapter.cloning.readonly;
 
 /**
  * @author Jan Wiemer

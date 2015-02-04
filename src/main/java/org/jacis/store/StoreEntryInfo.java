@@ -8,7 +8,7 @@ package org.jacis.store;
  * @param <K> Key type of the store entry
  * @param <V> Value type of the store entry
  */
-public class StoreEntryInfo<K, V> {
+public class StoreEntryInfo<K, TV, CV> {
 
   private final K key;
   private final long committedVersion;
@@ -21,13 +21,13 @@ public class StoreEntryInfo<K, V> {
   private final String txViewValueString;
   private final String originalTxViewValueString;
 
-  public StoreEntryInfo(K key, StoreEntry<K, V> committedEntry, StoreEntryTxView<K, V> entryTxView, JacisStoreTxView<K, V> txView) {
+  public StoreEntryInfo(K key, StoreEntry<K, TV, CV> committedEntry, StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> txView) {
     this.key = key;
     if (committedEntry != null) {
       committedVersion = committedEntry.getVersion();
       committedVersionLastCommitter = committedEntry.getUpdatedBy();
       committedValueString = String.valueOf(committedEntry.getValue());
-      JacisStoreTxView<K, V> lf = committedEntry.getLockedFor();
+      JacisStoreTxView<K, TV, CV> lf = committedEntry.getLockedFor();
       committedVersionLockedForTx = lf == null ? null : lf.getTxName();
     } else {
       committedVersion = -1;

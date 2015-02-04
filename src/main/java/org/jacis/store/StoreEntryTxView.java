@@ -1,6 +1,7 @@
 package org.jacis.store;
 
 import org.jacis.exception.JacisStaleObjectException;
+import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
  * @author Jan Wiemer
@@ -8,42 +9,43 @@ import org.jacis.exception.JacisStaleObjectException;
  * Representing the view of a store entry the current transaction currently sees.
  *
  * @param <K> Key type of the store entry
- * @param <V> Value type of the store entry
+ * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
+ * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  */
-class StoreEntryTxView<K, V> {
+class StoreEntryTxView<K, TV, CV> {
 
-  private final StoreEntry<K, V> commitedEntry; // link to the committed entry (note this is the real committed instance that might be changed by other TXs)
-  private V txValue = null; // current value of the entry in this TX
-  private V origValue; // original value of the entry when cloning it to the transaction view (only tracked if configured) 
+  private final StoreEntry<K, TV, CV> commitedEntry; // link to the committed entry (note this is the real committed instance that might be changed by other TXs)
+  private TV txValue = null; // current value of the entry in this TX
+  private TV origValue; // original value of the entry when cloning it to the transaction view (only tracked if configured) 
   private long origVersion; // original version of the entry when cloning it to the transaction view (for optimistic locking)
   private boolean updated = false; // entry was updated in the current transaction
 
-  public StoreEntryTxView(StoreEntry<K, V> commitedEntry, boolean trackOriginal) {
-    StoreEntryCloneHelper<V> ca = commitedEntry.getStore().getCloneHelper();
+  public StoreEntryTxView(StoreEntry<K, TV, CV> commitedEntry, boolean trackOriginal) {
+    JacisObjectAdapter<TV, CV> ca = commitedEntry.getStore().getObjectAdapter();
     this.commitedEntry = commitedEntry;
     this.txValue = ca.cloneCommitted2WritableTxView(commitedEntry.getValue());
     this.origVersion = commitedEntry.getVersion();
     if (trackOriginal) {
-      origValue = ca.cloneCommitted2WritableTxView(this.txValue);
+      origValue = ca.cloneCommitted2WritableTxView(commitedEntry.getValue());
     } else {
       origValue = null;
     }
   }
 
-  StoreEntryTxView(StoreEntryTxView<K, V> orig) { // only to create a read only view
+  StoreEntryTxView(StoreEntryTxView<K, TV, CV> orig) { // only to create a read only view
     this.commitedEntry = orig.getCommitedEntry();
-    StoreEntryCloneHelper<V> ca = commitedEntry.getStore().getCloneHelper();
-    this.txValue = ca.cloneCommitted2ReadOnlyTxView(orig.txValue);
-    this.origValue = ca.cloneCommitted2ReadOnlyTxView(orig.origValue);
+    JacisObjectAdapter<TV, CV> ca = commitedEntry.getStore().getObjectAdapter();
+    this.txValue = ca.cloneTxView2ReadOnlyTxView(orig.txValue);
+    this.origValue = ca.cloneTxView2ReadOnlyTxView(orig.origValue);
     this.origVersion = orig.origVersion;
   }
 
-  public void updateValue(V newValue) {
+  public void updateValue(TV newValue) {
     this.txValue = newValue;
     this.updated = true;
   }
 
-  public StoreEntry<K, V> getCommitedEntry() {
+  public StoreEntry<K, TV, CV> getCommitedEntry() {
     return commitedEntry;
   }
 
@@ -51,7 +53,7 @@ class StoreEntryTxView<K, V> {
     return commitedEntry.getKey();
   }
 
-  public V getValue() {
+  public TV getValue() {
     return txValue;
   }
 
@@ -63,7 +65,7 @@ class StoreEntryTxView<K, V> {
     return txValue != null;
   }
 
-  public V getOrigValue() {
+  public TV getOrigValue() {
     return origValue;
   }
 
@@ -75,7 +77,7 @@ class StoreEntryTxView<K, V> {
     return updated;
   }
 
-  public boolean isStale(JacisStoreTxView<K, V> txView) {
+  public boolean isStale(JacisStoreTxView<K, TV, CV> txView) {
     if (origVersion < commitedEntry.getVersion()) {
       return true;
     }
@@ -85,7 +87,7 @@ class StoreEntryTxView<K, V> {
     return false;
   }
 
-  public void assertNotStale(JacisStoreTxView<K, V> txView) {
+  public void assertNotStale(JacisStoreTxView<K, TV, CV> txView) {
     if (commitedEntry.isLockedForOtherThan(txView)) {
       throw new JacisStaleObjectException("Updated object already modified by (prepared) other transaction! Key: " + getKey() + ", Transaction view: " + this + ", current transaction: " + txView + ", pending other transaction: " + commitedEntry.getLockedFor() + ", others transaction view: " + commitedEntry.getLockedFor().getEntryTxView(getKey()) + "(ObjectStore=" + commitedEntry.getStore() + ")");
     } else if (origVersion < commitedEntry.getVersion()) {
@@ -107,7 +109,7 @@ class StoreEntryTxView<K, V> {
     } else if (getClass() != obj.getClass()) {
       return false;
     }
-    StoreEntryTxView<?, ?> that = (StoreEntryTxView<?, ?>) obj;
+    StoreEntryTxView<?, ?, ?> that = (StoreEntryTxView<?, ?, ?>) obj;
     return commitedEntry == null ? that.commitedEntry == null : commitedEntry.equals(that.commitedEntry);
   }
 
