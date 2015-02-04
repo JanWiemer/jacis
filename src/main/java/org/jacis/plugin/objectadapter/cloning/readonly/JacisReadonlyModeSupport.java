@@ -11,4 +11,6 @@ public interface JacisReadonlyModeSupport {
 
   public void switchToReadWriteMode();
 
+  public boolean isReadObly();
+
 }

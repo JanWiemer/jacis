@@ -17,4 +17,10 @@ public class DefaultJacisStoreEntryReadOnlyModeAdapter<V> implements JacisStoreE
     ((JacisReadonlyModeSupport) value).switchToReadWriteMode();
     return value;
   }
+
+  @Override
+  public boolean isReadOnly(V value) {
+    return ((JacisReadonlyModeSupport) value).isReadObly();
+  }
+
 }

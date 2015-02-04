@@ -9,10 +9,10 @@ import org.jacis.plugin.objectadapter.cloning.readonly.JacisStoreEntryReadOnlyMo
 
 public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
 
-  private final JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapters;
+  private final JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapter;
 
   public JacisCloningObjectAdapter(JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapters) {
-    this.readOnlyModeAdapters = readOnlyModeAdapters;
+    this.readOnlyModeAdapter = readOnlyModeAdapters;
   }
 
   public JacisCloningObjectAdapter() {
@@ -25,7 +25,7 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
       return null;
     }
     V clone = cloneValue(value);
-    return readOnlyModeAdapters.switchToReadWriteMode(clone);
+    return readOnlyModeAdapter.switchToReadWriteMode(clone);
   }
 
   @Override
@@ -43,16 +43,16 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
       return null;
     }
     V clone = cloneValue(value);
-    return readOnlyModeAdapters.switchToReadOnlyMode(clone);
+    return readOnlyModeAdapter.switchToReadOnlyMode(clone);
   }
 
   @Override
   public V cloneTxView2ReadOnlyTxView(V value) {
-    if (value == null) {
-      return null;
+    if (value == null || readOnlyModeAdapter.isReadOnly(value)) {
+      return value;
     }
     V clone = cloneValue(value);
-    return readOnlyModeAdapters.switchToReadOnlyMode(clone);
+    return readOnlyModeAdapter.switchToReadOnlyMode(clone);
   }
 
   @SuppressWarnings("unchecked")

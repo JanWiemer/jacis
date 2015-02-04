@@ -13,4 +13,6 @@ public interface JacisStoreEntryReadOnlyModeAdapter<V> {
 
   public V switchToReadWriteMode(V value);
 
+  public boolean isReadOnly(V value);
+
 }
