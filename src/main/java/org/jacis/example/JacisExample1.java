@@ -5,7 +5,7 @@ import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
 import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.plugin.objectadapter.cloning.readonly.AbstractReadOnlyModeSupportingObject;
-import org.jacis.plugin.txadapter.JacisLocalTransaction;
+import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.store.JacisStore;
 
 /**

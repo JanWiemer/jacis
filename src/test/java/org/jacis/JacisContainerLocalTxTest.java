@@ -7,7 +7,7 @@ import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisNoTransactionException;
 import org.jacis.exception.JacisTransactionAlreadyStartedException;
-import org.jacis.plugin.txadapter.JacisLocalTransaction;
+import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.store.JacisStore;
 import org.jacis.testhelper.JacisTestHelper;
 import org.jacis.testhelper.TestObject;
@@ -120,14 +120,14 @@ public class JacisContainerLocalTxTest {
   @Test(expected = JacisNoTransactionException.class)
   public void testInsertWithoutTransaction() {
     JacisContainer container = new JacisContainer();
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore(container);
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning(container);
     store.update("obj-1", new TestObject("obj-1", 1));
   }
 
   @Test()
   public void testInsertWithinTransaction() {
     JacisContainer container = new JacisContainer();
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore(container);
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning(container);
     JacisLocalTransaction tx = container.beginLocalTransaction();
     store.update("obj-1", new TestObject("obj-1", 1));
     tx.commit();

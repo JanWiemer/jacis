@@ -1,4 +1,4 @@
-package org.jacis;
+package org.jacis.serialization;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -6,7 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisStaleObjectException;
-import org.jacis.plugin.txadapter.JacisLocalTransaction;
+import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.store.JacisStore;
 import org.jacis.testhelper.JacisTestHelper;
 import org.jacis.testhelper.TestObject;
@@ -14,16 +14,16 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JacisStoreTxTest {
+public class JacisStoreWithSerializationTxTest {
 
-  private static final Logger log = LoggerFactory.getLogger(JacisStoreTxTest.class);
+  private static final Logger log = LoggerFactory.getLogger(JacisStoreWithSerializationTxTest.class);
 
   @Test
   public void testTransactionIsolationInsertPrepareCommit() {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, byte[]> store = testHelper.createTestStoreWithSerialization();
     JacisLocalTransaction writingTx = store.getContainer().beginLocalTransaction();
     JacisTransactionHandle writingTxHandle = testHelper.suspendTx();
     JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
@@ -64,7 +64,7 @@ public class JacisStoreTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, byte[]> store = testHelper.createTestStoreWithSerialization();
     store.getContainer().withLocalTx(() -> {
       store.update(testObject.getName(), testObject);
     });
@@ -112,7 +112,7 @@ public class JacisStoreTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, byte[]> store = testHelper.createTestStoreWithSerialization();
     JacisLocalTransaction writingTx = store.getContainer().beginLocalTransaction();
     JacisTransactionHandle writingTxHandle = testHelper.suspendTx();
     JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
@@ -133,7 +133,7 @@ public class JacisStoreTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, byte[]> store = testHelper.createTestStoreWithSerialization();
     store.getContainer().withLocalTx(() -> {
       store.update(testObject.getName(), testObject);
     });
@@ -158,7 +158,7 @@ public class JacisStoreTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, byte[]> store = testHelper.createTestStoreWithSerialization();
     store.getContainer().withLocalTx(() -> {
       store.update(testObject.getName(), testObject);
     });
@@ -194,7 +194,7 @@ public class JacisStoreTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, byte[]> store = testHelper.createTestStoreWithSerialization();
     store.getContainer().withLocalTx(() -> {
       store.update(testObject.getName(), testObject);
     });

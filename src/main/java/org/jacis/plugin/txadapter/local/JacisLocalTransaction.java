@@ -1,4 +1,4 @@
-package org.jacis.plugin.txadapter;
+package org.jacis.plugin.txadapter.local;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;

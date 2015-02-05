@@ -1,4 +1,4 @@
-package org.jacis;
+package org.jacis.serialization;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,12 +10,12 @@ import org.jacis.testhelper.TrackedTestView;
 import org.jacis.trackedviews.TrackedView;
 import org.junit.Test;
 
-public class JacisTrackedViewTest {
+public class JacisStoreWithSerializationTrackedViewTest {
 
   @Test
   public void testTrackedView() {
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
+    JacisStore<String, TestObject, byte[]> store = testHelper.createTestStoreWithSerialization();
     JacisContainer container = store.getContainer();
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1"));
@@ -41,5 +41,4 @@ public class JacisTrackedViewTest {
       assertEquals(5, viewVal);
     });
   }
-
 }

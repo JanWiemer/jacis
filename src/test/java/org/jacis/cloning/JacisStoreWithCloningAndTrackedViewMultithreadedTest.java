@@ -1,4 +1,4 @@
-package org.jacis;
+package org.jacis.cloning;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -18,15 +18,15 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MultithreadedJacisStoreWithTrackedViewTest {
+public class JacisStoreWithCloningAndTrackedViewMultithreadedTest {
 
-  static final Logger log = LoggerFactory.getLogger(MultithreadedJacisStoreWithTrackedViewTest.class);
+  static final Logger log = LoggerFactory.getLogger(JacisStoreWithCloningAndTrackedViewMultithreadedTest.class);
 
   @Test()
   public void testMultiThreadedAccess() {
     JacisTestHelper testHelper = new JacisTestHelper();
     AtomicReference<Throwable> exception = new AtomicReference<>();
-    final JacisStore<String, TestObject, TestObject> store = testHelper.createTestStore();
+    final JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
     final JacisContainer container = store.getContainer();
     final TestJacisTransactionListenerAdapter txListener = new TestJacisTransactionListenerAdapter(store);
     container.registerTransactionListener(txListener);

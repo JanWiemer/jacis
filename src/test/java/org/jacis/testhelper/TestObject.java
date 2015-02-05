@@ -1,5 +1,7 @@
 package org.jacis.testhelper;
 
+import java.io.Serializable;
+
 import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
 import org.jacis.plugin.objectadapter.cloning.readonly.AbstractReadOnlyModeSupportingObject;
 
@@ -7,7 +9,9 @@ import org.jacis.plugin.objectadapter.cloning.readonly.AbstractReadOnlyModeSuppo
  * @author Jan Wiemer
  *
  */
-public class TestObject extends AbstractReadOnlyModeSupportingObject implements JacisCloneable<TestObject> {
+public class TestObject extends AbstractReadOnlyModeSupportingObject implements JacisCloneable<TestObject>, Serializable {
+
+  private static final long serialVersionUID = 1L;
 
   private String name;
   private long value;

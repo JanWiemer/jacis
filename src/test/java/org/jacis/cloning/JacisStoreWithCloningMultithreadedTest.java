@@ -1,4 +1,4 @@
-package org.jacis;
+package org.jacis.cloning;
 
 import static org.junit.Assert.assertEquals;
 
@@ -12,9 +12,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MultithreadedJacisStoreTest {
+public class JacisStoreWithCloningMultithreadedTest {
 
-  private static final Logger log = LoggerFactory.getLogger(MultithreadedJacisStoreTest.class);
+  private static final Logger log = LoggerFactory.getLogger(JacisStoreWithCloningMultithreadedTest.class);
 
   @Test()
   public void testSimpleMultiThreadedAccess() {
@@ -24,7 +24,7 @@ public class MultithreadedJacisStoreTest {
   }
 
   public void checkSimpleMultiThreadedAccess() {
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStore();
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     String testObjName = "TST";
     store.getContainer().withLocalTx(() -> {
       store.update(testObjName, new TestObject(testObjName, 0).setStrValue("0"));
