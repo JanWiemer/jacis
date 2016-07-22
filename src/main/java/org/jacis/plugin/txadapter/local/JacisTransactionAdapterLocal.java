@@ -18,15 +18,16 @@ public class JacisTransactionAdapterLocal implements JacisTransactionAdapter {
   protected final ThreadLocal<JacisTransactionHandle> transaction = new ThreadLocal<>();
   protected AtomicLong txSeq = new AtomicLong(0);
 
-  public JacisLocalTransaction startLocalTransaction(JacisContainer jacisContainer) {
+  public JacisLocalTransaction startLocalTransaction(JacisContainer jacisContainer, String description) {
     JacisTransactionHandle tx = transaction.get();
     if (tx != null) {
       throw new JacisTransactionAlreadyStartedException("Transaction already started: " + tx);
     }
     long txNr = txSeq.incrementAndGet();
-    String txName = "TX-" + txNr;
+    String txShortName = "TX-" + txNr;
+    String txName = txShortName + "[" + description + "]";
     JacisLocalTransaction extTxObj = new JacisLocalTransaction(txName, jacisContainer);
-    tx = new JacisTransactionHandle(txName, extTxObj);
+    tx = new JacisTransactionHandle(txName, txShortName, extTxObj);
     transaction.set(tx);
     return extTxObj;
   }

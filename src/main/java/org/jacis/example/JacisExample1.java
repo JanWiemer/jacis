@@ -4,7 +4,7 @@ import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
 import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
-import org.jacis.plugin.objectadapter.cloning.readonly.AbstractReadOnlyModeSupportingObject;
+import org.jacis.plugin.objectadapter.readonly.AbstractReadOnlyModeSupportingObject;
 import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.store.JacisStore;
 
@@ -36,12 +36,7 @@ public class JacisExample1 {
 
     @Override
     public Account clone() {
-      try {
-        Account clone = (Account) super.clone();
-        return clone;
-      } catch (CloneNotSupportedException e) { // can never happen
-        throw new InternalError("Failed to clone " + this + "! " + e);
-      }
+      return (Account) super.clone();
     }
 
     Account deposit(long amount) {

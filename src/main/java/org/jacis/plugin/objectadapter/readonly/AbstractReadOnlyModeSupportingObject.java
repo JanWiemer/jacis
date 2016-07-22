@@ -1,4 +1,4 @@
-package org.jacis.plugin.objectadapter.cloning.readonly;
+package org.jacis.plugin.objectadapter.readonly;
 
 /**
  * @author Jan Wiemer
@@ -14,6 +14,15 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
   }
 
   @Override
+  protected Object clone() {
+    try {
+      return super.clone();
+    } catch (CloneNotSupportedException e) {
+      throw new InternalError("Could not clone " + this.getClass().getName());
+    }
+  }
+
+  @Override
   public void switchToReadOnlyMode() {
     threadWithWriteAccess = null;
   }
@@ -24,7 +33,7 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
   }
 
   @Override
-  public boolean isReadObly() {
+  public boolean isReadOnly() {
     return threadWithWriteAccess == null;
   }
 

@@ -8,15 +8,21 @@ package org.jacis.container;
 public class JacisTransactionHandle {
 
   private final String txName;
+  private final String txShortName;
   private final Object externalTransaction;
 
-  public JacisTransactionHandle(String txName, Object externalTransaction) {
+  public JacisTransactionHandle(String txName, String txShortName, Object externalTransaction) {
     this.txName = txName;
+    this.txShortName = txShortName;
     this.externalTransaction = externalTransaction;
   }
 
   public String getTxName() {
     return txName;
+  }
+
+  public String getTxShortName() {
+    return txShortName;
   }
 
   public Object getExternalTransaction() {

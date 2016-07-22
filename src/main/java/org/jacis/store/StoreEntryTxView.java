@@ -89,10 +89,34 @@ class StoreEntryTxView<K, TV, CV> {
 
   public void assertNotStale(JacisStoreTxView<K, TV, CV> txView) {
     if (commitedEntry.isLockedForOtherThan(txView)) {
-      throw new JacisStaleObjectException("Updated object already modified by (prepared) other transaction! Key: " + getKey() + ", Transaction view: " + this + ", current transaction: " + txView + ", pending other transaction: " + commitedEntry.getLockedFor() + ", others transaction view: " + commitedEntry.getLockedFor().getEntryTxView(getKey()) + "(ObjectStore=" + commitedEntry.getStore() + ")");
+      throwStale(txView);
     } else if (origVersion < commitedEntry.getVersion()) {
-      throw new JacisStaleObjectException("Updated object already modified by another transaction! Key: " + getKey() + ", Transaction view: " + this + ", current transaction: " + txView + ", changed original: " + commitedEntry + " by: " + commitedEntry.getUpdatedBy() + " (transactionalObjectStore=" + this + ")");
+      throwStale(txView);
     }
+  }
+
+  private void throwStale(JacisStoreTxView<K, TV, CV> txView) {
+    StringBuilder msg = new StringBuilder();
+    msg.append("Object ").append(getKey());
+    msg.append(" updated by current TX ").append(txView.getTxShortName()).append(" (from v. ").append(getOrigVersion()).append(")");
+    JacisStoreTxView<K, TV, CV> otherTxView = commitedEntry.getLockedFor() != null ? commitedEntry.getLockedFor() : commitedEntry.getUpdatedBy();
+    if (commitedEntry.isLockedForOtherThan(txView)) {
+      msg.append(" was already updated by prepared other TX ");
+    } else {
+      msg.append(" was already updated by other TX ");
+    }
+    msg.append(otherTxView == null ? "?" : otherTxView.getTxShortName()).append("!");
+    StringBuilder details = new StringBuilder();
+    details.append("// Details: \n");
+    details.append(" - value changed by this TX: ").append(getValue()).append("\n");
+    if (commitedEntry.getStore().getObjectTypeSpec().isTrackOriginalValueEnabled()) {
+      details.append(" - original value          : ").append(getOrigValue()).append(" (v. ").append(getOrigVersion()).append(")").append("\n");
+    }
+    details.append(" - committed value         : ").append(commitedEntry.getValue()).append(" (v. ").append(commitedEntry.getVersion()).append(")").append("\n");
+    details.append(" - current TX: ").append(txView).append("\n");
+    details.append(" - other TX: ").append(otherTxView == null ? "?" : otherTxView.getTxName()).append("\n");
+    details.append(" - store: ").append(this);
+    throw new JacisStaleObjectException(msg.toString()).setDetails(details.toString());
   }
 
   @Override

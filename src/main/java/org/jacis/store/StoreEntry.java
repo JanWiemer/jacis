@@ -15,7 +15,7 @@ class StoreEntry<K, TV, CV> {
   private final K key;
   private CV value = null;
   private long version = 0; // version counter will be increased when an updated view of the entry is committed (used for optimistic locking)
-  private String updatedBy = null; // transaction that has committed the current version (for logging / debugging only) 
+  private JacisStoreTxView<K, TV, CV> updatedBy = null; // transaction that has committed the current version (for logging / debugging only) 
   private JacisStoreTxView<K, TV, CV> lockedFor = null; // transaction this object is locked for (in the time between prepare and commit)
 
   public StoreEntry(JacisStore<K, TV, CV> store, K key) {
@@ -23,7 +23,7 @@ class StoreEntry<K, TV, CV> {
     this.key = key;
   }
 
-  public void update(StoreEntryTxView<K, TV, CV> entryTxView, String byTxName) {
+  public void update(StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> byTx) {
     TV txVal = entryTxView.getValue();
     if (txVal == null) { // deleted
       value = null;
@@ -31,7 +31,7 @@ class StoreEntry<K, TV, CV> {
       value = store.getObjectAdapter().cloneTxView2Committed(txVal);
     }
     version++;
-    updatedBy = byTxName;
+    updatedBy = byTx;
   }
 
   public void lockedFor(JacisStoreTxView<K, TV, CV> lockingTx) {
@@ -76,7 +76,7 @@ class StoreEntry<K, TV, CV> {
     return version;
   }
 
-  public String getUpdatedBy() {
+  public JacisStoreTxView<K, TV, CV> getUpdatedBy() {
     return updatedBy;
   }
 

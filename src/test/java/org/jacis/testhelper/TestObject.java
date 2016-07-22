@@ -3,7 +3,7 @@ package org.jacis.testhelper;
 import java.io.Serializable;
 
 import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
-import org.jacis.plugin.objectadapter.cloning.readonly.AbstractReadOnlyModeSupportingObject;
+import org.jacis.plugin.objectadapter.readonly.AbstractReadOnlyModeSupportingObject;
 
 /**
  * @author Jan Wiemer
@@ -29,12 +29,7 @@ public class TestObject extends AbstractReadOnlyModeSupportingObject implements 
 
   @Override
   public TestObject clone() {
-    try {
-      TestObject clone = (TestObject) super.clone();
-      return clone;
-    } catch (CloneNotSupportedException e) { // can never happen
-      throw new InternalError("Failed to clone " + this + "! " + e);
-    }
+    return (TestObject) super.clone();
   }
 
   public String getName() {

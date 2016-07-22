@@ -1,10 +1,6 @@
-package org.jacis.plugin.objectadapter.cloning.readonly;
+package org.jacis.plugin.objectadapter.readonly;
 
 public class DefaultJacisStoreEntryReadOnlyModeAdapter<V> implements JacisStoreEntryReadOnlyModeAdapter<V> {
-
-  public DefaultJacisStoreEntryReadOnlyModeAdapter() {
-    // TODO Auto-generated constructor stub
-  }
 
   @Override
   public V switchToReadOnlyMode(V value) {
@@ -20,7 +16,7 @@ public class DefaultJacisStoreEntryReadOnlyModeAdapter<V> implements JacisStoreE
 
   @Override
   public boolean isReadOnly(V value) {
-    return ((JacisReadonlyModeSupport) value).isReadObly();
+    return ((JacisReadonlyModeSupport) value).isReadOnly();
   }
 
 }

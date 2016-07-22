@@ -24,6 +24,7 @@ class JacisStoreTxView<K, TV, CV> {
   private final Map<K, StoreEntryTxView<K, TV, CV>> storeTxView; // entries with an own view in this TX
   private boolean commitPending = false; // commit pending / prepare already called
   private final String readOnlyTxName; // the name of the TX if this is a read only snapshot (null <-> writable)
+  private String invalidationReason = null; // gives the reason (null means valid) why the tx has been invalidated. Attempts to commit the tx will be ignored.
 
   public JacisStoreTxView(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
     this.store = store;
@@ -48,6 +49,10 @@ class JacisStoreTxView<K, TV, CV> {
 
   public String getTxName() {
     return readOnlyTxName == null ? tx.getTxName() : readOnlyTxName + "|" + tx.getTxName();
+  }
+
+  public String getTxShortName() {
+    return tx.getTxShortName();
   }
 
   public JacisTransactionHandle getTransaction() {
@@ -111,6 +116,18 @@ class JacisStoreTxView<K, TV, CV> {
     store.notifyTxViewDestroyed(this);
   }
 
+  public boolean isInvalidated() {
+    return invalidationReason != null;
+  }
+
+  public String getInvalidationReason() {
+    return invalidationReason;
+  }
+
+  public void invalidate(String reason) {
+    this.invalidationReason = reason;
+  }
+
   @Override
   public String toString() {
     StringBuilder b = new StringBuilder();
@@ -124,7 +141,10 @@ class JacisStoreTxView<K, TV, CV> {
     }
     b.append("(#entries=").append(storeTxView.size()).append(")");
     if (isReadOnly()) {
-      b.append("(readOnly)");
+      b.append("[readOnly]");
+    }
+    if (isInvalidated()) {
+      b.append("[INVALIDATED because ").append(getInvalidationReason()).append("]");
     }
     return b.toString();
   }

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import org.jacis.exception.JacisNoTransactionException;
 import org.jacis.exception.JacisStaleObjectException;
@@ -58,10 +59,25 @@ public class JacisContainer {
     return (JacisStore<K, TV, CV>) storeMap.get(storeIdentifier);
   }
 
+  public synchronized void clearAllStores() {
+    storeMap.values().forEach(store -> store.clear());
+  }
+
+  public boolean isInTransaction() {
+    return txAdapter.getCurrentTransaction(false) != null;
+  }
+
   public JacisLocalTransaction beginLocalTransaction() {
+    String description = Stream.of(new Exception("-").getStackTrace())//
+        .filter(se -> !getClass().getName().equals(se.getClassName()))//
+        .map(se -> se.toString()).findFirst().orElse("-");
+    return beginLocalTransaction(description);
+  }
+
+  public JacisLocalTransaction beginLocalTransaction(String description) {
     if (txAdapter instanceof JacisTransactionAdapterLocal) {
       JacisTransactionAdapterLocal txAdapterLocal = (JacisTransactionAdapterLocal) txAdapter;
-      return txAdapterLocal.startLocalTransaction(this);
+      return txAdapterLocal.startLocalTransaction(this, description);
     } else {
       throw new IllegalStateException("Local transactions not supported! Local transactions need TX adapter " + JacisTransactionAdapterLocal.class.getSimpleName() + " but the configured is: " + txAdapter.getClass().getSimpleName());
     }
@@ -74,6 +90,7 @@ public class JacisContainer {
         return;
       } catch (JacisStaleObjectException e) {
         log.warn("Stale object exception caught: {}", "" + e);
+        log.info("Detail message: \n{}", e.getDetails());
         if (retries == 0) {
           throw e;
         }

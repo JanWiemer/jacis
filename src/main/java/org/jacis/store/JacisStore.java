@@ -119,6 +119,14 @@ public class JacisStore<K, TV, CV> {
     return entryTxView != null && entryTxView.isStale(txView);
   }
 
+  public void checkStale(K key) {
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
+    if (entryTxView != null) {
+      entryTxView.assertNotStale(txView);
+    }
+  }
+
   public TV get(K key) {
     return getOrCreateEntryTxView(getOrCreateTxView(), key).getValue();
   }
@@ -239,6 +247,19 @@ public class JacisStore<K, TV, CV> {
     StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     return new StoreEntryInfo<K, TV, CV>(key, committedEntry, entryTxView, txView);
+  }
+
+  public synchronized void clear() {
+    storeAccessLock.writeLock().lock();// <======= **WRITE** LOCK =====
+    try {
+      for (JacisStoreTxView<K, TV, CV> txCtx : txViewMap.values()) {
+        txCtx.invalidate("store cleared");
+      }
+      store.clear();
+      trackedViewRegistry.clearViews();
+    } finally {
+      storeAccessLock.writeLock().unlock();// <======= **WRITE** UNLOCK =====
+    }
   }
 
   //======================================================================================

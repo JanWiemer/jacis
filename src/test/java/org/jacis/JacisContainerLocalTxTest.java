@@ -1,6 +1,7 @@
 package org.jacis;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.jacis.container.JacisContainer;
@@ -12,8 +13,12 @@ import org.jacis.store.JacisStore;
 import org.jacis.testhelper.JacisTestHelper;
 import org.jacis.testhelper.TestObject;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JacisContainerLocalTxTest {
+
+  private static final Logger log = LoggerFactory.getLogger(JacisContainerLocalTxTest.class);
 
   protected void assertNoTransaction(JacisContainer container) {
     try {
@@ -131,6 +136,20 @@ public class JacisContainerLocalTxTest {
     JacisLocalTransaction tx = container.beginLocalTransaction();
     store.update("obj-1", new TestObject("obj-1", 1));
     tx.commit();
+  }
+
+  @Test()
+  public void testTransactionDescription() {
+    JacisContainer container = new JacisContainer();
+    JacisLocalTransaction tx = container.beginLocalTransaction();
+    log.info("Transaction: {}", tx);
+    assertTrue(tx.getTxName().contains(JacisContainerLocalTxTest.class.getName()));
+    tx.commit();
+    container.withLocalTxAndRetry(5, () -> {
+      JacisTransactionHandle tx2 = container.getCurrentTransaction(false);
+      log.info("Transaction2: {}", tx2);
+      assertTrue(tx2.getTxName().contains(JacisContainerLocalTxTest.class.getName()));
+    });
   }
 
 }
