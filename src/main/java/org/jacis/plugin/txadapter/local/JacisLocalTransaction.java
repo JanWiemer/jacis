@@ -32,18 +32,18 @@ public class JacisLocalTransaction {
 
   public void prepare() throws JacisNoTransactionException {
     checkActive();
-    jacisContainer.prepare(jacisTransactionHandle);
+    jacisContainer.internalPrepare(jacisTransactionHandle);
   }
 
   public void commit() throws JacisNoTransactionException {
     checkActive();
-    jacisContainer.commit(jacisTransactionHandle);
+    jacisContainer.internalCommit(jacisTransactionHandle);
     destroy();
   }
 
   public void rollback() throws JacisNoTransactionException {
     checkActive();
-    jacisContainer.rollback(jacisTransactionHandle);
+    jacisContainer.internalRollback(jacisTransactionHandle);
     destroy();
   }
 

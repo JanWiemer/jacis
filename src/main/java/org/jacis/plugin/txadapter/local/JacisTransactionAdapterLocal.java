@@ -44,7 +44,7 @@ public class JacisTransactionAdapterLocal implements JacisTransactionAdapter {
   }
 
   @Override
-  public JacisTransactionHandle getCurrentTransaction(boolean enforce) {
+  public JacisTransactionHandle getCurrentTransaction(boolean enforce) throws JacisNoTransactionException {
     JacisTransactionHandle tx = transaction.get();
     if (tx == null && enforce) {
       throw new JacisNoTransactionException("No active transaction!");

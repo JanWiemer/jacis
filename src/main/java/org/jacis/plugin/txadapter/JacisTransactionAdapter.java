@@ -8,7 +8,6 @@ import org.jacis.exception.JacisNoTransactionException;
  * @author Jan Wiemer
  * 
  * Transaction adapter that can be registered to bind the Jacis Store to externally managed transactions.
- *
  */
 public interface JacisTransactionAdapter {
 
