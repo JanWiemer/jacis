@@ -4,14 +4,11 @@ import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
- * <h2>Specification of the Objects in a Store </h2>
+ * = Specification of the Objects in a Store
  * 
- * <p>
  * Specification of an object type that shall be stored in a transational store.
  * The pain purpose of the specification is to define the types (classes) for the keys and the values.
- * </p>
  * 
- * <p>
  * Furthermore some configuration is defined in this class how the object store should deal with objects of this type.
  * The basic concept how the transactional store works is that it stores an internal representation 
  * of the committed versions of all objects. This representation is not visible to the outside.
@@ -19,13 +16,10 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  * only visible for the current transaction. If an object should be updated inside a transaction the external
  * representation has to be modified and the store explicitly has to be notified about the change 
  * by calling an update method (there is no automatic) dirty checking.
- * </p>
  * 
- * <p>
  * The mechanism how the objects are copied from the internal representation and back can be customized 
  * (e.g. by cloning or by serialization and de-serialization).
  * The object specification stores an {@link #objectAdapter} (type {@link JacisObjectAdapter}) implementing this mechanism.
- * </p>
  *
  * @param <K> Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.

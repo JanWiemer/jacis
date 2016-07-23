@@ -20,12 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <h2>The Jacis Container Holding the Stores for the Different Object Types</h2>
+ * = The Jacis Container Holding the Stores for the Different Object Types
  * 
- * <p>The <code>JacisContainer</code> is the main class of the Java ACI Store.
+ * The 'JacisContainer' is the main class of the Java ACI Store.
  * The container stores a number of individual stores for different object types.
  * Transactions are managed by the container and are valid for all stores in the container.
- * This class provides methods to create stores for different object types and provides access to those stores.</p> 
+ * This class provides methods to create stores for different object types and provides access to those stores.
  * 
  * @author Jan Wiemer
  */
