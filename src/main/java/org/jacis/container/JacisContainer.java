@@ -20,12 +20,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Jan Wiemer
- *
- * The main class of the Java ACI Store.
+ * <h2>The Jacis Container Holding the Stores for the Different Object Types</h2>
+ * 
+ * <p>The <code>JacisContainer</code> is the main class of the Java ACI Store.
  * The container stores a number of individual stores for different object types.
  * Transactions are managed by the container and are valid for all stores in the container.
- * This class provides methods to create stores for different object types and provides access to those stores.
+ * This class provides methods to create stores for different object types and provides access to those stores.</p> 
+ * 
+ * @author Jan Wiemer
  */
 public class JacisContainer {
 
@@ -105,9 +107,7 @@ public class JacisContainer {
     storeMap.values().forEach(store -> store.clear());
   }
 
-  /**
-   * @return If for the current thread there is a transaction active on this container.
-   */
+  /** @return If for the current thread there is a transaction active on this container. */
   public boolean isInTransaction() {
     return txAdapter.getCurrentTransaction(false) != null;
   }
@@ -126,9 +126,9 @@ public class JacisContainer {
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
    */
   public JacisLocalTransaction beginLocalTransaction() throws IllegalStateException {
-    String description = Stream.of(new Exception("-").getStackTrace())//
-        .filter(se -> !getClass().getName().equals(se.getClassName()))//
-        .map(se -> se.toString()).findFirst().orElse("-");
+    String description = Stream.of(new Exception("-").getStackTrace()) // go through the stack trace elements
+        .filter(se -> !getClass().getName().equals(se.getClassName())) // ignore all stack trace elements for this class
+        .map(se -> se.toString()).findFirst().orElse("-"); // use the first from outside (the calling method) as description
     return beginLocalTransaction(description);
   }
 
@@ -166,14 +166,14 @@ public class JacisContainer {
     Throwable txException = null;
     try {
       task.run();
-      tx.prepare();
-      tx.commit();
+      tx.prepare(); // pase 1 of the two phase commit protocol
+      tx.commit(); // pase 2 of the two phase commit protocol
       tx = null;
     } catch (Throwable e) {
       txException = e;
       throw e;
     } finally {
-      if (tx != null) {
+      if (tx != null) { // if not committed roll it back
         try {
           tx.rollback();
         } catch (Throwable rollbackException) {
@@ -198,15 +198,15 @@ public class JacisContainer {
     while (retries-- > 0) {
       try {
         withLocalTx(task);
-        return;
-      } catch (JacisStaleObjectException e) {
+        return; // if one attempt succeeds return immediately
+      } catch (JacisStaleObjectException e) { // check if we retry
         log.warn("Stale object exception caught: {}", "" + e);
         log.info("Detail message: \n{}", e.getDetails());
         if (retries == 0) {
           throw e;
         }
-      }
-    }
+      } // other exceptions are not handled and are propagated to the caller
+    } // END OF: while (retries-- > 0) {
   }
 
   /**
@@ -222,7 +222,7 @@ public class JacisContainer {
   public JacisTransactionHandle getCurrentTransaction(boolean enforceTx) throws JacisNoTransactionException {
     JacisTransactionHandle tx = txAdapter.getCurrentTransaction(enforceTx);
     if (tx != null) {
-      txAdapter.joinCurrentTransaction(tx, this);
+      txAdapter.joinCurrentTransaction(tx, this); // check if the store already joined the tx and join if not
     }
     return tx;
   }
@@ -298,16 +298,12 @@ public class JacisContainer {
       this.valueClass = valueClass;
     }
 
-    /**
-     * @return The type of the keys in the store.
-     */
+    /** @return The type of the keys in the store. */
     public Class<?> getKeyClass() {
       return keyClass;
     }
 
-    /**
-     * @return The type of the values in the store.
-     */
+    /** @return The type of the values in the store. */
     public Class<?> getValueClass() {
       return valueClass;
     }
@@ -344,5 +340,6 @@ public class JacisContainer {
       return false;
     }
 
-  }
+  } // END OF:  public static class StoreIdentifier {
+
 }
