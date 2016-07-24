@@ -1,10 +1,14 @@
-package org.jacis.testhelper;
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
 
-import java.util.List;
+package org.jacis.testhelper;
 
 import org.jacis.trackedviews.TrackedView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * @author Jan Wiemer

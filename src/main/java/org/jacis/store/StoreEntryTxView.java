@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.store;
 
 import org.jacis.exception.JacisStaleObjectException;
@@ -81,10 +85,7 @@ class StoreEntryTxView<K, TV, CV> {
     if (origVersion < commitedEntry.getVersion()) {
       return true;
     }
-    if (commitedEntry.isLockedForOtherThan(txView)) {
-      return true;
-    }
-    return false;
+    return commitedEntry.isLockedForOtherThan(txView);
   }
 
   public void assertNotStale(JacisStoreTxView<K, TV, CV> txView) {

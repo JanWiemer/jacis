@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.plugin.txadapter.local;
 
 import org.jacis.container.JacisContainer;

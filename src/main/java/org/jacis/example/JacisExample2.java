@@ -1,13 +1,17 @@
-package org.jacis.example;
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
 
-import java.util.Comparator;
-import java.util.stream.Collectors;
+package org.jacis.example;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.example.JacisExample1.Account;
 import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.store.JacisStore;
+
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 /**
  * @author Jan Wiemer

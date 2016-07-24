@@ -1,8 +1,12 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.plugin.objectadapter.serialization;
 
-import java.io.Serializable;
-
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
+
+import java.io.Serializable;
 
 public abstract class JacisSerializationObjectAdapter<TV extends Serializable> implements JacisObjectAdapter<TV, byte[]> {
 

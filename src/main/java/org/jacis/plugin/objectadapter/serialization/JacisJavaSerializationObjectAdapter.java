@@ -1,11 +1,10 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.plugin.objectadapter.serialization;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 
 public class JacisJavaSerializationObjectAdapter<TV extends Serializable> extends JacisSerializationObjectAdapter<TV> {
 

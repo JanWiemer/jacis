@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.testhelper;
 
 import org.jacis.container.JacisContainer;
@@ -49,6 +53,18 @@ public class JacisTestHelper {
     testTxAdapter.resumeTx(tx);
   }
 
+  public long getRandBetween(long min, long max) {
+    return max <= min ? min : min + Math.round((max - min) * Math.random());
+  }
+
+  public void sleep(int ms) {
+    try {
+      Thread.sleep(ms);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
   private static class TestTxAdapter extends JacisTransactionAdapterLocal {
 
     JacisTransactionHandle suspendTx() {
@@ -68,17 +84,5 @@ public class JacisTestHelper {
       transaction.set(tx);
     }
 
-  }
-
-  public long getRandBetween(long min, long max) {
-    return max <= min ? min : min + Math.round((max - min) * Math.random());
-  }
-
-  public void sleep(int ms) {
-    try {
-      Thread.sleep(ms);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
   }
 }

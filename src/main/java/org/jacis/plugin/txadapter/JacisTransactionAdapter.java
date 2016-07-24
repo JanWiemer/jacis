@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.plugin.txadapter;
 
 import org.jacis.container.JacisContainer;
@@ -11,10 +15,10 @@ import org.jacis.exception.JacisNoTransactionException;
  */
 public interface JacisTransactionAdapter {
 
-  public JacisTransactionHandle getCurrentTransaction(boolean enforce) throws JacisNoTransactionException;
+  JacisTransactionHandle getCurrentTransaction(boolean enforce) throws JacisNoTransactionException;
 
-  public void joinCurrentTransaction(JacisTransactionHandle tramsaction, JacisContainer container);
+  void joinCurrentTransaction(JacisTransactionHandle tramsaction, JacisContainer container);
 
-  public void destroyCurrentTransaction();
+  void destroyCurrentTransaction();
 
 }

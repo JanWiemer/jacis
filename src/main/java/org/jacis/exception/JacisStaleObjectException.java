@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.exception;
 
 public class JacisStaleObjectException extends RuntimeException {
@@ -11,13 +15,13 @@ public class JacisStaleObjectException extends RuntimeException {
     super(message);
   }
 
+  public String getDetails() {
+    return details;
+  }
+
   public JacisStaleObjectException setDetails(String details) {
     this.details = details;
     return this;
-  }
-
-  public String getDetails() {
-    return details;
   }
 
 }

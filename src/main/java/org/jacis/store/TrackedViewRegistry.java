@@ -1,10 +1,8 @@
-package org.jacis.store;
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+package org.jacis.store;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
@@ -13,6 +11,8 @@ import org.jacis.plugin.JacisTransactionListener;
 import org.jacis.plugin.JacisTransactionListenerAdapter;
 import org.jacis.trackedviews.TrackedView;
 import org.jacis.trackedviews.TrackedViewClustered;
+
+import java.util.*;
 
 /**
  * @author Jan Wiemer

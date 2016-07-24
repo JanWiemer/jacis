@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.container;
 
 import org.jacis.container.JacisContainer.StoreIdentifier;
@@ -73,24 +77,24 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   }
 
   /**
-   * Sets if the store should keep track of the original value of an object at the time it was copied to the transactional view.
+   * Sets if all registered tracked views are checked for consistency on each commit.
    * Note that the value should only be set before the corresponding store is used, otherwise the behavior is undefined.
-   * @param trackOriginalValue Defining if the store keeps track of the original value of an object at the time it was copied to the transactional view. 
-   * @return The object type specification itself for method chaining.
-   */
-  public JacisObjectTypeSpec<K, TV, CV> setTrackOriginalValue(boolean trackOriginalValue) {
-    this.trackOriginalValue = trackOriginalValue;
-    return this;
-  }
-
-  /**
-   * Sets if all registered tracked views are checked for consistency on each commit. 
-   * Note that the value should only be set before the corresponding store is used, otherwise the behavior is undefined.
-   * @param checkViewsOnCommit Defining if all registered tracked views are checked for consistency on each commit. 
+   * @param checkViewsOnCommit Defining if all registered tracked views are checked for consistency on each commit.
    * @return The object type specification itself for method chaining.
    */
   public JacisObjectTypeSpec<K, TV, CV> setCheckViewsOnCommit(boolean checkViewsOnCommit) {
     this.checkViewsOnCommit = checkViewsOnCommit;
+    return this;
+  }
+
+  /**
+   * Sets if the store should keep track of the original value of an object at the time it was copied to the transactional view.
+   * Note that the value should only be set before the corresponding store is used, otherwise the behavior is undefined.
+   * @param trackOriginalValue Defining if the store keeps track of the original value of an object at the time it was copied to the transactional view.
+   * @return The object type specification itself for method chaining.
+   */
+  public JacisObjectTypeSpec<K, TV, CV> setTrackOriginalValue(boolean trackOriginalValue) {
+    this.trackOriginalValue = trackOriginalValue;
     return this;
   }
 

@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.example;
 
 import org.jacis.container.JacisContainer;
@@ -24,42 +28,6 @@ public class JacisExample1 {
   // to prevent any modification after the method switchToReadOnlyMode is called.
   // The AbstractReadOnlyModeSupportingObject provides a checkWritable method throwing an exception
   // if the object is in read only mode.
-
-  static class Account extends AbstractReadOnlyModeSupportingObject implements JacisCloneable<Account> {
-
-    private final String name;
-    private long balance;
-
-    public Account(String name) {
-      this.name = name;
-    }
-
-    @Override
-    public Account clone() {
-      return (Account) super.clone();
-    }
-
-    Account deposit(long amount) {
-      checkWritable();
-      balance += amount;
-      return this;
-    }
-
-    public Account withdraw(long amount) {
-      checkWritable();
-      balance -= amount;
-      return this;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public long getBalance() {
-      return balance;
-    }
-
-  }
 
   public static void main(String[] args) {
     // first we initialize a JACIS container:
@@ -110,6 +78,42 @@ public class JacisExample1 {
       Account acc = store.get("account1");
       System.out.println("balance of " + acc.getName() + ": " + acc.getBalance());
     });
+
+  }
+
+  static class Account extends AbstractReadOnlyModeSupportingObject implements JacisCloneable<Account> {
+
+    private final String name;
+    private long balance;
+
+    public Account(String name) {
+      this.name = name;
+    }
+
+    @Override
+    public Account clone() {
+      return (Account) super.clone();
+    }
+
+    Account deposit(long amount) {
+      checkWritable();
+      balance += amount;
+      return this;
+    }
+
+    public Account withdraw(long amount) {
+      checkWritable();
+      balance -= amount;
+      return this;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public long getBalance() {
+      return balance;
+    }
 
   }
 }

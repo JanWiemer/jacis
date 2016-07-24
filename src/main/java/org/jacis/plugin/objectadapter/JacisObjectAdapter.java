@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.plugin.objectadapter;
 
 /**
@@ -10,12 +14,12 @@ package org.jacis.plugin.objectadapter;
  */
 public interface JacisObjectAdapter<TV, CV> {
 
-  public abstract TV cloneCommitted2WritableTxView(CV value);
+  TV cloneCommitted2WritableTxView(CV value);
 
-  public abstract TV cloneCommitted2ReadOnlyTxView(CV value);
+  TV cloneCommitted2ReadOnlyTxView(CV value);
 
-  public abstract TV cloneTxView2ReadOnlyTxView(TV value);
+  TV cloneTxView2ReadOnlyTxView(TV value);
 
-  public abstract CV cloneTxView2Committed(TV value);
+  CV cloneTxView2Committed(TV value);
 
 }

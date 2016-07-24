@@ -1,6 +1,8 @@
-package org.jacis.cloning;
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
 
-import static org.junit.Assert.assertEquals;
+package org.jacis.cloning;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.store.JacisStore;
@@ -9,6 +11,8 @@ import org.jacis.testhelper.TestObject;
 import org.jacis.testhelper.TrackedTestView;
 import org.jacis.trackedviews.TrackedView;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class JacisStoreWithCloningTrackedViewTest {
 

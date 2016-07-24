@@ -1,11 +1,15 @@
-package org.jacis.plugin.objectadapter.cloning;
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+package org.jacis.plugin.objectadapter.cloning;
 
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 import org.jacis.plugin.objectadapter.readonly.DefaultJacisStoreEntryReadOnlyModeAdapter;
 import org.jacis.plugin.objectadapter.readonly.JacisStoreEntryReadOnlyModeAdapter;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
 
@@ -62,7 +66,7 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
     }
     V clone;
     if (value instanceof JacisCloneable) {
-      clone = (V) ((JacisCloneable<V>) value).clone();
+      clone = ((JacisCloneable<V>) value).clone();
     } else {
       clone = cloneByReflection(value);
     }

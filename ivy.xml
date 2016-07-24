@@ -1,3 +1,7 @@
+<!--
+  ~ Copyright (c) 2016. Jan Wiemer
+  -->
+
 <ivy-module version="2.0">
   <info organisation="org.jacis" module="jacis" revision="1.0" status="release"/>
  <configurations>

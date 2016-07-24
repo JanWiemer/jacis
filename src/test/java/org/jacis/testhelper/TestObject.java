@@ -1,9 +1,13 @@
-package org.jacis.testhelper;
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
 
-import java.io.Serializable;
+package org.jacis.testhelper;
 
 import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
 import org.jacis.plugin.objectadapter.readonly.AbstractReadOnlyModeSupportingObject;
+
+import java.io.Serializable;
 
 /**
  * @author Jan Wiemer
@@ -36,24 +40,24 @@ public class TestObject extends AbstractReadOnlyModeSupportingObject implements 
     return name;
   }
 
-  public long getValue() {
-    return value;
-  }
-
-  public String getStrValue() {
-    return strValue;
-  }
-
   public TestObject setName(String name) {
     checkWritable();
     this.name = name;
     return this;
   }
 
+  public long getValue() {
+    return value;
+  }
+
   public TestObject setValue(long value) {
     checkWritable();
     this.value = value;
     return this;
+  }
+
+  public String getStrValue() {
+    return strValue;
   }
 
   public TestObject setStrValue(String strValue) {
@@ -96,9 +100,7 @@ public class TestObject extends AbstractReadOnlyModeSupportingObject implements 
         return false;
     } else if (!name.equals(other.name))
       return false;
-    if (value != other.value)
-      return false;
-    return true;
+    return value == other.value;
   }
 
 }

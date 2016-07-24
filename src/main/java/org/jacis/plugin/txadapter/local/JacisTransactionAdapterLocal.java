@@ -1,12 +1,16 @@
-package org.jacis.plugin.txadapter.local;
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
 
-import java.util.concurrent.atomic.AtomicLong;
+package org.jacis.plugin.txadapter.local;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisNoTransactionException;
 import org.jacis.exception.JacisTransactionAlreadyStartedException;
 import org.jacis.plugin.txadapter.JacisTransactionAdapter;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author Jan Wiemer

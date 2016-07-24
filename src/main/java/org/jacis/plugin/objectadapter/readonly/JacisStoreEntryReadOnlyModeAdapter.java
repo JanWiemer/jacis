@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.plugin.objectadapter.readonly;
 
 /**
@@ -9,10 +13,10 @@ package org.jacis.plugin.objectadapter.readonly;
  */
 public interface JacisStoreEntryReadOnlyModeAdapter<V> {
 
-  public V switchToReadOnlyMode(V value);
+  V switchToReadOnlyMode(V value);
 
-  public V switchToReadWriteMode(V value);
+  V switchToReadWriteMode(V value);
 
-  public boolean isReadOnly(V value);
+  boolean isReadOnly(V value);
 
 }

@@ -1,11 +1,15 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.store;
+
+import org.jacis.container.JacisTransactionHandle;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.jacis.container.JacisTransactionHandle;
 
 /**
  * @author Jan Wiemer
@@ -18,12 +22,12 @@ import org.jacis.container.JacisTransactionHandle;
  */
 class JacisStoreTxView<K, TV, CV> {
 
-  private JacisStore<K, TV, CV> store; // main store
-  private final JacisTransactionHandle tx; // the transaction 
+  private final JacisTransactionHandle tx; // the transaction
   private final long creationTimestamp; // in system milliseconds (timestamp usually set at first access returning a TX view)
   private final Map<K, StoreEntryTxView<K, TV, CV>> storeTxView; // entries with an own view in this TX
-  private boolean commitPending = false; // commit pending / prepare already called
   private final String readOnlyTxName; // the name of the TX if this is a read only snapshot (null <-> writable)
+  private JacisStore<K, TV, CV> store; // main store
+  private boolean commitPending = false; // commit pending / prepare already called
   private String invalidationReason = null; // gives the reason (null means valid) why the tx has been invalidated. Attempts to commit the tx will be ignored.
 
   public JacisStoreTxView(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {

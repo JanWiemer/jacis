@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.plugin.objectadapter.readonly;
 
 /**
@@ -7,13 +11,13 @@ package org.jacis.plugin.objectadapter.readonly;
  */
 public interface JacisReadonlyModeSupport {
 
-  public void switchToReadOnlyMode();
+  void switchToReadOnlyMode();
 
-  public void switchToReadWriteMode();
+  void switchToReadWriteMode();
 
-  public boolean isReadOnly();
+  boolean isReadOnly();
 
-  public default void switchToReadOnlyMode(boolean readOnlyMode) {
+  default void switchToReadOnlyMode(boolean readOnlyMode) {
     if (readOnlyMode) {
       switchToReadOnlyMode();
     } else {

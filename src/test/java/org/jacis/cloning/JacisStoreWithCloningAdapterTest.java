@@ -1,10 +1,8 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.cloning;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jacis.store.JacisStore;
 import org.jacis.testhelper.JacisTestHelper;
@@ -12,6 +10,10 @@ import org.jacis.testhelper.TestObject;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.*;
 
 public class JacisStoreWithCloningAdapterTest {
 

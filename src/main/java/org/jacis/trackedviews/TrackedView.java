@@ -1,8 +1,12 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.trackedviews;
 
-import java.util.List;
-
 import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
+
+import java.util.List;
 
 /**
  * A tracked view can be registered at a JACIS store to automatically keep a view (typically some cummulated values) up to date.
@@ -14,10 +18,10 @@ import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
  */
 public interface TrackedView<V> extends JacisCloneable<TrackedView<V>> {
 
-  public void trackModification(V oldValue, V newValue);
+  void trackModification(V oldValue, V newValue);
 
-  public void checkView(List<V> values);
+  void checkView(List<V> values);
 
-  public void clear();
+  void clear();
 
 }

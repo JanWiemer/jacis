@@ -1,14 +1,16 @@
-/**
- * Copyright (c) 2010 Jan Wiemer
+/*
+ * Copyright (c) 2016. Jan Wiemer
  */
 package org.jacis.store;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
+import org.jacis.container.JacisContainer;
+import org.jacis.container.JacisContainer.StoreIdentifier;
+import org.jacis.container.JacisObjectTypeSpec;
+import org.jacis.container.JacisTransactionHandle;
+import org.jacis.plugin.JacisModificationListener;
+import org.jacis.plugin.objectadapter.JacisObjectAdapter;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -18,13 +20,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.jacis.container.JacisContainer;
-import org.jacis.container.JacisContainer.StoreIdentifier;
-import org.jacis.container.JacisObjectTypeSpec;
-import org.jacis.container.JacisTransactionHandle;
-import org.jacis.plugin.JacisModificationListener;
-import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
  * @author Jan Wiemer
@@ -391,6 +386,11 @@ public class JacisStore<K, TV, CV> {
     return new KeyValuePair<K, TV>(key, val);
   }
 
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "-(" + spec + ": #" + store.size() + " entries)";
+  }
+
   private static class KeyValuePair<PK, PV> {
     public PK key;
     public PV val;
@@ -400,11 +400,6 @@ public class JacisStore<K, TV, CV> {
       this.val = val;
     }
 
-  }
-
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "-(" + spec + ": #" + store.size() + " entries)";
   }
 
 }

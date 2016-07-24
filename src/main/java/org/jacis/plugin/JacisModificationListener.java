@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.plugin;
 
 import org.jacis.container.JacisTransactionHandle;
@@ -12,6 +16,6 @@ import org.jacis.container.JacisTransactionHandle;
  */
 public interface JacisModificationListener<K, V> {
 
-  public void onModification(K key, V oldValue, V newValue, JacisTransactionHandle tx);
+  void onModification(K key, V oldValue, V newValue, JacisTransactionHandle tx);
 
 }

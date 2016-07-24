@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.trackedviews;
 
 import java.util.Collection;
@@ -13,8 +17,8 @@ import java.util.Collection;
  */
 public interface TrackedViewClustered<V, SVK, SVT extends TrackedView<V>> extends TrackedView<V> {
 
-  public SVT getSubView(SVK key);
+  SVT getSubView(SVK key);
 
-  public Collection<SVK> getSubViewKeys();
+  Collection<SVK> getSubViewKeys();
 
 }

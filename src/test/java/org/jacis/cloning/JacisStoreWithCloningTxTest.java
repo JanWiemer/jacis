@@ -1,8 +1,8 @@
-package org.jacis.cloning;
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+package org.jacis.cloning;
 
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisStaleObjectException;
@@ -13,6 +13,8 @@ import org.jacis.testhelper.TestObject;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.*;
 
 public class JacisStoreWithCloningTxTest {
 

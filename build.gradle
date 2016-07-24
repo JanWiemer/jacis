@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
