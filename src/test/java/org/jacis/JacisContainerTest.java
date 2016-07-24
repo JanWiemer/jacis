@@ -1,7 +1,5 @@
 package org.jacis;
 
-import static org.junit.Assert.assertNotNull;
-
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
@@ -10,6 +8,9 @@ import org.jacis.testhelper.TestObject;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class JacisContainerTest {
 
@@ -25,9 +26,23 @@ public class JacisContainerTest {
   @Test
   public void testRegisterStore() {
     JacisContainer container = new JacisContainer();
-    JacisObjectTypeSpec<String, TestObject, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class, new JacisCloningObjectAdapter<TestObject>());
+    JacisObjectTypeSpec<String, TestObject, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class, new JacisCloningObjectAdapter<>());
     container.createStore(objectTypeSpec);
     JacisStore<String, TestObject, TestObject> store = container.getStore(String.class, TestObject.class);
+    assertEquals(String.class, store.getObjectTypeSpec().getKeyClass());
+    assertEquals(TestObject.class, store.getObjectTypeSpec().getValueClass());
+    assertEquals(String.class, store.getObjectTypeSpec().asStoreIdentifier().getKeyClass());
+    assertEquals(TestObject.class, store.getObjectTypeSpec().asStoreIdentifier().getValueClass());
+    assertNotNull(store);
+  }
+
+  @Test
+  public void testClearStores() {
+    JacisContainer container = new JacisContainer();
+    JacisObjectTypeSpec<String, TestObject, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class, new JacisCloningObjectAdapter<>());
+    container.createStore(objectTypeSpec);
+    JacisStore<String, TestObject, TestObject> store = container.getStore(String.class, TestObject.class);
+    container.clearAllStores();
     assertNotNull(store);
   }
 

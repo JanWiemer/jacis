@@ -1,13 +1,7 @@
-/**
+/*
  * Copyright (c) 2010 Jan Wiemer
  */
 package org.jacis.container;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import org.jacis.exception.JacisNoTransactionException;
 import org.jacis.exception.JacisStaleObjectException;
@@ -18,6 +12,12 @@ import org.jacis.plugin.txadapter.local.JacisTransactionAdapterLocal;
 import org.jacis.store.JacisStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * = The Jacis Container Holding the Stores for the Different Object Types
@@ -40,11 +40,6 @@ public class JacisContainer {
   /** List of transaction listeners / observers (type {@link JacisTransactionListener}) providing call-backs before / after prepare / commit / rollback. */
   private final List<JacisTransactionListener> txListeners = new ArrayList<>();
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "(#stores=" + storeMap.size() + ")";
-  }
-
   /**
    * Create a container with the passed transaction adapter.
    * @param txAdapter The transaction adapter binding the container to  externally managed transactions
@@ -61,6 +56,11 @@ public class JacisContainer {
     this(new JacisTransactionAdapterLocal());
   }
 
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "(#stores=" + storeMap.size() + ")";
+  }
+
   /**
    * Register the passed transaction listener ({@link JacisTransactionListener}).
    * All registered listeners will be informed before / after each prepare / commit / rollback of any transaction on this container.
@@ -68,6 +68,7 @@ public class JacisContainer {
    * @return This container itself for method chaining.
    */
   public JacisContainer registerTransactionListener(JacisTransactionListener listener) {
+
     txListeners.add(listener);
     return this;
   }
@@ -80,7 +81,7 @@ public class JacisContainer {
    */
   public <K, TV, CV> JacisStore<K, TV, CV> createStore(JacisObjectTypeSpec<K, TV, CV> objectTypeSpec) {
     StoreIdentifier storeIdentifier = new StoreIdentifier(objectTypeSpec.getKeyClass(), objectTypeSpec.getValueClass());
-    JacisStore<K, TV, CV> store = new JacisStore<K, TV, CV>(this, storeIdentifier, objectTypeSpec);
+    JacisStore<K, TV, CV> store = new JacisStore<>(this, storeIdentifier, objectTypeSpec);
     storeMap.put(storeIdentifier, store);
     return store;
   }
@@ -104,7 +105,7 @@ public class JacisContainer {
    * All ending transactions are invalidated, that means any attempt to prepare or commit them is ignored (without an exception).
    */
   public synchronized void clearAllStores() {
-    storeMap.values().forEach(store -> store.clear());
+    storeMap.values().forEach(JacisStore::clear);
   }
 
   /** @return If for the current thread there is a transaction active on this container. */
@@ -128,7 +129,7 @@ public class JacisContainer {
   public JacisLocalTransaction beginLocalTransaction() throws IllegalStateException {
     String description = Stream.of(new Exception("-").getStackTrace()) // go through the stack trace elements
         .filter(se -> !getClass().getName().equals(se.getClassName())) // ignore all stack trace elements for this class
-        .map(se -> se.toString()).findFirst().orElse("-"); // use the first from outside (the calling method) as description
+        .map(StackTraceElement::toString).findFirst().orElse("-"); // use the first from outside (the calling method) as description
     return beginLocalTransaction(description);
   }
 
@@ -140,7 +141,7 @@ public class JacisContainer {
    * (calling the constructor {@link #JacisContainer()}. Otherwise an {@link IllegalStateException} is thrown.
    * The returned object represents the started transaction and provides method to commit or rollback the transaction.
    * @param description a description of the transaction for logging and monitoring
-   * @return An object representing the stated transaction (type {@link #JacisLocalTransaction()})
+   * @return An object representing the stated transaction (type {@link JacisLocalTransaction})
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
    */
   public JacisLocalTransaction beginLocalTransaction(String description) throws IllegalStateException {
@@ -166,8 +167,8 @@ public class JacisContainer {
     Throwable txException = null;
     try {
       task.run();
-      tx.prepare(); // pase 1 of the two phase commit protocol
-      tx.commit(); // pase 2 of the two phase commit protocol
+      tx.prepare(); // phase 1 of the two phase commit protocol
+      tx.commit(); // phase 2 of the two phase commit protocol
       tx = null;
     } catch (Throwable e) {
       txException = e;
@@ -179,6 +180,7 @@ public class JacisContainer {
         } catch (Throwable rollbackException) {
           RuntimeException exceptionToThrow = new RuntimeException("Rollback failed after " + txException, txException);
           exceptionToThrow.addSuppressed(rollbackException);
+          //noinspection ThrowFromFinallyBlock
           throw exceptionToThrow;
         }
       }
@@ -217,7 +219,7 @@ public class JacisContainer {
    * 
    * @param enforceTx A flag indicating if {@link JacisNoTransactionException} is thrown when no transaction is active for the current thread
    * @return a handle (type {@link JacisTransactionHandle}) for the transaction currently associated with the current thread.
-   * @throws JacisNoTransactionException
+   * @throws JacisNoTransactionException If no transaction is active and the enforceTx flag is set to true
    */
   public JacisTransactionHandle getCurrentTransaction(boolean enforceTx) throws JacisNoTransactionException {
     JacisTransactionHandle tx = txAdapter.getCurrentTransaction(enforceTx);
@@ -236,11 +238,11 @@ public class JacisContainer {
    * @param transaction The transaction handle representing the transaction to prepare.
    */
   public synchronized void internalPrepare(JacisTransactionHandle transaction) {
-    txListeners.stream().forEach(l -> l.beforePrepare(this, transaction));
+    txListeners.forEach(l -> l.beforePrepare(this, transaction));
     for (JacisStore<?, ?, ?> store : storeMap.values()) {
       store.prepare(transaction);
     }
-    txListeners.stream().forEach(l -> l.afterPrepare(this, transaction));
+    txListeners.forEach(l -> l.afterPrepare(this, transaction));
   }
 
   /**
@@ -252,11 +254,11 @@ public class JacisContainer {
    * @param transaction The transaction handle representing the transaction to commit.
    */
   public synchronized void internalCommit(JacisTransactionHandle transaction) {
-    txListeners.stream().forEach(l -> l.beforeCommit(this, transaction));
+    txListeners.forEach(l -> l.beforeCommit(this, transaction));
     for (JacisStore<?, ?, ?> store : storeMap.values()) {
       store.commit(transaction);
     }
-    txListeners.stream().forEach(l -> l.afterCommit(this, transaction));
+    txListeners.forEach(l -> l.afterCommit(this, transaction));
     txAdapter.destroyCurrentTransaction();
   }
 
@@ -269,11 +271,11 @@ public class JacisContainer {
    * @param transaction The transaction handle representing the transaction to rollback.
    */
   public synchronized void internalRollback(JacisTransactionHandle transaction) {
-    txListeners.stream().forEach(l -> l.beforeRollback(this, transaction));
+    txListeners.forEach(l -> l.beforeRollback(this, transaction));
     for (JacisStore<?, ?, ?> store : storeMap.values()) {
       store.rollback(transaction);
     }
-    txListeners.stream().forEach(l -> l.afterRollback(this, transaction));
+    txListeners.forEach(l -> l.afterRollback(this, transaction));
     txAdapter.destroyCurrentTransaction();
   }
 
@@ -293,7 +295,7 @@ public class JacisContainer {
      * @param keyClass Type of the keys in the store 
      * @param valueClass Type of the values in the store 
      */
-    public StoreIdentifier(Class<?> keyClass, Class<?> valueClass) {
+    StoreIdentifier(Class<?> keyClass, Class<?> valueClass) {
       this.keyClass = keyClass;
       this.valueClass = valueClass;
     }

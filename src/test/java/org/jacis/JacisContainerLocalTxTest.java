@@ -1,9 +1,5 @@
 package org.jacis;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisNoTransactionException;
@@ -16,11 +12,13 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.junit.Assert.*;
+
 public class JacisContainerLocalTxTest {
 
   private static final Logger log = LoggerFactory.getLogger(JacisContainerLocalTxTest.class);
 
-  protected void assertNoTransaction(JacisContainer container) {
+  private void assertNoTransaction(JacisContainer container) {
     try {
       JacisTransactionHandle tx = container.getCurrentTransaction(true);
       fail("No teansaction expected but found: " + tx);
@@ -38,16 +36,19 @@ public class JacisContainerLocalTxTest {
   @Test
   public void testBeginCommit() {
     JacisContainer container = new JacisContainer();
-    JacisLocalTransaction tx = container.beginLocalTransaction();
+    JacisLocalTransaction tx = container.beginLocalTransaction("test");
+    assertFalse(container.isInTransaction());
     assertEquals(tx, container.getCurrentTransaction(true).getExternalTransaction());
+    assertTrue(container.isInTransaction());
     tx.commit();
+    assertFalse(container.isInTransaction());
     assertNoTransaction(container);
   }
 
   @Test
   public void testBeginRollback() {
     JacisContainer container = new JacisContainer();
-    JacisLocalTransaction tx = container.beginLocalTransaction();
+    JacisLocalTransaction tx = container.beginLocalTransaction("test");
     assertEquals(tx, container.getCurrentTransaction(true).getExternalTransaction());
     tx.rollback();
     assertNoTransaction(container);
@@ -56,7 +57,7 @@ public class JacisContainerLocalTxTest {
   @Test
   public void testBeginPrepareCommit() {
     JacisContainer container = new JacisContainer();
-    JacisLocalTransaction tx = container.beginLocalTransaction();
+    JacisLocalTransaction tx = container.beginLocalTransaction("test");
     assertEquals(tx, container.getCurrentTransaction(true).getExternalTransaction());
     tx.prepare();
     assertEquals(tx, container.getCurrentTransaction(true).getExternalTransaction());
@@ -67,7 +68,7 @@ public class JacisContainerLocalTxTest {
   @Test
   public void testBeginPrepareRollback() {
     JacisContainer container = new JacisContainer();
-    JacisLocalTransaction tx = container.beginLocalTransaction();
+    JacisLocalTransaction tx = container.beginLocalTransaction("test");
     assertEquals(tx, container.getCurrentTransaction(true).getExternalTransaction());
     tx.prepare();
     assertEquals(tx, container.getCurrentTransaction(true).getExternalTransaction());
@@ -78,22 +79,22 @@ public class JacisContainerLocalTxTest {
   @Test(expected = JacisTransactionAlreadyStartedException.class)
   public void testBeginBegin() {
     JacisContainer container = new JacisContainer();
-    container.beginLocalTransaction();
-    container.beginLocalTransaction();
+    container.beginLocalTransaction("test");
+    container.beginLocalTransaction("test");
   }
 
   @Test(expected = JacisTransactionAlreadyStartedException.class)
   public void testBeginPrepareBegin() {
     JacisContainer container = new JacisContainer();
-    JacisLocalTransaction tx = container.beginLocalTransaction();
+    JacisLocalTransaction tx = container.beginLocalTransaction("test");
     tx.prepare();
-    container.beginLocalTransaction();
+    container.beginLocalTransaction("test");
   }
 
   @Test(expected = JacisNoTransactionException.class)
   public void testBeginCommitCommit() {
     JacisContainer container = new JacisContainer();
-    JacisLocalTransaction tx = container.beginLocalTransaction();
+    JacisLocalTransaction tx = container.beginLocalTransaction("test");
     tx.commit();
     tx.commit();
   }
@@ -101,7 +102,7 @@ public class JacisContainerLocalTxTest {
   @Test(expected = JacisNoTransactionException.class)
   public void testBeginCommitRollback() {
     JacisContainer container = new JacisContainer();
-    JacisLocalTransaction tx = container.beginLocalTransaction();
+    JacisLocalTransaction tx = container.beginLocalTransaction("test");
     tx.commit();
     tx.rollback();
   }
@@ -109,7 +110,7 @@ public class JacisContainerLocalTxTest {
   @Test(expected = JacisNoTransactionException.class)
   public void testBeginRollbackCommit() {
     JacisContainer container = new JacisContainer();
-    JacisLocalTransaction tx = container.beginLocalTransaction();
+    JacisLocalTransaction tx = container.beginLocalTransaction("test");
     tx.rollback();
     tx.commit();
   }
@@ -117,7 +118,7 @@ public class JacisContainerLocalTxTest {
   @Test(expected = JacisNoTransactionException.class)
   public void testBeginRollbackRollback() {
     JacisContainer container = new JacisContainer();
-    JacisLocalTransaction tx = container.beginLocalTransaction();
+    JacisLocalTransaction tx = container.beginLocalTransaction("test");
     tx.rollback();
     tx.rollback();
   }
@@ -133,7 +134,7 @@ public class JacisContainerLocalTxTest {
   public void testInsertWithinTransaction() {
     JacisContainer container = new JacisContainer();
     JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning(container);
-    JacisLocalTransaction tx = container.beginLocalTransaction();
+    JacisLocalTransaction tx = container.beginLocalTransaction("test");
     store.update("obj-1", new TestObject("obj-1", 1));
     tx.commit();
   }
@@ -141,7 +142,7 @@ public class JacisContainerLocalTxTest {
   @Test()
   public void testTransactionDescription() {
     JacisContainer container = new JacisContainer();
-    JacisLocalTransaction tx = container.beginLocalTransaction();
+    JacisLocalTransaction tx = container.beginLocalTransaction("test");
     log.info("Transaction: {}", tx);
     assertTrue(tx.getTxName().contains(JacisContainerLocalTxTest.class.getName()));
     tx.commit();
