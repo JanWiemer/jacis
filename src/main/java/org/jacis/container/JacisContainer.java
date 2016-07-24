@@ -121,9 +121,9 @@ public class JacisContainer {
    * (calling the constructor {@link #JacisContainer()}. Otherwise an {@link IllegalStateException} is thrown.
    * The returned object represents the started transaction and provides method to commit or rollback the transaction.
    * Note that each transaction is started with a description for logging and monitoring.
-   * It is recommended to pass an explicit description by calling the method {@link #beginLocalTransaction(String description)).
+   * It is recommended to pass an explicit description by calling the method {@link #beginLocalTransaction(String)} ).
    * This convenience method tries to compute a default description by analyzing the call stack to determine the calling method.
-   * @return An object representing the stated transaction (type {@link #JacisLocalTransaction()})
+   * @return An object representing the stated transaction (type {@link JacisLocalTransaction})
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
    */
   public JacisLocalTransaction beginLocalTransaction() throws IllegalStateException {
@@ -194,6 +194,7 @@ public class JacisContainer {
    * If the {@link JacisStaleObjectException} is thrown repeatedly for all these attempts the exception is propagated to the caller.
    * In case of any other exception the transaction is rolled back and the exception is propagated to the caller immediately.
    * @param task The task to execute inside a locally managed transaction
+   * @param retries Number of retries if transaction failed with {@link JacisStaleObjectException}
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
    */
   public void withLocalTxAndRetry(int retries, Runnable task) {
@@ -233,7 +234,7 @@ public class JacisContainer {
    * Prepare the transaction represented by the passed transaction handle.
    * Note that this method usually is only called internally.
    * Usually the commit is called either at the local transaction returned
-   * by the method starting this transaction ({@link #beginLocalTransaction(String description)),
+   * by the method starting this transaction ({@link #beginLocalTransaction(String)}),
    * or by the external transaction framework via the transaction adapter.
    * @param transaction The transaction handle representing the transaction to prepare.
    */
@@ -249,7 +250,7 @@ public class JacisContainer {
    * Commit the transaction represented by the passed transaction handle.
    * Note that this method usually is only called internally.
    * Usually the commit is called either at the local transaction returned
-   * by the method starting this transaction ({@link #beginLocalTransaction(String description)),
+   * by the method starting this transaction ({@link #beginLocalTransaction(String)}),
    * or by the external transaction framework via the transaction adapter.
    * @param transaction The transaction handle representing the transaction to commit.
    */
@@ -266,7 +267,7 @@ public class JacisContainer {
    * Rollback the transaction represented by the passed transaction handle.
    * Note that this method usually is only called internally.
    * Usually the commit is called either at the local transaction returned
-   * by the method starting this transaction ({@link #beginLocalTransaction(String description)),
+   * by the method starting this transaction ({@link #beginLocalTransaction(String)}),
    * or by the external transaction framework via the transaction adapter.
    * @param transaction The transaction handle representing the transaction to rollback.
    */

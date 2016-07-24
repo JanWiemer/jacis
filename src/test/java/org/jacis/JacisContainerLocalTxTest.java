@@ -41,7 +41,7 @@ public class JacisContainerLocalTxTest {
   public void testBeginCommit() {
     JacisContainer container = new JacisContainer();
     JacisLocalTransaction tx = container.beginLocalTransaction("test");
-    assertFalse(container.isInTransaction());
+    assertTrue(container.isInTransaction());
     assertEquals(tx, container.getCurrentTransaction(true).getExternalTransaction());
     assertTrue(container.isInTransaction());
     tx.commit();
@@ -146,7 +146,7 @@ public class JacisContainerLocalTxTest {
   @Test()
   public void testTransactionDescription() {
     JacisContainer container = new JacisContainer();
-    JacisLocalTransaction tx = container.beginLocalTransaction("test");
+    JacisLocalTransaction tx = container.beginLocalTransaction();
     log.info("Transaction: {}", tx);
     assertTrue(tx.getTxName().contains(JacisContainerLocalTxTest.class.getName()));
     tx.commit();
