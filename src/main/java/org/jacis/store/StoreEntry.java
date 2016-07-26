@@ -20,7 +20,7 @@ class StoreEntry<K, TV, CV> {
   private CV value = null;
   private long version = 0; // version counter will be increased when an updated view of the entry is committed (used for optimistic locking)
   private JacisStoreTxView<K, TV, CV> updatedBy = null; // transaction that has committed the current version (for logging / debugging only) 
-  private JacisStoreTxView<K, TV, CV> lockedFor = null; // transaction this object is locked for (in the time between prepare and commit)
+  private JacisStoreTxView<K, TV, CV> lockedFor = null; // transaction this object is locked for (in the time between prepare and internalCommit)
 
   public StoreEntry(JacisStore<K, TV, CV> store, K key) {
     this.store = store;

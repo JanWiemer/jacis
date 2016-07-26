@@ -10,7 +10,7 @@ import org.jacis.container.JacisTransactionHandle;
 /**
  * @author Jan Wiemer
  *
- * Callback methods before and after prepare, commit and rollback.
+ * Callback methods before and after prepare, internalCommit and rollback.
  */
 public interface JacisTransactionListener {
 

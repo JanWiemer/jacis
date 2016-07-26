@@ -37,7 +37,7 @@ public class JacisStore<K, TV, CV> {
   private final JacisObjectTypeSpec<K, TV, CV> spec;
   private final ConcurrentHashMap<K, StoreEntry<K, TV, CV>> store = new ConcurrentHashMap<>();
   private final Map<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>> txViewMap = Collections.synchronizedMap(new WeakHashMap<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>>());
-  private final ReadWriteLock storeAccessLock = new ReentrantReadWriteLock(true); // lock to synchronize changes on the committed entries of the store (specially during commit)
+  private final ReadWriteLock storeAccessLock = new ReentrantReadWriteLock(true); // lock to synchronize changes on the committed entries of the store (specially during internalCommit)
   private final JacisObjectAdapter<TV, CV> objectAdapter;
   private final TrackedViewRegistry<K, TV, CV> trackedViewRegistry;
   private final List<JacisModificationListener<K, TV>> modificationListeners = new ArrayList<>();
@@ -80,15 +80,15 @@ public class JacisStore<K, TV, CV> {
     return trackedViewRegistry;
   }
 
-  public void prepare(JacisTransactionHandle transaction) {
+  public void internalPrepare(JacisTransactionHandle transaction) {
     withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executePrepare(this, transaction)));
   }
 
-  public void commit(JacisTransactionHandle transaction) {
+  public void internalCommit(JacisTransactionHandle transaction) {
     withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeCommit(this, transaction)));
   }
 
-  public void rollback(JacisTransactionHandle transaction) {
+  public void internalRollback(JacisTransactionHandle transaction) {
     withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeRollback(this, transaction)));
   }
 
@@ -211,11 +211,11 @@ public class JacisStore<K, TV, CV> {
     return store.size();
   }
 
-  public void executeAtomic(Runnable atomicOperation) { // Execute an atomic operation. No commit of any other TX and no other atomic action will interleave.
+  public void executeAtomic(Runnable atomicOperation) { // Execute an atomic operation. No internalCommit of any other TX and no other atomic action will interleave.
     withReadLock(runnableWrapper(atomicOperation));
   }
 
-  public <R> R computeAtomic(Supplier<R> atomicOperation) { // Execute an atomic operation. No commit of any other TX and no other atomic action will interleave.
+  public <R> R computeAtomic(Supplier<R> atomicOperation) { // Execute an atomic operation. No internalCommit of any other TX and no other atomic action will interleave.
     return withReadLock(atomicOperation);
   }
 

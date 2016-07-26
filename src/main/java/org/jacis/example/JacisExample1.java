@@ -43,11 +43,11 @@ public class JacisExample1 {
     Account account1 = new Account("account1");
     // modifications (and creation of new objects) have to be notified to the store by calling:
     store.update(account1.getName(), account1);
-    // now we commit the transaction. Afterwards all other transactions can see our new Account
+    // now we internalCommit the transaction. Afterwards all other transactions can see our new Account
     tx.commit();
 
     // we use a helper method executing some code inside a transaction to deposit some money on the account.
-    // Note that the update is necessary, otherwise the change will be lost after commit (try it)
+    // Note that the update is necessary, otherwise the change will be lost after internalCommit (try it)
     container.withLocalTx(() -> {
       Account acc = store.get("account1");
       acc.deposit(100);

@@ -25,22 +25,22 @@ class JacisStoreTxView<K, TV, CV> {
   private final JacisTransactionHandle tx; // the transaction
   private final long creationTimestamp; // in system milliseconds (timestamp usually set at first access returning a TX view)
   private final Map<K, StoreEntryTxView<K, TV, CV>> storeTxView; // entries with an own view in this TX
-  private final String readOnlyTxName; // the name of the TX if this is a read only snapshot (null <-> writable)
+  private final String readOnlyTxId; // the name of the TX if this is a read only snapshot (null <-> writable)
   private JacisStore<K, TV, CV> store; // main store
-  private boolean commitPending = false; // commit pending / prepare already called
-  private String invalidationReason = null; // gives the reason (null means valid) why the tx has been invalidated. Attempts to commit the tx will be ignored.
+  private boolean commitPending = false; // internalCommit pending / prepare already called
+  private String invalidationReason = null; // gives the reason (null means valid) why the tx has been invalidated. Attempts to internalCommit the tx will be ignored.
 
   public JacisStoreTxView(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
     this.store = store;
     this.tx = transaction;
-    this.readOnlyTxName = null;
+    this.readOnlyTxId = null;
     this.creationTimestamp = System.currentTimeMillis();
     this.storeTxView = new HashMap<>();
   }
 
-  public JacisStoreTxView(String readOnlyTxName, JacisStoreTxView<K, TV, CV> orig) { // only to create a read only snapshot
+  public JacisStoreTxView(String readOnlyTxId, JacisStoreTxView<K, TV, CV> orig) { // only to create a read only snapshot
     this.tx = orig.tx;
-    this.readOnlyTxName = readOnlyTxName;
+    this.readOnlyTxId = readOnlyTxId;
     this.creationTimestamp = orig.creationTimestamp;
     Map<K, StoreEntryTxView<K, TV, CV>> origCache = orig.storeTxView;
     Map<K, StoreEntryTxView<K, TV, CV>> readOnlyCache = new HashMap<>(origCache.size());
@@ -51,12 +51,12 @@ class JacisStoreTxView<K, TV, CV> {
     storeTxView = readOnlyCache;
   }
 
-  public String getTxName() {
-    return readOnlyTxName == null ? tx.getTxName() : readOnlyTxName + "|" + tx.getTxName();
+  public String getTxId() {
+    return readOnlyTxId == null ? tx.getTxId() : readOnlyTxId + "|" + tx.getTxId();
   }
 
-  public String getTxShortName() {
-    return tx.getTxShortName();
+  public String getTxDescription() {
+    return tx.getTxDescription();
   }
 
   public JacisTransactionHandle getTransaction() {
@@ -68,7 +68,7 @@ class JacisStoreTxView<K, TV, CV> {
   }
 
   public boolean isReadOnly() {
-    return readOnlyTxName != null;
+    return readOnlyTxId != null;
   }
 
   public boolean isCommitPending() {
@@ -135,17 +135,17 @@ class JacisStoreTxView<K, TV, CV> {
   @Override
   public String toString() {
     StringBuilder b = new StringBuilder();
-    if (readOnlyTxName != null) {
-      b.append(readOnlyTxName).append("(snapshot-from:").append(tx).append(")");
+    if (readOnlyTxId != null) {
+      b.append(readOnlyTxId).append("(snapshot-from:").append(tx).append(")");
     } else {
       b.append(tx);
     }
+    b.append("(#entries=").append(storeTxView.size()).append(")");
     if (commitPending) {
       b.append("[COMMIT-PENDING]");
     }
-    b.append("(#entries=").append(storeTxView.size()).append(")");
     if (isReadOnly()) {
-      b.append("[readOnly]");
+      b.append("[READ-ONLY]");
     }
     if (isInvalidated()) {
       b.append("[INVALIDATED because ").append(getInvalidationReason()).append("]");

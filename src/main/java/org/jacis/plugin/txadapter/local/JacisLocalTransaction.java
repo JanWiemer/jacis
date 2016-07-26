@@ -15,21 +15,27 @@ import org.jacis.exception.JacisNoTransactionException;
  */
 public class JacisLocalTransaction {
 
-  private final String txName;
+  private final String txId;
   private JacisContainer jacisContainer;
   private JacisTransactionHandle jacisTransactionHandle;
   private boolean destroyed = false;
 
-  JacisLocalTransaction(String txName, JacisContainer jacisContainer) {
-    this.txName = txName;
-    this.jacisContainer = jacisContainer;
+  JacisLocalTransaction(String txId) {
+    this.txId = txId;
   }
 
-  public String getTxName() {
-    return txName;
+  public String getTxId() {
+    return txId;
+  }
+
+  public String getTxDescription() {
+    return jacisTransactionHandle == null ? null : jacisTransactionHandle.getTxDescription();
   }
 
   void joinCurrentTransaction(JacisTransactionHandle txHandle, JacisContainer container) {
+    if (!txId.equals(txHandle.getTxId())) {
+      throw new IllegalArgumentException("Passed txHandle " + txHandle + " does not match the id of the local transaction " + txId);
+    }
     this.jacisTransactionHandle = txHandle;
     this.jacisContainer = container;
   }
@@ -65,7 +71,7 @@ public class JacisLocalTransaction {
 
   @Override
   public int hashCode() {
-    return txName.hashCode();
+    return txId.hashCode();
   }
 
   @Override
@@ -78,12 +84,12 @@ public class JacisLocalTransaction {
       return false;
     }
     JacisLocalTransaction that = (JacisLocalTransaction) obj;
-    return txName == null ? that.txName == null : txName.equals(that.txName);
+    return txId == null ? that.txId == null : txId.equals(that.txId);
   }
 
   @Override
   public String toString() {
-    return "TX(" + txName + ")";
+    return "TX(" + txId + ")";
   }
 
 }

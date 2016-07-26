@@ -47,7 +47,7 @@ public class StoreTxDemarcationExecutor {
     } else if (txView.isReadOnly()) {
       throw new IllegalStateException("Commit not allowed for read only transaction " + txView + "!");
     } else if (txView.isInvalidated()) {
-      logger.warn("ignored commit invalidated {} on {} (invalidated because {}) by Thread {}", txView, store, txView.getInvalidationReason(), Thread.currentThread().getName());
+      logger.warn("ignored internalCommit invalidated {} on {} (invalidated because {}) by Thread {}", txView, store, txView.getInvalidationReason(), Thread.currentThread().getName());
       return;
     }
     if (!txView.isCommitPending()) {
@@ -55,14 +55,14 @@ public class StoreTxDemarcationExecutor {
     }
     boolean trace = logger.isTraceEnabled();
     if (trace) {
-      logger.trace("commit {} on {} by Thread {}", txView, store, Thread.currentThread().getName());
+      logger.trace("internalCommit {} on {} by Thread {}", txView, store, Thread.currentThread().getName());
     }
     for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
       K key = entryTxView.getKey();
       StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommitedEntry();
       if (entryTxView.isUpdated()) {
         if (trace) {
-          logger.trace("... commit {}, Store: {}", store.getObjectInfo(key), store);
+          logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
         }
         trackModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
         entryCommitted.update(entryTxView, txView);

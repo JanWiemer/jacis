@@ -37,7 +37,9 @@ public class JacisContainer {
   private final JacisTransactionAdapter txAdapter;
   /** Map assigning the stores (values of type {@link JacisStore}) to the store identifiers (keys of type {@link StoreIdentifier}). */
   private final Map<StoreIdentifier, JacisStore<?, ?, ?>> storeMap = new ConcurrentHashMap<>();
-  /** List of transaction listeners / observers (type {@link JacisTransactionListener}) providing call-backs before / after prepare / commit / rollback. */
+  /**
+   * List of transaction listeners / observers (type {@link JacisTransactionListener}) providing call-backs before / after prepare / internalCommit / rollback.
+   */
   private final List<JacisTransactionListener> txListeners = new ArrayList<>();
 
   /**
@@ -63,7 +65,7 @@ public class JacisContainer {
 
   /**
    * Register the passed transaction listener ({@link JacisTransactionListener}).
-   * All registered listeners will be informed before / after each prepare / commit / rollback of any transaction on this container.
+   * All registered listeners will be informed before / after each prepare / internalCommit / rollback of any transaction on this container.
    * @param listener The transachtion listener to register.
    * @return This container itself for method chaining.
    */
@@ -78,6 +80,9 @@ public class JacisContainer {
    * The passed specification determines the type of the keys and the type of the values stored in the created store.
    * @param objectTypeSpec object type specification describing the objects to be stored.
    * @return A reference to the created store (type {@link JacisStore})
+   * @param <K> Key type of the store entry
+   * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
+   * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    */
   public <K, TV, CV> JacisStore<K, TV, CV> createStore(JacisObjectTypeSpec<K, TV, CV> objectTypeSpec) {
     StoreIdentifier storeIdentifier = new StoreIdentifier(objectTypeSpec.getKeyClass(), objectTypeSpec.getValueClass());
@@ -91,6 +96,9 @@ public class JacisContainer {
    * @param keyClass Class of the keys that should be stored in the searched store 
    * @param valueClass Class of the values that should be stored in the searched store 
    * @return A reference to the found store (type {@link JacisStore}) (null if not found)
+   * @param <K> Key type of the store entry
+   * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
+   * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    */
   @SuppressWarnings("unchecked")
   public <K, TV, CV> JacisStore<K, TV, CV> getStore(Class<K> keyClass, Class<TV> valueClass) {
@@ -102,7 +110,7 @@ public class JacisContainer {
    * Clear all stored objects in all stores in this container.
    * The stores are cleared independently of any transaction context.
    * It is not necessary to start a transaction to call this method.
-   * All ending transactions are invalidated, that means any attempt to prepare or commit them is ignored (without an exception).
+   * All ending transactions are invalidated, that means any attempt to prepare or internalCommit them is ignored (without an exception).
    */
   public synchronized void clearAllStores() {
     storeMap.values().forEach(JacisStore::clear);
@@ -119,7 +127,7 @@ public class JacisContainer {
    * Note that a locally managed transaction can only be started if the container
    * has been initialized with a transaction adapter for locally managed transactions
    * (calling the constructor {@link #JacisContainer()}. Otherwise an {@link IllegalStateException} is thrown.
-   * The returned object represents the started transaction and provides method to commit or rollback the transaction.
+   * The returned object represents the started transaction and provides method to internalCommit or rollback the transaction.
    * Note that each transaction is started with a description for logging and monitoring.
    * It is recommended to pass an explicit description by calling the method {@link #beginLocalTransaction(String)} ).
    * This convenience method tries to compute a default description by analyzing the call stack to determine the calling method.
@@ -139,7 +147,7 @@ public class JacisContainer {
    * Note that a locally managed transaction can only be started if the container
    * has been initialized with a transaction adapter for locally managed transactions
    * (calling the constructor {@link #JacisContainer()}. Otherwise an {@link IllegalStateException} is thrown.
-   * The returned object represents the started transaction and provides method to commit or rollback the transaction.
+   * The returned object represents the started transaction and provides method to internalCommit or rollback the transaction.
    * @param description a description of the transaction for logging and monitoring
    * @return An object representing the stated transaction (type {@link JacisLocalTransaction})
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
@@ -167,8 +175,8 @@ public class JacisContainer {
     Throwable txException = null;
     try {
       task.run();
-      tx.prepare(); // phase 1 of the two phase commit protocol
-      tx.commit(); // phase 2 of the two phase commit protocol
+      tx.prepare(); // phase 1 of the two phase internalCommit protocol
+      tx.commit(); // phase 2 of the two phase internalCommit protocol
       tx = null;
     } catch (Throwable e) {
       txException = e;
@@ -233,7 +241,7 @@ public class JacisContainer {
   /**
    * Prepare the transaction represented by the passed transaction handle.
    * Note that this method usually is only called internally.
-   * Usually the commit is called either at the local transaction returned
+   * Usually the internalCommit is called either at the local transaction returned
    * by the method starting this transaction ({@link #beginLocalTransaction(String)}),
    * or by the external transaction framework via the transaction adapter.
    * @param transaction The transaction handle representing the transaction to prepare.
@@ -241,7 +249,7 @@ public class JacisContainer {
   public synchronized void internalPrepare(JacisTransactionHandle transaction) {
     txListeners.forEach(l -> l.beforePrepare(this, transaction));
     for (JacisStore<?, ?, ?> store : storeMap.values()) {
-      store.prepare(transaction);
+      store.internalPrepare(transaction);
     }
     txListeners.forEach(l -> l.afterPrepare(this, transaction));
   }
@@ -249,15 +257,15 @@ public class JacisContainer {
   /**
    * Commit the transaction represented by the passed transaction handle.
    * Note that this method usually is only called internally.
-   * Usually the commit is called either at the local transaction returned
+   * Usually the internalCommit is called either at the local transaction returned
    * by the method starting this transaction ({@link #beginLocalTransaction(String)}),
    * or by the external transaction framework via the transaction adapter.
-   * @param transaction The transaction handle representing the transaction to commit.
+   * @param transaction The transaction handle representing the transaction to internalCommit.
    */
   public synchronized void internalCommit(JacisTransactionHandle transaction) {
     txListeners.forEach(l -> l.beforeCommit(this, transaction));
     for (JacisStore<?, ?, ?> store : storeMap.values()) {
-      store.commit(transaction);
+      store.internalCommit(transaction);
     }
     txListeners.forEach(l -> l.afterCommit(this, transaction));
     txAdapter.destroyCurrentTransaction();
@@ -266,7 +274,7 @@ public class JacisContainer {
   /**
    * Rollback the transaction represented by the passed transaction handle.
    * Note that this method usually is only called internally.
-   * Usually the commit is called either at the local transaction returned
+   * Usually the internalCommit is called either at the local transaction returned
    * by the method starting this transaction ({@link #beginLocalTransaction(String)}),
    * or by the external transaction framework via the transaction adapter.
    * @param transaction The transaction handle representing the transaction to rollback.
@@ -274,7 +282,7 @@ public class JacisContainer {
   public synchronized void internalRollback(JacisTransactionHandle transaction) {
     txListeners.forEach(l -> l.beforeRollback(this, transaction));
     for (JacisStore<?, ?, ?> store : storeMap.values()) {
-      store.rollback(transaction);
+      store.internalRollback(transaction);
     }
     txListeners.forEach(l -> l.afterRollback(this, transaction));
     txAdapter.destroyCurrentTransaction();
@@ -293,8 +301,8 @@ public class JacisContainer {
 
     /**
      * Create a store identifier with the passed types for the keys and values.
-     * @param keyClass Type of the keys in the store 
-     * @param valueClass Type of the values in the store 
+     * @param keyClass Type of the keys in the store
+     * @param valueClass Type of the values in the store
      */
     StoreIdentifier(Class<?> keyClass, Class<?> valueClass) {
       this.keyClass = keyClass;

@@ -38,10 +38,14 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   private final Class<TV> valueClass;
   /** The object adapter defining how to copy the committed values to the transactional view and back. */
   private final JacisObjectAdapter<TV, CV> objectAdapter;
-  /** Defining if the store keeps track of the original value of an object at the time it was copied to the transactional view. */
-  private boolean trackOriginalValue;
-  /** Defines if all registered tracked views are checked for consistency on each commit. */
-  private boolean checkViewsOnCommit;
+  /**
+   * Defining if the store keeps track of the original value of an object at the time it was copied to the transactional view (default: 'false').
+   */
+  private boolean trackOriginalValue = false;
+  /**
+   * Defines if all registered tracked views are checked for consistency on each internalCommit (default: 'false').
+   */
+  private boolean checkViewsOnCommit = false;
 
   public JacisObjectTypeSpec(Class<K> keyClass, Class<TV> valueClass, JacisObjectAdapter<TV, CV> objectAdapter) {
     this.keyClass = keyClass;
@@ -56,7 +60,7 @@ public class JacisObjectTypeSpec<K, TV, CV> {
     return keyClass;
   }
 
-  /** Return The type of the values in the store */
+  /** @return The type of the values in the store */
   public Class<TV> getValueClass() {
     return valueClass;
   }
@@ -66,20 +70,20 @@ public class JacisObjectTypeSpec<K, TV, CV> {
     return objectAdapter;
   }
 
-  /** @return if the store keeps track of the original value of an object at the time it was copied to the transactional view. */
+  /** @return if the store keeps track of the original value of an object at the time it was copied to the transactional view (default: 'false'). */
   public boolean isTrackOriginalValueEnabled() {
     return trackOriginalValue;
   }
 
-  /** @return if all registered tracked views are checked for consistency on each commit. */
+  /** @return if all registered tracked views are checked for consistency on each internalCommit (default: 'false'). */
   public boolean isCheckViewsOnCommit() {
     return checkViewsOnCommit;
   }
 
   /**
-   * Sets if all registered tracked views are checked for consistency on each commit.
+   * Sets if all registered tracked views are checked for consistency on each internalCommit (default: 'false').
    * Note that the value should only be set before the corresponding store is used, otherwise the behavior is undefined.
-   * @param checkViewsOnCommit Defining if all registered tracked views are checked for consistency on each commit.
+   * @param checkViewsOnCommit Defining if all registered tracked views are checked for consistency on each internalCommit.
    * @return The object type specification itself for method chaining.
    */
   public JacisObjectTypeSpec<K, TV, CV> setCheckViewsOnCommit(boolean checkViewsOnCommit) {
@@ -88,7 +92,7 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   }
 
   /**
-   * Sets if the store should keep track of the original value of an object at the time it was copied to the transactional view.
+   * Sets if the store should keep track of the original value of an object at the time it was copied to the transactional view (default: 'false').
    * Note that the value should only be set before the corresponding store is used, otherwise the behavior is undefined.
    * @param trackOriginalValue Defining if the store keeps track of the original value of an object at the time it was copied to the transactional view.
    * @return The object type specification itself for method chaining.
@@ -99,7 +103,7 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   }
 
   /** @return The store identifier (containing key and value class) for this object type specification. */
-  public StoreIdentifier asStoreIdentifier() {
+  public StoreIdentifier getStoreIdentifier() {
     return new StoreIdentifier(keyClass, valueClass);
   }
 

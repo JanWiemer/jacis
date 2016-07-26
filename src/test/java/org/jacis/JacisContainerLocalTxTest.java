@@ -25,7 +25,7 @@ public class JacisContainerLocalTxTest {
   private void assertNoTransaction(JacisContainer container) {
     try {
       JacisTransactionHandle tx = container.getCurrentTransaction(true);
-      fail("No teansaction expected but found: " + tx);
+      fail("No transaction expected but found: " + tx);
     } catch (JacisNoTransactionException e) {
       // expected
     }
@@ -148,12 +148,12 @@ public class JacisContainerLocalTxTest {
     JacisContainer container = new JacisContainer();
     JacisLocalTransaction tx = container.beginLocalTransaction();
     log.info("Transaction: {}", tx);
-    assertTrue(tx.getTxName().contains(JacisContainerLocalTxTest.class.getName()));
+    assertTrue(tx.getTxDescription().contains(JacisContainerLocalTxTest.class.getName()));
     tx.commit();
     container.withLocalTxAndRetry(5, () -> {
       JacisTransactionHandle tx2 = container.getCurrentTransaction(false);
       log.info("Transaction2: {}", tx2);
-      assertTrue(tx2.getTxName().contains(JacisContainerLocalTxTest.class.getName()));
+      assertTrue(tx2.getTxDescription().contains(JacisContainerLocalTxTest.class.getName()));
     });
   }
 

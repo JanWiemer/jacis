@@ -9,7 +9,7 @@ import org.jacis.container.JacisTransactionHandle;
 /**
  * @author Jan Wiemer
  *
- * Listener that gets notified on each modification during commit.
+ * Listener that gets notified on each modification during internalCommit.
  * 
  * @param <K> Key type of the store entry
  * @param <V> Value type of the store entry

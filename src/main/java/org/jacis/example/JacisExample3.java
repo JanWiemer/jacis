@@ -40,7 +40,7 @@ public class JacisExample3 {
       store.update("account3", new Account("account3").deposit(100));
     });
 
-    // on commit the tracked view is updated automatically
+    // on internalCommit the tracked view is updated automatically
     TotalBalanceView view0 = store.getTrackedViewRegistry().getView(TotalBalanceView.class);
     System.out.println("tracked balance=" + view0.getTotalBalance());
 

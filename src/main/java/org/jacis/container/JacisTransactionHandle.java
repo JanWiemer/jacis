@@ -5,30 +5,53 @@
 package org.jacis.container;
 
 /**
- * @author Jan Wiemer
+ * = Jacis handle for an external transaction.
  *
- * Jacis handle of a transaction.
+ * This class is used by the Jacis store to reference an external transaction the Jacis container is bound to.
+ *
+ * @author Jan Wiemer
  */
 public class JacisTransactionHandle {
 
-  private final String txName;
-  private final String txShortName;
+  /**
+   * The id of the transaction
+   */
+  private final String txId;
+  /**
+   * Description for the transaction giving some more information about the purpose of the transaction (for logging and debugging)
+   */
+  private final String txDescription;
+  /**
+   * A reference to the external (global) transaction (e.g. a JTA transaction)
+   */
   private final Object externalTransaction;
 
-  public JacisTransactionHandle(String txName, String txShortName, Object externalTransaction) {
-    this.txName = txName;
-    this.txShortName = txShortName;
+  /**
+   * Creates a transaction handle with the passed parameters.
+   *
+   * @param txId                The id of the transaction
+   * @param txDescription       A description for the transaction giving some more information about the purpose of the transaction (for logging and debugging)
+   * @param externalTransaction A reference to the external (global) transaction (e.g. a JTA transaction) this handle represents
+   */
+  public JacisTransactionHandle(String txId, String txDescription, Object externalTransaction) {
+    this.txId = txId;
+    this.txDescription = txDescription;
     this.externalTransaction = externalTransaction;
   }
 
-  public String getTxName() {
-    return txName;
+  /** @return The id of the transaction*/
+  public String getTxId() {
+    return txId;
   }
 
-  public String getTxShortName() {
-    return txShortName;
+  /**
+   * @return A description for the transaction giving some more information about the purpose of the transaction (for logging and debugging)
+   */
+  public String getTxDescription() {
+    return txDescription;
   }
 
+  /** @return A reference to the external (global) transaction (e.g. a JTA transaction) this handle represents */
   public Object getExternalTransaction() {
     return externalTransaction;
   }
@@ -53,7 +76,7 @@ public class JacisTransactionHandle {
 
   @Override
   public String toString() {
-    return "TX(" + txName + ")";
+    return "TX(" + txId + ": "+ txDescription+")";
   }
 
 }

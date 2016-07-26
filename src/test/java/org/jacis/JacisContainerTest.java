@@ -31,12 +31,14 @@ public class JacisContainerTest {
   public void testRegisterStore() {
     JacisContainer container = new JacisContainer();
     JacisObjectTypeSpec<String, TestObject, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class, new JacisCloningObjectAdapter<>());
+    objectTypeSpec.setCheckViewsOnCommit(true);
+    objectTypeSpec.setTrackOriginalValue(true);
     container.createStore(objectTypeSpec);
     JacisStore<String, TestObject, TestObject> store = container.getStore(String.class, TestObject.class);
     assertEquals(String.class, store.getObjectTypeSpec().getKeyClass());
     assertEquals(TestObject.class, store.getObjectTypeSpec().getValueClass());
-    assertEquals(String.class, store.getObjectTypeSpec().asStoreIdentifier().getKeyClass());
-    assertEquals(TestObject.class, store.getObjectTypeSpec().asStoreIdentifier().getValueClass());
+    assertEquals(String.class, store.getObjectTypeSpec().getStoreIdentifier().getKeyClass());
+    assertEquals(TestObject.class, store.getObjectTypeSpec().getStoreIdentifier().getValueClass());
     assertNotNull(store);
   }
 
