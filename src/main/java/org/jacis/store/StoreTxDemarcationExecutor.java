@@ -15,11 +15,11 @@ import org.slf4j.LoggerFactory;
  * This class contains the code for actual transaction demarcation.
  *
  */
-public class StoreTxDemarcationExecutor {
+class StoreTxDemarcationExecutor {
 
-  Logger logger = LoggerFactory.getLogger(StoreTxDemarcationExecutor.class);
+  private Logger logger = LoggerFactory.getLogger(StoreTxDemarcationExecutor.class);
 
-  public <K, TV, CV> void executePrepare(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
+  <K, TV, CV> void executePrepare(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
       return;
@@ -40,7 +40,7 @@ public class StoreTxDemarcationExecutor {
     }
   }
 
-  public <K, TV, CV> void executeCommit(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
+  <K, TV, CV> void executeCommit(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
       return;
@@ -73,7 +73,7 @@ public class StoreTxDemarcationExecutor {
     txView.destroy();
   }
 
-  public <K, TV, CV> void executeRollback(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
+  <K, TV, CV> void executeRollback(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
       return;
@@ -99,6 +99,7 @@ public class StoreTxDemarcationExecutor {
   }
 
   private <K, TV, CV> void trackModification(JacisStore<K, TV, CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
+    assert store.getObjectTypeSpec().isTrackOriginalValueEnabled() : "Tracking modification is only possible if original value is tracked";
     for (JacisModificationListener<K, TV> listener : store.getModificationListeners()) {
       listener.onModification(key, oldValue, newValue, tx);
     }

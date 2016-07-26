@@ -5,8 +5,8 @@
 package org.jacis.plugin.objectadapter.cloning;
 
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
-import org.jacis.plugin.objectadapter.readonly.DefaultJacisStoreEntryReadOnlyModeAdapter;
-import org.jacis.plugin.objectadapter.readonly.JacisStoreEntryReadOnlyModeAdapter;
+import org.jacis.plugin.objectadapter.cloning.readonly.DefaultJacisStoreEntryReadOnlyModeAdapter;
+import org.jacis.plugin.objectadapter.cloning.readonly.JacisStoreEntryReadOnlyModeAdapter;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

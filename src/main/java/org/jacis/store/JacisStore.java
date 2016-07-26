@@ -64,6 +64,9 @@ public class JacisStore<K, TV, CV> {
   }
 
   public JacisStore<K, TV, CV> registerModificationListener(JacisModificationListener<K, TV> listener) {
+    if (!getObjectTypeSpec().isTrackOriginalValueEnabled()) {
+      throw new IllegalStateException("Registering modification listeners is only supported if original values are tracked, but they are not tracked for " + this + "! Trying to register listener: " + listener);
+    }
     modificationListeners.add(listener);
     return this;
   }

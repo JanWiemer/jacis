@@ -211,7 +211,7 @@ public class JacisContainer {
         withLocalTx(task);
         return; // if one attempt succeeds return immediately
       } catch (JacisStaleObjectException e) { // check if we retry
-        log.warn("Stale object exception caught: {}", "" + e);
+        log.warn("Stale object exception caught: {}", "" + e.getMessage());
         log.info("Detail message: \n{}", e.getDetails());
         if (retries == 0) {
           throw e;

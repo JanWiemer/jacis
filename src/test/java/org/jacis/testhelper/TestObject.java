@@ -5,7 +5,7 @@
 package org.jacis.testhelper;
 
 import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
-import org.jacis.plugin.objectadapter.readonly.AbstractReadOnlyModeSupportingObject;
+import org.jacis.plugin.objectadapter.cloning.readonly.AbstractReadOnlyModeSupportingObject;
 
 import java.io.Serializable;
 
