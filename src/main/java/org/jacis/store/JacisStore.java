@@ -244,7 +244,7 @@ public class JacisStore<K, TV, CV> {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
-    return new StoreEntryInfo<K, TV, CV>(key, committedEntry, entryTxView, txView);
+    return new StoreEntryInfo<>(key, committedEntry, entryTxView, txView);
   }
 
   public synchronized void clear() {
@@ -365,7 +365,7 @@ public class JacisStore<K, TV, CV> {
   JacisStoreTxView<K, TV, CV> getTxView(JacisTransactionHandle transaction, boolean createIfAbsent) {
     JacisStoreTxView<K, TV, CV> txView = txViewMap.get(transaction);
     if (txView == null && createIfAbsent) {
-      txView = new JacisStoreTxView<K, TV, CV>(this, transaction);
+      txView = new JacisStoreTxView<>(this, transaction);
       txViewMap.put(transaction, txView);
     }
     return txView;
@@ -386,7 +386,7 @@ public class JacisStore<K, TV, CV> {
   }
 
   private KeyValuePair<K, TV> pair(K key, TV val) {
-    return new KeyValuePair<K, TV>(key, val);
+    return new KeyValuePair<>(key, val);
   }
 
   @Override

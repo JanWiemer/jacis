@@ -20,7 +20,7 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
   }
 
   public JacisCloningObjectAdapter() {
-    this(new DefaultJacisStoreEntryReadOnlyModeAdapter<V>());
+    this(new DefaultJacisStoreEntryReadOnlyModeAdapter<>());
   }
 
   @Override
@@ -80,13 +80,9 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
       return (V) cloneMethod.invoke(obj);
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException("Failed to clone object " + obj + "! No clone method declared: " + e, e);
-    } catch (SecurityException e) {
-      throw new IllegalArgumentException("Failed to clone object " + obj + "! Clone method not accessible: " + e, e);
-    } catch (IllegalAccessException e) {
+    } catch (SecurityException | IllegalAccessException | InvocationTargetException e) {
       throw new IllegalArgumentException("Failed to clone object " + obj + "! Clone method not accessible: " + e, e);
     } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException("Failed to clone object " + obj + "! Clone method not accessible: " + e, e);
-    } catch (InvocationTargetException e) {
       throw new IllegalArgumentException("Failed to clone object " + obj + "! Clone method not accessible: " + e, e);
     }
   }

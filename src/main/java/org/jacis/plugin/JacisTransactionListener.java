@@ -21,6 +21,7 @@ import org.jacis.container.JacisTransactionHandle;
  *
  * @author Jan Wiemer
  */
+@SuppressWarnings("EmptyMethod")
 public interface JacisTransactionListener {
 
   /**

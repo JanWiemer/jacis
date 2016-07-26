@@ -25,7 +25,7 @@ public class JacisExample3 {
 
   public static void main(String[] args) {
     JacisContainer container = new JacisContainer();
-    JacisObjectTypeSpec<String, Account, Account> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, Account.class, new JacisCloningObjectAdapter<Account>());
+    JacisObjectTypeSpec<String, Account, Account> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, Account.class, new JacisCloningObjectAdapter<>());
     JacisStore<String, Account, Account> store = container.createStore(objectTypeSpec);
 
     // First register the tracked view
