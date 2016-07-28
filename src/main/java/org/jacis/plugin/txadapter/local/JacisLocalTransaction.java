@@ -24,21 +24,19 @@ public class JacisLocalTransaction {
     this.txId = txId;
   }
 
-  public String getTxId() {
-    return txId;
+  JacisLocalTransaction associateWithJacisTransaction(JacisTransactionHandle txHandle, JacisContainer container) {
+    if (!txId.equals(txHandle.getTxId())) {
+      throw new IllegalArgumentException("Passed txHandle " + txHandle + " does not match the id of the local transaction " + txId);
+    }
+    this.jacisTransactionHandle = txHandle;
+    this.jacisContainer = container;
+    return this;
   }
 
   public String getTxDescription() {
     return jacisTransactionHandle == null ? null : jacisTransactionHandle.getTxDescription();
   }
 
-  void joinCurrentTransaction(JacisTransactionHandle txHandle, JacisContainer container) {
-    if (!txId.equals(txHandle.getTxId())) {
-      throw new IllegalArgumentException("Passed txHandle " + txHandle + " does not match the id of the local transaction " + txId);
-    }
-    this.jacisTransactionHandle = txHandle;
-    this.jacisContainer = container;
-  }
 
   public void prepare() throws JacisNoTransactionException {
     checkActive();

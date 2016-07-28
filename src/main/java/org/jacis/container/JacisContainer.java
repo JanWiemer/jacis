@@ -19,14 +19,21 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
+//       _   _    ____ ___ ____
+//      | | / \  / ___|_ _/ ___|
+//   _  | |/ _ \| |    | |\___ \
+//  | |_| / ___ \ |___ | | ___) |
+//   \___/_/   \_\____|___|____/
+//
+
 /**
  * = The Jacis Container Holding the Stores for the Different Object Types
- * 
+ *
  * The 'JacisContainer' is the main class of the Java ACI Store.
  * The container stores a number of individual stores for different object types.
  * Transactions are managed by the container and are valid for all stores in the container.
  * This class provides methods to create stores for different object types and provides access to those stores.
- * 
+ *
  * @author Jan Wiemer
  */
 public class JacisContainer {
@@ -66,11 +73,10 @@ public class JacisContainer {
   /**
    * Register the passed transaction listener ({@link JacisTransactionListener}).
    * All registered listeners will be informed before / after each prepare / internalCommit / rollback of any transaction on this container.
-   * @param listener The transachtion listener to register.
+   * @param listener The transaction listener to register.
    * @return This container itself for method chaining.
    */
   public JacisContainer registerTransactionListener(JacisTransactionListener listener) {
-
     txListeners.add(listener);
     return this;
   }
@@ -93,8 +99,8 @@ public class JacisContainer {
 
   /**
    * Get the store (type {@link JacisStore}) for the passed key and value type.
-   * @param keyClass Class of the keys that should be stored in the searched store 
-   * @param valueClass Class of the values that should be stored in the searched store 
+   * @param keyClass Class of the keys that should be stored in the searched store
+   * @param valueClass Class of the values that should be stored in the searched store
    * @return A reference to the found store (type {@link JacisStore}) (null if not found)
    * @param <K> Key type of the store entry
    * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
@@ -118,7 +124,7 @@ public class JacisContainer {
 
   /** @return If for the current thread there is a transaction active on this container. */
   public boolean isInTransaction() {
-    return txAdapter.getCurrentTransaction(false) != null;
+    return txAdapter.isTransactionActive();
   }
 
   /**
@@ -225,17 +231,16 @@ public class JacisContainer {
    * The passed flag determines if a {@link JacisNoTransactionException} is thrown when no transaction is active for the current thread.
    * Otherwise the method simply returns null in case of a missing transaction.
    * If the container has not yet joined the transaction represented by the handle it is registered now.
-   * 
+   *
    * @param enforceTx A flag indicating if {@link JacisNoTransactionException} is thrown when no transaction is active for the current thread
    * @return a handle (type {@link JacisTransactionHandle}) for the transaction currently associated with the current thread.
    * @throws JacisNoTransactionException If no transaction is active and the enforceTx flag is set to true
    */
   public JacisTransactionHandle getCurrentTransaction(boolean enforceTx) throws JacisNoTransactionException {
-    JacisTransactionHandle tx = txAdapter.getCurrentTransaction(enforceTx);
-    if (tx != null) {
-      txAdapter.joinCurrentTransaction(tx, this); // check if the store already joined the tx and join if not
+    if (!txAdapter.isTransactionActive() && enforceTx) {
+      throw new JacisNoTransactionException("No active transaction!");
     }
-    return tx;
+    return txAdapter.joinCurrentTransaction(this);
   }
 
   /**
@@ -268,7 +273,7 @@ public class JacisContainer {
       store.internalCommit(transaction);
     }
     txListeners.forEach(l -> l.afterCommit(this, transaction));
-    txAdapter.destroyCurrentTransaction();
+    txAdapter.disjoinCurrentTransaction();
   }
 
   /**
@@ -285,7 +290,7 @@ public class JacisContainer {
       store.internalRollback(transaction);
     }
     txListeners.forEach(l -> l.afterRollback(this, transaction));
-    txAdapter.destroyCurrentTransaction();
+    txAdapter.disjoinCurrentTransaction();
   }
 
   /**
