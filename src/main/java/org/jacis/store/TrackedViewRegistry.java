@@ -15,12 +15,11 @@ import org.jacis.trackedviews.TrackedViewClustered;
 import java.util.*;
 
 /**
- * @author Jan Wiemer
- * 
  * Registry where tracked views can be registered for an object store.
  *
  * @param <K> Key type of the store entry
  * @param <TV> Value type of the store entry
+ * @author Jan Wiemer
  */
 public class TrackedViewRegistry<K, TV, CV> implements JacisModificationListener<K, TV> {
 

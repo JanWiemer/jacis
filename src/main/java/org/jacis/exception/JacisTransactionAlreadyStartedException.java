@@ -7,6 +7,8 @@ package org.jacis.exception;
 /**
  * Exception thrown on the attempt to start a new (local) transaction
  * while there is already a transaction active.
+ *
+ * @author Jan Wiemer
  */
 public class JacisTransactionAlreadyStartedException extends RuntimeException {
 

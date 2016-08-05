@@ -15,6 +15,7 @@ import java.io.Serializable;
  * {@link #serialize(Serializable)} and {@link #deserialize(byte[])}.
  *
  * @param <TV> The object type (note that in this case the committed values and the values in the transactional view have the same type)
+ * @author Jan Wiemer
  */
 public abstract class JacisSerializationObjectAdapter<TV extends Serializable> implements JacisObjectAdapter<TV, byte[]> {
 
@@ -38,8 +39,19 @@ public abstract class JacisSerializationObjectAdapter<TV extends Serializable> i
     return serialize(value);
   }
 
+  /**
+   * Serialize the passed object to a byte array.
+   *
+   * @param obj The object to serialize.
+   * @return The bytes of the serialized object.
+   */
   protected abstract byte[] serialize(TV obj);
 
+  /**
+   * De-serialize an object from the passed byte array.
+   * @param bytes The bytes from which to de-serialize the object.
+   * @return The de-serialized object.
+   */
   protected abstract TV deserialize(byte[] bytes);
 
 }

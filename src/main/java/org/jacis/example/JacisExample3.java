@@ -14,10 +14,9 @@ import org.jacis.trackedviews.TrackedView;
 import java.util.List;
 
 /**
- * @author Jan Wiemer
- * 
  * Example 3: using a tracked view.
  *
+ * @author Jan Wiemer
  */
 public class JacisExample3 {
 

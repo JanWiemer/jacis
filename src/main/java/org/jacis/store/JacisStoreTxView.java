@@ -12,13 +12,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * @author Jan Wiemer
- * 
  * Representing a committed version of an entry in the store.
  *
  * @param <K> Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
+ * @author Jan Wiemer
  */
 class JacisStoreTxView<K, TV, CV> {
 

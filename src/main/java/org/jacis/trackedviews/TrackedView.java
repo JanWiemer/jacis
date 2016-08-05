@@ -15,6 +15,7 @@ import java.util.List;
  * Caution: a tracked view must not modify the objects passed to the method tracking the modifications!
  *
  * @param <V> The type of the original values (from the store)
+ * @author Jan Wiemer
  */
 public interface TrackedView<V> extends JacisCloneable<TrackedView<V>> {
 

@@ -14,10 +14,9 @@ import java.util.Comparator;
 import java.util.stream.Collectors;
 
 /**
- * @author Jan Wiemer
- * 
  * Example 2: showing stream API to access JACIS store.
  *
+ * @author Jan Wiemer
  */
 public class JacisExample2 {
 

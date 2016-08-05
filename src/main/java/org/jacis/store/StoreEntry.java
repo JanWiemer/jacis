@@ -5,13 +5,12 @@
 package org.jacis.store;
 
 /**
- * @author Jan Wiemer
- * 
  * Representing a committed version of an entry in the store.
  *
  * @param <K> Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
+ * @author Jan Wiemer
  */
 class StoreEntry<K, TV, CV> {
 
@@ -19,7 +18,7 @@ class StoreEntry<K, TV, CV> {
   private final K key;
   private CV value = null;
   private long version = 0; // version counter will be increased when an updated view of the entry is committed (used for optimistic locking)
-  private JacisStoreTxView<K, TV, CV> updatedBy = null; // transaction that has committed the current version (for logging / debugging only) 
+  private JacisStoreTxView<K, TV, CV> updatedBy = null; // transaction that has committed the current version (for logging / debugging only)
   private JacisStoreTxView<K, TV, CV> lockedFor = null; // transaction this object is locked for (in the time between prepare and internalCommit)
 
   public StoreEntry(JacisStore<K, TV, CV> store, K key) {

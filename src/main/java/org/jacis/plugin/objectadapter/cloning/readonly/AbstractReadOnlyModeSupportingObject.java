@@ -5,9 +5,8 @@
 package org.jacis.plugin.objectadapter.cloning.readonly;
 
 /**
- * @author Jan Wiemer
- *
  * Abstract base class for objects supporting switching them to read only mode and back.
+ * @author Jan Wiemer
  */
 public abstract class AbstractReadOnlyModeSupportingObject implements JacisReadonlyModeSupport {
 

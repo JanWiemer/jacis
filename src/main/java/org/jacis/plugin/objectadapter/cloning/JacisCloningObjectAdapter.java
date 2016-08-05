@@ -11,8 +11,21 @@ import org.jacis.plugin.objectadapter.cloning.readonly.JacisStoreEntryReadOnlyMo
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * Generic implementation of the {@link org.jacis.plugin.objectadapter.JacisObjectAdapter} copying the objects
+ * to and from the transactional view by pragmatically clone the object.
+ * If the object is an instance of the {@link JacisCloneable} interface the {@link JacisCloneable#clone()} method
+ * declared in this interface is used to clone the object.
+ * Otherwise the object may be cloneable (overwrites the {@link Object#clone()} methods)
+ * but does not implement the {@link JacisCloneable} interface.
+ * In this case the {@link Object#clone()} method is called by reflection.
+ *
+ * @param <TV> The object type (note that in this case the committed values and the values in the transactional view have the same type)
+ * @author Jan Wiemer
+ */
 public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
 
+  /** */
   private final JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapter;
 
   public JacisCloningObjectAdapter(JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapters) {

@@ -13,17 +13,16 @@ import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.store.JacisStore;
 
 /**
- * @author Jan Wiemer
- * 
  * Example 1: showing basic usage of a JACIS store.
  *
+ * @author Jan Wiemer
  */
 public class JacisExample1 {
 
   // First we create a simple example class of objects that shall be stored in a transactional store.
   // The class implements the JacisCloneable interface to enable the store to clone the object without using reflection.
-  // Furthermore the class extends the AbstractReadOnlyModeSupportingObject (implementing the JacisReadonlyModeSupport interface). 
-  // This means the object provides a secure read only mode. 
+  // Furthermore the class extends the AbstractReadOnlyModeSupportingObject (implementing the JacisReadonlyModeSupport interface).
+  // This means the object provides a secure read only mode.
   // It is the responsibility of an object implementing the JacisReadonlyModeSupport interface
   // to prevent any modification after the method switchToReadOnlyMode is called.
   // The AbstractReadOnlyModeSupportingObject provides a checkWritable method throwing an exception

@@ -4,6 +4,10 @@
 
 package org.jacis.plugin.objectadapter.cloning.readonly;
 
+/**
+ * @param <V>
+ * @author Jan Wiemer
+ */
 public class DefaultJacisStoreEntryReadOnlyModeAdapter<V> implements JacisStoreEntryReadOnlyModeAdapter<V> {
 
   @Override

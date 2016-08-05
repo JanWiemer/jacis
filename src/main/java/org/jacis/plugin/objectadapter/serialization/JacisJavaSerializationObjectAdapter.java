@@ -11,6 +11,7 @@ import java.io.*;
  * to and from the transactional view by means of Java serialization.
  *
  * @param <TV> The object type (note that in this case the committed values and the values in the transactional view have the same type)
+ * @author Jan Wiemer
  */
 public class JacisJavaSerializationObjectAdapter<TV extends Serializable> extends JacisSerializationObjectAdapter<TV> {
 

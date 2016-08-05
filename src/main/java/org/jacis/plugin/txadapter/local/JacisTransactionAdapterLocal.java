@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Default implementation of the transaction adapter using local transactions.
+ *
  * @author Jan Wiemer
  */
 public class JacisTransactionAdapterLocal implements JacisTransactionAdapter {

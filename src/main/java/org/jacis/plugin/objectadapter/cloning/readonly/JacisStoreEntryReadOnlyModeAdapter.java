@@ -5,11 +5,10 @@
 package org.jacis.plugin.objectadapter.cloning.readonly;
 
 /**
- * @author Jan Wiemer
- *
  * The read only mode adapter is used to define if and how objects are switched to read only mode and back.
- * 
+ *
  * @param <V> The type of the values that have to be cloned.
+ * @author Jan Wiemer
  */
 public interface JacisStoreEntryReadOnlyModeAdapter<V> {
 

@@ -8,19 +8,18 @@ import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
- * @author Jan Wiemer
- * 
  * Representing the view of a store entry the current transaction currently sees.
  *
  * @param <K> Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
+ * @author Jan Wiemer
  */
 class StoreEntryTxView<K, TV, CV> {
 
   private final StoreEntry<K, TV, CV> commitedEntry; // link to the committed entry (note this is the real committed instance that might be changed by other TXs)
   private TV txValue = null; // current value of the entry in this TX
-  private TV origValue; // original value of the entry when cloning it to the transaction view (only tracked if configured) 
+  private TV origValue; // original value of the entry when cloning it to the transaction view (only tracked if configured)
   private long origVersion; // original version of the entry when cloning it to the transaction view (for optimistic locking)
   private boolean updated = false; // entry was updated in the current transaction
 

@@ -10,10 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Jan Wiemer
- * 
  * This class contains the code for actual transaction demarcation.
  *
+ * @author Jan Wiemer
  */
 class StoreTxDemarcationExecutor {
 

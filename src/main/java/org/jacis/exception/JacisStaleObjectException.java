@@ -12,6 +12,8 @@ package org.jacis.exception;
  * the version counter of the oommitted object is incremented. Before committing an object it is checked if the
  * version counter of the committed version is the same as the original version of the transactional view to commit.
  * If both version counters are the same the object has not been changed in the meantime, otherwise this exception is thrown
+ *
+ * @author Jan Wiemer
  */
 public class JacisStaleObjectException extends RuntimeException {
 

@@ -6,6 +6,7 @@ package org.jacis.plugin.objectadapter.cloning.readonly;
 
 /**
  * Thrown when trying to modify an object in read only mode.
+ * @author Jan Wiemer
  */
 public class ReadOnlyException extends IllegalStateException {
 

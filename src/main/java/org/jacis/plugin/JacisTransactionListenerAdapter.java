@@ -11,6 +11,8 @@ import org.jacis.container.JacisTransactionHandle;
  * Adapter class to simplify creating an implementation of the {@link JacisTransactionListener} interface.
  * A class implementing this interface can extend this class providing empty default implementation for
  * all methods declared in the interface. So the implementation only has to overwrite the desired method and skip the other ones.
+ *
+ * @author Jan Wiemer
  */
 public abstract class JacisTransactionListenerAdapter implements JacisTransactionListener {
 
