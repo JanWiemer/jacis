@@ -41,11 +41,11 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
     return threadWithWriteAccess == null;
   }
 
-  protected void checkWritable() {
+  protected void checkWritable() throws ReadOnlyException {
     if (threadWithWriteAccess == null) {
-      throw new IllegalStateException("Object currently in read only mode! Accessing Thread: " + Thread.currentThread() + ". Object: " + this);
+      throw new ReadOnlyException("Object currently in read only mode! Accessing Thread: " + Thread.currentThread() + ". Object: " + this);
     } else if (!threadWithWriteAccess.equals(Thread.currentThread())) {
-      throw new IllegalStateException("Object currently only writable for thread " + threadWithWriteAccess + "! Accessing Thread: " + Thread.currentThread() + ". Object: " + this);
+      throw new ReadOnlyException("Object currently only writable for thread " + threadWithWriteAccess + "! Accessing Thread: " + Thread.currentThread() + ". Object: " + this);
     }
   }
 

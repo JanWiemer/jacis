@@ -37,8 +37,7 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
     if (value == null) {
       return null;
     }
-    V clone = cloneValue(value);
-    return clone;
+    return value; // for read only objects we do not clone the returned object. -> skip call of: cloneValue(value);
   }
 
   @Override
@@ -80,9 +79,7 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
       return (V) cloneMethod.invoke(obj);
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException("Failed to clone object " + obj + "! No clone method declared: " + e, e);
-    } catch (SecurityException | IllegalAccessException | InvocationTargetException e) {
-      throw new IllegalArgumentException("Failed to clone object " + obj + "! Clone method not accessible: " + e, e);
-    } catch (IllegalArgumentException e) {
+    } catch (SecurityException | IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
       throw new IllegalArgumentException("Failed to clone object " + obj + "! Clone method not accessible: " + e, e);
     }
   }

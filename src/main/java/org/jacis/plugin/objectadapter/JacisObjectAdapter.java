@@ -22,7 +22,7 @@ package org.jacis.plugin.objectadapter;
  * * One default implementation copies the objects by cloning them using the Java 'clone' method
  *   (see {@link org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter}).
  * * The other  default implementation copies the objects by Java serialization
- *   (see {@link org.jacis.plugin.objectadapter.serialization.org.jacis.plugin.objectadapter.serialization.JacisJavaSerializationObjectAdapter}).
+ *   (see {@link org.jacis.plugin.objectadapter.serialization.JacisJavaSerializationObjectAdapter}).
  *
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.

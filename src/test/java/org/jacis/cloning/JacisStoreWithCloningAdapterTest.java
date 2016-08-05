@@ -4,6 +4,9 @@
 
 package org.jacis.cloning;
 
+import org.jacis.container.JacisTransactionHandle;
+import org.jacis.plugin.objectadapter.cloning.readonly.ReadOnlyException;
+import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.store.JacisStore;
 import org.jacis.testhelper.JacisTestHelper;
 import org.jacis.testhelper.TestObject;
@@ -15,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
 
+@SuppressWarnings("CodeBlock2Expr")
 public class JacisStoreWithCloningAdapterTest {
 
   private static final Logger log = LoggerFactory.getLogger(JacisStoreWithCloningAdapterTest.class);
@@ -113,7 +117,7 @@ public class JacisStoreWithCloningAdapterTest {
     });
     store.getContainer().withLocalTx(() -> {
       store.update("5", new TestObject("A3", 5));
-      long res = store.stream().filter(o -> o.getName().startsWith("A")).mapToLong(o -> o.getValue()).sum();
+      long res = store.stream().filter(o -> o.getName().startsWith("A")).mapToLong(TestObject::getValue).sum();
       assertEquals(1 + 2 + 5, res);
     });
   }
@@ -152,6 +156,49 @@ public class JacisStoreWithCloningAdapterTest {
       assertEquals(testObject2, store.get(testObjectName));
       assertEquals(String.valueOf(testObject1), store.getObjectInfo(testObjectName).getOriginalTxViewValueString());
     });
+  }
+
+  @Test(expected = ReadOnlyException.class)
+  public void testGetReadView() {
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    TestObject testObject = new TestObject("name", 1);
+    // init store
+    store.getContainer().withLocalTx(() -> {
+      store.update(testObject.getName(), testObject);
+    });
+    // update with writable object
+    store.getContainer().withLocalTx(() -> {
+      TestObject obj = store.get(testObject.getName());
+      obj.setValue(2);
+      store.update(obj.getName(), obj);
+    });
+    // get as read only object
+    store.getContainer().withLocalTx(() -> {
+      TestObject obj = store.getReadOnly(testObject.getName());
+      assertEquals(2, obj.getValue());
+      obj.setValue(3); // exception expected here!
+    });
+  }
+
+  @Test
+  public void testGetReadViewSkipCloning() {
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
+    TestObject testObject = new TestObject("name", 1);
+    // init store
+    store.getContainer().withLocalTx(() -> {
+      store.update(testObject.getName(), testObject);
+    });
+    JacisLocalTransaction tx1 = store.getContainer().beginLocalTransaction("Testing Repeated Read");
+    TestObject objReadOnly = store.getReadOnly("name");
+    assertEquals(1, objReadOnly.getValue());
+    JacisTransactionHandle tx1Handle = testHelper.suspendTx();
+    // update in another comcurrent transaction
+    store.getContainer().withLocalTx(() -> store.update("name", store.get("name").setValue(2)));
+    testHelper.resumeTx(tx1Handle);
+    assertEquals(1, objReadOnly.getValue()); // for the old read only view the value has not changed because writing back clones a new instance into the committed view store
+    assertEquals(2, store.getReadOnly("name").getValue());
+    tx1.commit();
   }
 
 }
