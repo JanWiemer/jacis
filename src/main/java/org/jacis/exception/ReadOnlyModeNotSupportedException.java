@@ -5,7 +5,9 @@
 package org.jacis.exception;
 
 /**
- * Thrown when trying to get a read only view of an object not supporting a read only mode..
+ * Thrown when trying to access an object in read only mode when the object adapter
+ * does not support a read only mode for this object
+ * and is configured to throw an exception in this case.
  *
  * @author Jan Wiemer
  */

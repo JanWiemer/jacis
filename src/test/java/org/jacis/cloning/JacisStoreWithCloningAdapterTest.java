@@ -7,6 +7,7 @@ package org.jacis.cloning;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.ReadOnlyException;
 import org.jacis.exception.ReadOnlyModeNotSupportedException;
+import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.store.JacisStore;
 import org.jacis.testhelper.JacisTestHelper;
@@ -206,6 +207,7 @@ public class JacisStoreWithCloningAdapterTest {
   @Test(expected = ReadOnlyModeNotSupportedException.class)
   public void testObjectWithoutReadOnlySupport() {
     JacisStore<String, TestObjectWithoutReadOnlyMode, TestObjectWithoutReadOnlyMode> store = new JacisTestHelper().createTestStoreWithCloningAndWithoutReadonlyMode();
+    ((JacisCloningObjectAdapter) store.getObjectAdapter()).setThrowIfMissingReadOnlyModeDetected(true);
     TestObjectWithoutReadOnlyMode testObject = new TestObjectWithoutReadOnlyMode("name", 1).setName("name");
     // init store
     store.getContainer().withLocalTx(() -> {

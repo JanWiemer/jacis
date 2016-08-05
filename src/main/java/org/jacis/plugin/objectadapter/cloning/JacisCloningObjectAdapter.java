@@ -20,14 +20,28 @@ import java.lang.reflect.Method;
  * Otherwise the object may be cloneable (overwrites the {@link Object#clone()} methods)
  * but does not implement the {@link JacisCloneable} interface.
  * In this case the {@link Object#clone()} method is called by reflection.
+ * <p>
+ * If a read only mode adapter is set (see {@link #readOnlyModeAdapter}) and this read only mode adapter is applicable
+ * for the objects in the store this adapter is used to switch the objects between the read-only and read-write mode.
+ * In this case the committed values are always stored in read-only mode. When cloned to a transactional view
+ * the cloned values are switched to read-write mode. When the objects are cloned back to the committed view
+ * they are switched back to the read only mode. With this feature it is possible to access a read only view
+ * of an object from the outside. This read only view is *not* cloned from the committed value. Instead the committed
+ * value itself is returned to the caller. This is possible since the object is in read only mode.
+ * <p>
+ * If the read only mode is not supported accessing a read only value returns an ordinary cloned object.
  *
  * @param <V> The object type (note that in this case the committed values and the values in the transactional view have the same type)
  * @author Jan Wiemer
  */
 public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
 
-  /** */
+  /**
+   * Read only mode adapter used to switch objects from writable to read only mode if required and supported
+   */
   private final JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapter;
+
+  private boolean throwIfMissingReadOnlyModeDetected = false;
 
   public JacisCloningObjectAdapter(JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapters) {
     this.readOnlyModeAdapter = readOnlyModeAdapters;
@@ -35,6 +49,12 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
 
   public JacisCloningObjectAdapter() {
     this(new DefaultJacisStoreEntryReadOnlyModeAdapter<>());
+  }
+
+
+  public JacisCloningObjectAdapter<V> setThrowIfMissingReadOnlyModeDetected(boolean throwIfMissingReadOnlyModeDetected) {
+    this.throwIfMissingReadOnlyModeDetected = throwIfMissingReadOnlyModeDetected;
+    return this;
   }
 
   @Override
@@ -50,15 +70,6 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
   }
 
   @Override
-  public V cloneCommitted2ReadOnlyTxView(V value) {
-    checkReadOnlyModeSupported(value);
-    if (value == null) {
-      return null;
-    }
-    return value; // for read only objects we do not clone the returned object. -> skip call of: cloneValue(value);
-  }
-
-  @Override
   public V cloneTxView2Committed(V value) {
     if (value == null) {
       return null;
@@ -71,20 +82,36 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
   }
 
   @Override
-  public V cloneTxView2ReadOnlyTxView(V value) {
-    checkReadOnlyModeSupported(value);
-    if (value == null || readOnlyModeAdapter.isReadOnly(value)) {
-      return value;
+  public V cloneCommitted2ReadOnlyTxView(V value) {
+    if (value == null) {
+      return null;
     }
-    V clone = cloneValue(value);
-    return readOnlyModeAdapter.switchToReadOnlyMode(clone);
+    checkReadOnlyModeSupported(value);
+    V clone;
+    if (readOnlyModeAdapter == null || !readOnlyModeAdapter.isApplicableTo(value)) {
+      clone = cloneValue(value);
+    } else {
+      clone = value; // for read only objects we do not clone the returned object. -> skip call of: cloneValue(value);
+    }
+    return clone;
   }
 
-  private void checkReadOnlyModeSupported(V value) {
-    if (value != null && (readOnlyModeAdapter == null || !readOnlyModeAdapter.isApplicableTo(value))) {
-      throw new ReadOnlyModeNotSupportedException("Object of class " + value.getClass().getName() + " not supporting read only mode! Object: " + value);
+  @Override
+  public V cloneTxView2ReadOnlyTxView(V value) {
+    if (value == null) {
+      return null;
+    }
+    if (readOnlyModeAdapter != null && readOnlyModeAdapter.isApplicableTo(value)) {
+      if (readOnlyModeAdapter.isReadOnly(value)) {
+        return value;
+      } else {
+        return readOnlyModeAdapter.switchToReadOnlyMode(cloneValue(value));
+      }
+    } else {
+      return cloneValue(value);
     }
   }
+
 
   @SuppressWarnings("unchecked")
   private V cloneValue(V value) {
@@ -111,5 +138,12 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
       throw new IllegalArgumentException("Failed to clone object " + obj + "! Clone method not accessible: " + e, e);
     }
   }
+
+  private void checkReadOnlyModeSupported(V value) throws ReadOnlyModeNotSupportedException {
+    if (throwIfMissingReadOnlyModeDetected && value != null && (readOnlyModeAdapter == null || !readOnlyModeAdapter.isApplicableTo(value))) {
+      throw new ReadOnlyModeNotSupportedException("Object of class " + value.getClass().getName() + " not supporting read only mode! Object: " + value);
+    }
+  }
+
 
 }

@@ -128,7 +128,7 @@ public class JacisStore<K, TV, CV> {
     return getOrCreateEntryTxView(getOrCreateTxView(), key).getValue();
   }
 
-  public TV getReadOnly(K key) {
+  private TV getReadOnly(K key, boolean cloneIfReadOnlyModeNotSupported) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     if (entryTxView != null) {
@@ -137,6 +137,14 @@ public class JacisStore<K, TV, CV> {
       StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
       return committedEntry == null ? null : objectAdapter.cloneCommitted2ReadOnlyTxView(committedEntry.getValue());
     }
+  }
+
+  public TV getReadOnly(K key) {
+    return getReadOnly(key, false);
+  }
+
+  public TV getReadOnlyIfSupported(K key) {
+    return getReadOnly(key, true);
   }
 
   public <P> P getProjectionReadOnly(K key, Function<TV, P> projection) {
