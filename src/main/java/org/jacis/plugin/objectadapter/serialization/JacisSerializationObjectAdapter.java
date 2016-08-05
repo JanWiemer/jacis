@@ -54,4 +54,8 @@ public abstract class JacisSerializationObjectAdapter<TV extends Serializable> i
    */
   protected abstract TV deserialize(byte[] bytes);
 
+  @Override
+  public String toString() {
+    return getClass().getSimpleName();
+  }
 }

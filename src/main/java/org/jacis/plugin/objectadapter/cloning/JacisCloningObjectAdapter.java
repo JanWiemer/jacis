@@ -6,8 +6,8 @@ package org.jacis.plugin.objectadapter.cloning;
 
 import org.jacis.exception.ReadOnlyModeNotSupportedException;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
-import org.jacis.plugin.objectadapter.cloning.readonly.DefaultJacisStoreEntryReadOnlyModeAdapter;
-import org.jacis.plugin.objectadapter.cloning.readonly.JacisStoreEntryReadOnlyModeAdapter;
+import org.jacis.plugin.readonly.DefaultJacisStoreEntryReadOnlyModeAdapter;
+import org.jacis.plugin.readonly.JacisStoreEntryReadOnlyModeAdapter;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -40,19 +40,31 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
    * Read only mode adapter used to switch objects from writable to read only mode if required and supported
    */
   private final JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapter;
-
+  /** Flag indicating if the object adapter should throw an exception if a read only mode is required, but not supported.*/
   private boolean throwIfMissingReadOnlyModeDetected = false;
 
+  /**
+   * Create a cloning object adapter with the passed read only mode adapter.
+   * @param readOnlyModeAdapters Adapter to switch an object between read-only and read-write mode (if supported).
+   */
   @SuppressWarnings("WeakerAccess")
   public JacisCloningObjectAdapter(JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapters) {
     this.readOnlyModeAdapter = readOnlyModeAdapters;
   }
 
+  /**
+   * Create a cloning object adapter with a default read only mode adapter (see {@link DefaultJacisStoreEntryReadOnlyModeAdapter}).
+   */
   public JacisCloningObjectAdapter() {
     this(new DefaultJacisStoreEntryReadOnlyModeAdapter<>());
   }
 
 
+  /**
+   * Set the flag indicating if the object adapter should throw an exception if a read only mode is required, but not supported.
+   * @param throwIfMissingReadOnlyModeDetected  flag indicating if the object adapter should throw an exception if a read only mode is required, but not supported.
+   * @return The current instance for method chaining
+   */
   public JacisCloningObjectAdapter<V> setThrowIfMissingReadOnlyModeDetected(boolean throwIfMissingReadOnlyModeDetected) {
     this.throwIfMissingReadOnlyModeDetected = throwIfMissingReadOnlyModeDetected;
     return this;
@@ -146,5 +158,9 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
     }
   }
 
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "(readOnlyModeAdapter=" + readOnlyModeAdapter + ", throwIfMissingReadOnlyModeDetected=" + throwIfMissingReadOnlyModeDetected +")";
+  }
 
 }

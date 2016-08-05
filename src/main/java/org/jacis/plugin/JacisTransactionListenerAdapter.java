@@ -46,4 +46,8 @@ public abstract class JacisTransactionListenerAdapter implements JacisTransactio
     // empty
   }
 
+  @Override
+  public String toString() {
+    return getClass().getSimpleName();
+  }
 }

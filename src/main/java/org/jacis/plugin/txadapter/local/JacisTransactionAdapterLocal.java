@@ -26,6 +26,11 @@ public class JacisTransactionAdapterLocal implements JacisTransactionAdapter {
   private final AtomicLong txSeq = new AtomicLong(0);
 
   @Override
+  public String toString() {
+    return getClass().getSimpleName();
+  }
+
+  @Override
   public boolean isTransactionActive() {
     return transaction.get() != null;
   }
