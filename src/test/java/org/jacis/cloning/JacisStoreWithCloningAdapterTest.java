@@ -5,11 +5,13 @@
 package org.jacis.cloning;
 
 import org.jacis.container.JacisTransactionHandle;
-import org.jacis.plugin.objectadapter.cloning.readonly.ReadOnlyException;
+import org.jacis.exception.ReadOnlyException;
+import org.jacis.exception.ReadOnlyModeNotSupportedException;
 import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.store.JacisStore;
 import org.jacis.testhelper.JacisTestHelper;
 import org.jacis.testhelper.TestObject;
+import org.jacis.testhelper.TestObjectWithoutReadOnlyMode;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,7 +183,7 @@ public class JacisStoreWithCloningAdapterTest {
   }
 
   @Test
-  public void testGetReadViewSkipCloning() {
+  public void testGetReadViewIsolation() {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
     TestObject testObject = new TestObject("name", 1);
@@ -199,6 +201,26 @@ public class JacisStoreWithCloningAdapterTest {
     assertEquals(1, objReadOnly.getValue()); // for the old read only view the value has not changed because writing back clones a new instance into the committed view store
     assertEquals(2, store.getReadOnly("name").getValue());
     tx1.commit();
+  }
+
+  @Test(expected = ReadOnlyModeNotSupportedException.class)
+  public void testObjectWithoutReadOnlySupport() {
+    JacisStore<String, TestObjectWithoutReadOnlyMode, TestObjectWithoutReadOnlyMode> store = new JacisTestHelper().createTestStoreWithCloningAndWithoutReadonlyMode();
+    TestObjectWithoutReadOnlyMode testObject = new TestObjectWithoutReadOnlyMode("name", 1).setName("name");
+    // init store
+    store.getContainer().withLocalTx(() -> {
+      store.update(testObject.getName(), testObject);
+    });
+    // update with writable object
+    store.getContainer().withLocalTx(() -> {
+      TestObjectWithoutReadOnlyMode obj = store.get(testObject.getName());
+      obj.setValue(2);
+      store.update(obj.getName(), obj);
+    });
+    // get as read only object
+    store.getContainer().withLocalTx(() -> {
+      TestObjectWithoutReadOnlyMode obj = store.getReadOnly(testObject.getName());
+    });
   }
 
 }

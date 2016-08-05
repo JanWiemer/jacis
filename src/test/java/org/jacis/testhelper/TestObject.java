@@ -10,8 +10,9 @@ import org.jacis.plugin.objectadapter.cloning.readonly.AbstractReadOnlyModeSuppo
 import java.io.Serializable;
 
 /**
- * @author Jan Wiemer
+ * A JACOS clonable test object that also provides a read only mode.
  *
+ * @author Jan Wiemer
  */
 public class TestObject extends AbstractReadOnlyModeSupportingObject implements JacisCloneable<TestObject>, Serializable {
 

@@ -33,6 +33,20 @@ public class JacisTestHelper {
     return store;
   }
 
+  public JacisStore<String, TestObjectWithoutReadOnlyMode, TestObjectWithoutReadOnlyMode> createTestStoreWithCloningAndWithoutReadonlyMode() {
+    testTxAdapter = new TestTxAdapter();
+    JacisContainer container = new JacisContainer(testTxAdapter);
+    return createTestStoreWithCloningAndWithoutReadonlyMode(container);
+  }
+
+  public JacisStore<String, TestObjectWithoutReadOnlyMode, TestObjectWithoutReadOnlyMode> createTestStoreWithCloningAndWithoutReadonlyMode(JacisContainer container) {
+    JacisCloningObjectAdapter<TestObjectWithoutReadOnlyMode> serializationAdapter = new JacisCloningObjectAdapter<>();
+    JacisObjectTypeSpec<String, TestObjectWithoutReadOnlyMode, TestObjectWithoutReadOnlyMode> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObjectWithoutReadOnlyMode.class, serializationAdapter);
+    container.createStore(objectTypeSpec);
+    JacisStore<String, TestObjectWithoutReadOnlyMode, TestObjectWithoutReadOnlyMode> store = container.getStore(String.class, TestObjectWithoutReadOnlyMode.class);
+    return store;
+  }
+
   public JacisStore<String, TestObject, byte[]> createTestStoreWithSerialization() {
     testTxAdapter = new TestTxAdapter();
     JacisContainer container = new JacisContainer(testTxAdapter);

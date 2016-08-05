@@ -4,6 +4,7 @@
 
 package org.jacis.plugin.objectadapter.cloning;
 
+import org.jacis.exception.ReadOnlyModeNotSupportedException;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 import org.jacis.plugin.objectadapter.cloning.readonly.DefaultJacisStoreEntryReadOnlyModeAdapter;
 import org.jacis.plugin.objectadapter.cloning.readonly.JacisStoreEntryReadOnlyModeAdapter;
@@ -20,7 +21,7 @@ import java.lang.reflect.Method;
  * but does not implement the {@link JacisCloneable} interface.
  * In this case the {@link Object#clone()} method is called by reflection.
  *
- * @param <TV> The object type (note that in this case the committed values and the values in the transactional view have the same type)
+ * @param <V> The object type (note that in this case the committed values and the values in the transactional view have the same type)
  * @author Jan Wiemer
  */
 public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
@@ -42,11 +43,15 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
       return null;
     }
     V clone = cloneValue(value);
-    return readOnlyModeAdapter.switchToReadWriteMode(clone);
+    if (readOnlyModeAdapter != null && readOnlyModeAdapter.isApplicableTo(clone)) {
+      clone = readOnlyModeAdapter.switchToReadWriteMode(clone);
+    }
+    return clone;
   }
 
   @Override
   public V cloneCommitted2ReadOnlyTxView(V value) {
+    checkReadOnlyModeSupported(value);
     if (value == null) {
       return null;
     }
@@ -59,16 +64,26 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
       return null;
     }
     V clone = cloneValue(value);
-    return readOnlyModeAdapter.switchToReadOnlyMode(clone);
+    if (readOnlyModeAdapter != null && readOnlyModeAdapter.isApplicableTo(clone)) {
+      clone = readOnlyModeAdapter.switchToReadOnlyMode(clone);
+    }
+    return clone;
   }
 
   @Override
   public V cloneTxView2ReadOnlyTxView(V value) {
+    checkReadOnlyModeSupported(value);
     if (value == null || readOnlyModeAdapter.isReadOnly(value)) {
       return value;
     }
     V clone = cloneValue(value);
     return readOnlyModeAdapter.switchToReadOnlyMode(clone);
+  }
+
+  private void checkReadOnlyModeSupported(V value) {
+    if (value != null && (readOnlyModeAdapter == null || !readOnlyModeAdapter.isApplicableTo(value))) {
+      throw new ReadOnlyModeNotSupportedException("Object of class " + value.getClass().getName() + " not supporting read only mode! Object: " + value);
+    }
   }
 
   @SuppressWarnings("unchecked")

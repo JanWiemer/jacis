@@ -4,6 +4,8 @@
 
 package org.jacis.plugin.objectadapter.cloning.readonly;
 
+import org.jacis.exception.ReadOnlyException;
+
 /**
  * Abstract base class for objects supporting switching them to read only mode and back.
  * @author Jan Wiemer

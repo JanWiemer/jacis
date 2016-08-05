@@ -12,10 +12,12 @@ package org.jacis.plugin.objectadapter.cloning.readonly;
  */
 public interface JacisStoreEntryReadOnlyModeAdapter<V> {
 
+  boolean isApplicableTo(V value);
+
+  boolean isReadOnly(V value);
+
   V switchToReadOnlyMode(V value);
 
   V switchToReadWriteMode(V value);
-
-  boolean isReadOnly(V value);
 
 }

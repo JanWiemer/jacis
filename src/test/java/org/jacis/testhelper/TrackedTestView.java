@@ -11,9 +11,9 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * @author Jan Wiemer
- * 
  * Test tracked view...
+ *
+ * @author Jan Wiemer
  */
 public class TrackedTestView implements TrackedView<TestObject> {
 
