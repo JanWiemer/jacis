@@ -8,6 +8,14 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 import java.io.Serializable;
 
+/**
+ * Abstract generic implementation of the {@link org.jacis.plugin.objectadapter.JacisObjectAdapter} copying the objects
+ * to and from the transactional view by means of a serialization mechanism.
+ * Serialization and de-serialization of the objects is delegated to the abstract methods
+ * {@link #serialize(Serializable)} and {@link #deserialize(byte[])}.
+ *
+ * @param <TV> The object type (note that in this case the committed values and the values in the transactional view have the same type)
+ */
 public abstract class JacisSerializationObjectAdapter<TV extends Serializable> implements JacisObjectAdapter<TV, byte[]> {
 
   @Override
