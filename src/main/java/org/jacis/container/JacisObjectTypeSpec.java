@@ -9,19 +9,19 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
  * = Specification of the Objects in a Store
- * 
+ *
  * Specification of an object type that shall be stored in a transational store.
  * The pain purpose of the specification is to define the types (classes) for the keys and the values.
- * 
+ *
  * Furthermore some configuration is defined in this class how the object store should deal with objects of this type.
- * The basic concept how the transactional store works is that it stores an internal representation 
+ * The basic concept how the transactional store works is that it stores an internal representation
  * of the committed versions of all objects. This representation is not visible to the outside.
- * Each read access from the outside gets back a copy (clone) of the internal representation 
+ * Each read access from the outside gets back a copy (clone) of the internal representation
  * only visible for the current transaction. If an object should be updated inside a transaction the external
- * representation has to be modified and the store explicitly has to be notified about the change 
+ * representation has to be modified and the store explicitly has to be notified about the change
  * by calling an update method (there is no automatic) dirty checking.
- * 
- * The mechanism how the objects are copied from the internal representation and back can be customized 
+ *
+ * The mechanism how the objects are copied from the internal representation and back can be customized
  * (e.g. by cloning or by serialization and de-serialization).
  * The object specification stores an {@link #objectAdapter} (type {@link JacisObjectAdapter}) implementing this mechanism.
  *
@@ -39,12 +39,10 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   /** The object adapter defining how to copy the committed values to the transactional view and back. */
   private final JacisObjectAdapter<TV, CV> objectAdapter;
   /**
-   * Defining if the store keeps track of the original value of an object at the time it was copied to the transactional view (default: 'false').
+   * Defining if the store keeps track of the original value of an object at the time it was copied to the transactional view (default: 'false')
    */
   private boolean trackOriginalValue = false;
-  /**
-   * Defines if all registered tracked views are checked for consistency on each internalCommit (default: 'false').
-   */
+  /** Defines if all registered tracked views are checked for consistency on each internalCommit (default: 'false'). */
   private boolean checkViewsOnCommit = false;
 
   public JacisObjectTypeSpec(Class<K> keyClass, Class<TV> valueClass, JacisObjectAdapter<TV, CV> objectAdapter) {

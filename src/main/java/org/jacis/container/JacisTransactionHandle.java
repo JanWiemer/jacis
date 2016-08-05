@@ -17,13 +17,9 @@ public class JacisTransactionHandle {
    * The id of the transaction
    */
   private final String txId;
-  /**
-   * Description for the transaction giving some more information about the purpose of the transaction (for logging and debugging)
-   */
+  /** Description for the transaction giving some more information about the purpose of the transaction (for logging and debugging) */
   private final String txDescription;
-  /**
-   * A reference to the external (global) transaction (e.g. a JTA transaction)
-   */
+  /** A reference to the external (global) transaction (e.g. a JTA transaction) */
   private final Object externalTransaction;
 
   /**
