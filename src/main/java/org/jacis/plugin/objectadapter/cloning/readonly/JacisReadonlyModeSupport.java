@@ -8,6 +8,7 @@ package org.jacis.plugin.objectadapter.cloning.readonly;
  * Interface objects can implement to support switching them to read only mode and back.
  * @author Jan Wiemer
  */
+@SuppressWarnings("WeakerAccess")
 public interface JacisReadonlyModeSupport {
 
   void switchToReadOnlyMode();

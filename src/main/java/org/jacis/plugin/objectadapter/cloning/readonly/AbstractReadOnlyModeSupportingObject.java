@@ -14,7 +14,7 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
 
   private Thread threadWithWriteAccess = null;
 
-  public AbstractReadOnlyModeSupportingObject() {
+  protected AbstractReadOnlyModeSupportingObject() {
     threadWithWriteAccess = Thread.currentThread(); // when creating the object its writable
   }
 

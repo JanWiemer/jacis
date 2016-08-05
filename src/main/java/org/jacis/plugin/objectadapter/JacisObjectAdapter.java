@@ -48,7 +48,6 @@ public interface JacisObjectAdapter<TV, CV> {
    */
   CV cloneTxView2Committed(TV value);
 
-
   /**
    * Clone a committed version of the object into a read only transactional view.
    * Modifications ob the read only view must not be possible (lead to an exception).

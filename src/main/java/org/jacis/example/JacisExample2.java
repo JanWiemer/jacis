@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
  *
  * @author Jan Wiemer
  */
+@SuppressWarnings({"WeakerAccess", "CodeBlock2Expr"})
 public class JacisExample2 {
 
   // Note that we use the same account object introduced for the first example
@@ -43,7 +44,7 @@ public class JacisExample2 {
     });
 
     // Now we show some examples how to use the stream API (note read only access is possible without a transaction)
-    System.out.println("sum=" + store.streamReadOnly().mapToLong(acc -> acc.getBalance()).sum());
+    System.out.println("sum=" + store.streamReadOnly().mapToLong(Account::getBalance).sum());
     // starting with a filter
     System.out.println("#>500=" + store.streamReadOnly(acc -> acc.getBalance() > 500).count());
     // adding 10% interest
@@ -54,7 +55,7 @@ public class JacisExample2 {
     });
     // output all accounts
     String str = store.streamReadOnly().//
-        sorted(Comparator.comparing(acc -> acc.getName())). //
+        sorted(Comparator.comparing(Account::getName)). //
         map(acc -> acc.getName() + ":" + acc.getBalance()).//
         collect(Collectors.joining(", "));
     System.out.println("Accounts: " + str);

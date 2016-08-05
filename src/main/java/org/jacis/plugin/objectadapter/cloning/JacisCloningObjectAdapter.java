@@ -43,6 +43,7 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
 
   private boolean throwIfMissingReadOnlyModeDetected = false;
 
+  @SuppressWarnings("WeakerAccess")
   public JacisCloningObjectAdapter(JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapters) {
     this.readOnlyModeAdapter = readOnlyModeAdapters;
   }

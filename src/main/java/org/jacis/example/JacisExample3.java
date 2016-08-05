@@ -18,6 +18,7 @@ import java.util.List;
  *
  * @author Jan Wiemer
  */
+@SuppressWarnings({"WeakerAccess", "CodeBlock2Expr"})
 public class JacisExample3 {
 
   // Note that we use the same account object introduced for the first example
@@ -81,7 +82,7 @@ public class JacisExample3 {
 
     @Override
     public void checkView(List<Account> values) {
-      long checkValue = values.stream().mapToLong(a -> a.getBalance()).sum();
+      long checkValue = values.stream().mapToLong(Account::getBalance).sum();
       if (totalBalance != checkValue) {
         throw new IllegalStateException("Corrupt view! Tracked value=" + totalBalance + " computed value=" + checkValue);
       }
