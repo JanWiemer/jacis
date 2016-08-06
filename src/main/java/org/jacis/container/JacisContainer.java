@@ -254,7 +254,7 @@ public class JacisContainer {
   public synchronized void internalPrepare(JacisTransactionHandle transaction) {
     txListeners.forEach(l -> l.beforePrepare(this, transaction));
     for (JacisStore<?, ?, ?> store : storeMap.values()) {
-      store.internalPrepare(transaction);
+      ((JacisStoreTransactionAdapter) store).internalPrepare(transaction);
     }
     txListeners.forEach(l -> l.afterPrepare(this, transaction));
   }
@@ -270,7 +270,7 @@ public class JacisContainer {
   public synchronized void internalCommit(JacisTransactionHandle transaction) {
     txListeners.forEach(l -> l.beforeCommit(this, transaction));
     for (JacisStore<?, ?, ?> store : storeMap.values()) {
-      store.internalCommit(transaction);
+      ((JacisStoreTransactionAdapter) store).internalCommit(transaction);
     }
     txListeners.forEach(l -> l.afterCommit(this, transaction));
     txAdapter.disjoinCurrentTransaction();
@@ -287,7 +287,7 @@ public class JacisContainer {
   public synchronized void internalRollback(JacisTransactionHandle transaction) {
     txListeners.forEach(l -> l.beforeRollback(this, transaction));
     for (JacisStore<?, ?, ?> store : storeMap.values()) {
-      store.internalRollback(transaction);
+      ((JacisStoreTransactionAdapter) store).internalRollback(transaction);
     }
     txListeners.forEach(l -> l.afterRollback(this, transaction));
     txAdapter.disjoinCurrentTransaction();
@@ -358,4 +358,12 @@ public class JacisContainer {
 
   } // END OF:  public static class StoreIdentifier {
 
+  public static abstract class JacisStoreTransactionAdapter {
+    protected abstract void internalPrepare(JacisTransactionHandle transaction);
+
+    protected abstract void internalCommit(JacisTransactionHandle transaction);
+
+    protected abstract void internalRollback(JacisTransactionHandle transaction);
+
+  }
 }

@@ -30,11 +30,9 @@ import java.util.stream.Stream;
  * @author Jan Wiemer
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class JacisStore<K, TV, CV> {
+public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionAdapter {
 
-  /**
-   * Reference to the JACIS container this store belongs to
-   */
+  /** Reference to the JACIS container this store belongs to */
   private final JacisContainer container;
   /** The store identifier uniquely identifying this store inside the container */
   private final StoreIdentifier storeIdentifier;
@@ -44,15 +42,13 @@ public class JacisStore<K, TV, CV> {
   private final ConcurrentHashMap<K, StoreEntry<K, TV, CV>> store = new ConcurrentHashMap<>();
   /** A Map assigning each active transaction handle the transactional view on this store */
   private final Map<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>> txViewMap = Collections.synchronizedMap(new WeakHashMap<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>>());
-  /**
-   * Mutex / Lock to synchronize changes on the committed entries of the store (specially during internalCommit)
-   */
+  /** Mutex / Lock to synchronize changes on the committed entries of the store (specially during internalCommit) */
   private final ReadWriteLock storeAccessLock = new ReentrantReadWriteLock(true);
   /** The object adapter defining how to copy objects from the committed view to a transactional view and back */
   private final JacisObjectAdapter<TV, CV> objectAdapter;
-  /** The registry of tracked views for this store that are kwpt up to date on each commit automatically */
+  /** The registry of tracked views for this store that are kept up to date on each commit automatically */
   private final TrackedViewRegistry<K, TV, CV> trackedViewRegistry;
-  /** List of listeners notified on each modification on the committed values in the store*/
+  /** List of listeners notified on each modification on the committed values in the store */
   private final List<JacisModificationListener<K, TV>> modificationListeners = new ArrayList<>();
 
   public JacisStore(JacisContainer container, StoreIdentifier storeIdentifier, JacisObjectTypeSpec<K, TV, CV> spec) {
@@ -64,18 +60,33 @@ public class JacisStore<K, TV, CV> {
     registerModificationListener(trackedViewRegistry);
   }
 
+  /** @return the store identifier uniquely identifying this store inside the container */
   public StoreIdentifier getStoreIdentifier() {
     return storeIdentifier;
   }
 
+  /** @return the reference to the JACIS container this store belongs to */
   public JacisContainer getContainer() {
     return container;
   }
 
+  /** @return the object type specification for the objects stored in this store */
   public JacisObjectTypeSpec<K, TV, CV> getObjectTypeSpec() {
     return spec;
   }
 
+  /** @return the list of listeners notified on each modification on the committed values in the store */
+  public List<JacisModificationListener<K, TV>> getModificationListeners() {
+    return modificationListeners;
+  }
+
+  /**
+   * Add the passed listener (implementing the interface {@link JacisModificationListener}).
+   * The listener will be notified on each modification on the committed values in the store.
+   *
+   * @param listener the listener to notify
+   * @return this store for method chaining
+   */
   public JacisStore<K, TV, CV> registerModificationListener(JacisModificationListener<K, TV> listener) {
     if (!getObjectTypeSpec().isTrackOriginalValueEnabled()) {
       throw new IllegalStateException("Registering modification listeners is only supported if original values are tracked, but they are not tracked for " + this + "! Trying to register listener: " + listener);
@@ -84,28 +95,14 @@ public class JacisStore<K, TV, CV> {
     return this;
   }
 
-  public List<JacisModificationListener<K, TV>> getModificationListeners() {
-    return modificationListeners;
-  }
-
+  /** @return the object adapter defining how to copy objects from the committed view to a transactional view and back */
   public JacisObjectAdapter<TV, CV> getObjectAdapter() {
     return objectAdapter;
   }
 
+  /** @return tte registry of tracked views for this store that are kept up to date on each commit automatically */
   public TrackedViewRegistry<K, TV, CV> getTrackedViewRegistry() {
     return trackedViewRegistry;
-  }
-
-  public void internalPrepare(JacisTransactionHandle transaction) {
-    withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executePrepare(this, transaction)));
-  }
-
-  public void internalCommit(JacisTransactionHandle transaction) {
-    withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeCommit(this, transaction)));
-  }
-
-  public void internalRollback(JacisTransactionHandle transaction) {
-    withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeRollback(this, transaction)));
   }
 
   public boolean containsKey(K key) {
@@ -142,7 +139,7 @@ public class JacisStore<K, TV, CV> {
     return getOrCreateEntryTxView(getOrCreateTxView(), key).getValue();
   }
 
-  private TV getReadOnly(K key) {
+  public TV getReadOnly(K key) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     if (entryTxView != null) {
@@ -260,6 +257,9 @@ public class JacisStore<K, TV, CV> {
     return new StoreEntryInfo<>(key, committedEntry, entryTxView, txView);
   }
 
+  /**
+   * Clear the complete store, remove all committed values and invalidate all pending transactions.
+   */
   public synchronized void clear() {
     storeAccessLock.writeLock().lock();// <======= **WRITE** LOCK =====
     try {
@@ -271,6 +271,25 @@ public class JacisStore<K, TV, CV> {
     } finally {
       storeAccessLock.writeLock().unlock();// <======= **WRITE** UNLOCK =====
     }
+  }
+
+  //======================================================================================
+  // transaction demarcation methods
+  //======================================================================================
+
+  @Override
+  protected void internalPrepare(JacisTransactionHandle transaction) {
+    withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executePrepare(this, transaction)));
+  }
+
+  @Override
+  protected void internalCommit(JacisTransactionHandle transaction) {
+    withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeCommit(this, transaction)));
+  }
+
+  @Override
+  protected void internalRollback(JacisTransactionHandle transaction) {
+    withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeRollback(this, transaction)));
   }
 
   //======================================================================================
