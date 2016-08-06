@@ -29,16 +29,30 @@ import java.util.stream.Stream;
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class JacisStore<K, TV, CV> {
 
+  /**
+   * Reference to the JACIS container this store belongs to
+   */
   private final JacisContainer container;
+  /** The store identifier uniquely identifying this store inside the container */
   private final StoreIdentifier storeIdentifier;
+  /** The object type specification for the objects stored in this store*/
   private final JacisObjectTypeSpec<K, TV, CV> spec;
+  /** The map containing the committed values of the objects (the core store) */
   private final ConcurrentHashMap<K, StoreEntry<K, TV, CV>> store = new ConcurrentHashMap<>();
+  /** A Map assigning each active transaction handle the transactional view on this store */
   private final Map<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>> txViewMap = Collections.synchronizedMap(new WeakHashMap<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>>());
-  private final ReadWriteLock storeAccessLock = new ReentrantReadWriteLock(true); // lock to synchronize changes on the committed entries of the store (specially during internalCommit)
+  /**
+   * Mutex / Lock to synchronize changes on the committed entries of the store (specially during internalCommit)
+   */
+  private final ReadWriteLock storeAccessLock = new ReentrantReadWriteLock(true);
+  /** The object adapter defining how to copy objects from the committed view to a transactional view and back */
   private final JacisObjectAdapter<TV, CV> objectAdapter;
+  /** The registry of tracked views for this store that are kwpt up to date on each commit automatically */
   private final TrackedViewRegistry<K, TV, CV> trackedViewRegistry;
+  /** List of listeners notified on each modification on the committed values in the store*/
   private final List<JacisModificationListener<K, TV>> modificationListeners = new ArrayList<>();
 
   public JacisStore(JacisContainer container, StoreIdentifier storeIdentifier, JacisObjectTypeSpec<K, TV, CV> spec) {
@@ -128,7 +142,7 @@ public class JacisStore<K, TV, CV> {
     return getOrCreateEntryTxView(getOrCreateTxView(), key).getValue();
   }
 
-  private TV getReadOnly(K key, boolean cloneIfReadOnlyModeNotSupported) {
+  private TV getReadOnly(K key) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     if (entryTxView != null) {
@@ -137,14 +151,6 @@ public class JacisStore<K, TV, CV> {
       StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
       return committedEntry == null ? null : objectAdapter.cloneCommitted2ReadOnlyTxView(committedEntry.getValue());
     }
-  }
-
-  public TV getReadOnly(K key) {
-    return getReadOnly(key, false);
-  }
-
-  public TV getReadOnlyIfSupported(K key) {
-    return getReadOnly(key, true);
   }
 
   public <P> P getProjectionReadOnly(K key, Function<TV, P> projection) {
@@ -156,11 +162,11 @@ public class JacisStore<K, TV, CV> {
   }
 
   public Stream<TV> stream() { // Note this method will clone all objects into the TX view!
-    return keyStream().map(k -> get(k)).filter(v -> v != null);
+    return keyStream().map(this::get).filter(v -> v != null);
   }
 
   public Stream<TV> streamReadOnly() {
-    return keyStream().map(k -> getReadOnly(k)).filter(v -> v != null);
+    return keyStream().map(this::getReadOnly).filter(v -> v != null);
   }
 
   public Stream<TV> stream(Predicate<TV> filter) {
@@ -173,7 +179,7 @@ public class JacisStore<K, TV, CV> {
 
   public Stream<TV> streamReadOnly(Predicate<TV> filter) {
     if (filter != null) {
-      return keyStream().map(k -> getReadOnly(k)).filter(v -> v != null && filter.test(v));
+      return keyStream().map(this::getReadOnly).filter(v -> v != null && filter.test(v));
     } else {
       return streamReadOnly();
     }
@@ -360,7 +366,7 @@ public class JacisStore<K, TV, CV> {
     return getTxView(false);
   }
 
-  JacisStoreTxView<K, TV, CV> getOrCreateTxView() {
+  private JacisStoreTxView<K, TV, CV> getOrCreateTxView() {
     return getTxView(true);
   }
 
@@ -402,10 +408,10 @@ public class JacisStore<K, TV, CV> {
   }
 
   private static class KeyValuePair<PK, PV> {
-    public PK key;
-    public PV val;
+    PK key;
+    PV val;
 
-    public KeyValuePair(PK key, PV val) {
+    KeyValuePair(PK key, PV val) {
       this.key = key;
       this.val = val;
     }
