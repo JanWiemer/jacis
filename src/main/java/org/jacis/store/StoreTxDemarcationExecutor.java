@@ -31,7 +31,7 @@ class StoreTxDemarcationExecutor {
     logger.trace("prepare {} on {} by Thread {}", txView, this, Thread.currentThread().getName());
     txView.startCommitPhase();
     for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
-      StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommitedEntry();
+      StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
       if (entryTxView.isUpdated()) {
         entryTxView.assertNotStale(txView);
         entryCommitted.lockedFor(txView);
@@ -58,7 +58,7 @@ class StoreTxDemarcationExecutor {
     }
     for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
       K key = entryTxView.getKey();
-      StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommitedEntry();
+      StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
       if (entryTxView.isUpdated()) {
         if (trace) {
           logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
@@ -87,7 +87,7 @@ class StoreTxDemarcationExecutor {
     }
     for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
       K key = entryTxView.getKey();
-      StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommitedEntry();
+      StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
       if (trace) {
         logger.trace("... rollback {}, Store: {}", store.getObjectInfo(key), this);
       }

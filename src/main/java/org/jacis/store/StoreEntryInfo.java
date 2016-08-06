@@ -12,6 +12,7 @@ package org.jacis.store;
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
+@SuppressWarnings("ALL")
 public class StoreEntryInfo<K, TV, CV> {
 
   private final K key;
@@ -25,7 +26,7 @@ public class StoreEntryInfo<K, TV, CV> {
   private final String txViewValueString;
   private final String originalTxViewValueString;
 
-  public StoreEntryInfo(K key, StoreEntry<K, TV, CV> committedEntry, StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> txView) {
+  StoreEntryInfo(K key, StoreEntry<K, TV, CV> committedEntry, StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> txView) {
     this.key = key;
     if (committedEntry != null) {
       committedVersion = committedEntry.getVersion();

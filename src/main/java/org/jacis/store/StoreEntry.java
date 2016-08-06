@@ -21,11 +21,12 @@ class StoreEntry<K, TV, CV> {
   private JacisStoreTxView<K, TV, CV> updatedBy = null; // transaction that has committed the current version (for logging / debugging only)
   private JacisStoreTxView<K, TV, CV> lockedFor = null; // transaction this object is locked for (in the time between prepare and internalCommit)
 
-  public StoreEntry(JacisStore<K, TV, CV> store, K key) {
+  StoreEntry(JacisStore<K, TV, CV> store, K key) {
     this.store = store;
     this.key = key;
   }
 
+  @SuppressWarnings("ObjectEquality")
   public void update(StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> byTx) {
     TV txVal = entryTxView.getValue();
     if (txVal == null) { // deleted
@@ -37,53 +38,53 @@ class StoreEntry<K, TV, CV> {
     updatedBy = byTx;
   }
 
-  public void lockedFor(JacisStoreTxView<K, TV, CV> lockingTx) {
+  void lockedFor(JacisStoreTxView<K, TV, CV> lockingTx) {
     lockedFor = lockingTx;
   }
 
-  public void releaseLockedFor(JacisStoreTxView<K, TV, CV> releasingTx) {
+  void releaseLockedFor(JacisStoreTxView<K, TV, CV> releasingTx) {
     if (releasingTx.equals(getLockedFor())) {
       lockedFor = null;
     }
   }
 
-  public boolean isLocked() {
+  boolean isLocked() {
     return lockedFor != null;
   }
 
-  public boolean isLockedForOtherThan(JacisStoreTxView<K, TV, CV> txView) {
+  boolean isLockedForOtherThan(JacisStoreTxView<K, TV, CV> txView) {
     return lockedFor != null && !lockedFor.equals(txView);
   }
 
-  public JacisStore<K, TV, CV> getStore() {
+  JacisStore<K, TV, CV> getStore() {
     return store;
   }
 
-  public K getKey() {
+  K getKey() {
     return key;
   }
 
-  public CV getValue() {
+  CV getValue() {
     return value;
   }
 
-  public boolean isNull() {
+  boolean isNull() {
     return value == null;
   }
 
-  public boolean isNotNull() {
+  boolean isNotNull() {
     return value != null;
   }
 
-  public long getVersion() {
+  long getVersion() {
     return version;
   }
 
-  public JacisStoreTxView<K, TV, CV> getUpdatedBy() {
+  JacisStoreTxView<K, TV, CV> getUpdatedBy() {
     return updatedBy;
   }
 
-  public JacisStoreTxView<K, TV, CV> getLockedFor() {
+  JacisStoreTxView<K, TV, CV> getLockedFor() {
     return lockedFor;
   }
 

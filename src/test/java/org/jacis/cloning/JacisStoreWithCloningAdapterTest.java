@@ -126,7 +126,7 @@ public class JacisStoreWithCloningAdapterTest {
   }
 
   @Test
-  public void testCollect() {
+  public void testAccumulate() {
     JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     store.getContainer().withLocalTx(() -> {
       store.update("1", new TestObject("A1", 1));
@@ -136,7 +136,7 @@ public class JacisStoreWithCloningAdapterTest {
     });
     store.getContainer().withLocalTx(() -> {
       store.update("5", new TestObject("A3", 5));
-      AtomicInteger res = store.collect(new AtomicInteger(), (c, o) -> {
+      AtomicInteger res = store.accumulate(new AtomicInteger(), (c, o) -> {
         if (o != null && o.getName().startsWith("A")) {
           c.incrementAndGet();
         }

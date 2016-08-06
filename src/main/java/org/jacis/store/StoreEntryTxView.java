@@ -17,90 +17,87 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  */
 class StoreEntryTxView<K, TV, CV> {
 
-  private final StoreEntry<K, TV, CV> commitedEntry; // link to the committed entry (note this is the real committed instance that might be changed by other TXs)
+  private final StoreEntry<K, TV, CV> committedEntry; // link to the committed entry (note this is the real committed instance that might be changed by other TXs)
   private TV txValue = null; // current value of the entry in this TX
   private TV origValue; // original value of the entry when cloning it to the transaction view (only tracked if configured)
   private long origVersion; // original version of the entry when cloning it to the transaction view (for optimistic locking)
   private boolean updated = false; // entry was updated in the current transaction
 
-  public StoreEntryTxView(StoreEntry<K, TV, CV> commitedEntry, boolean trackOriginal) {
-    JacisObjectAdapter<TV, CV> ca = commitedEntry.getStore().getObjectAdapter();
-    this.commitedEntry = commitedEntry;
-    this.txValue = ca.cloneCommitted2WritableTxView(commitedEntry.getValue());
-    this.origVersion = commitedEntry.getVersion();
+  StoreEntryTxView(StoreEntry<K, TV, CV> committedEntry, boolean trackOriginal) {
+    JacisObjectAdapter<TV, CV> ca = committedEntry.getStore().getObjectAdapter();
+    this.committedEntry = committedEntry;
+    this.txValue = ca.cloneCommitted2WritableTxView(committedEntry.getValue());
+    this.origVersion = committedEntry.getVersion();
     if (trackOriginal) {
-      origValue = ca.cloneCommitted2WritableTxView(commitedEntry.getValue());
+      origValue = ca.cloneCommitted2WritableTxView(committedEntry.getValue());
     } else {
       origValue = null;
     }
   }
 
   StoreEntryTxView(StoreEntryTxView<K, TV, CV> orig) { // only to create a read only view
-    this.commitedEntry = orig.getCommitedEntry();
-    JacisObjectAdapter<TV, CV> ca = commitedEntry.getStore().getObjectAdapter();
+    this.committedEntry = orig.getCommittedEntry();
+    JacisObjectAdapter<TV, CV> ca = committedEntry.getStore().getObjectAdapter();
     this.txValue = ca.cloneTxView2ReadOnlyTxView(orig.txValue);
     this.origValue = ca.cloneTxView2ReadOnlyTxView(orig.origValue);
     this.origVersion = orig.origVersion;
   }
 
-  public void updateValue(TV newValue) {
+  void updateValue(TV newValue) {
     this.txValue = newValue;
     this.updated = true;
   }
 
-  public StoreEntry<K, TV, CV> getCommitedEntry() {
-    return commitedEntry;
+  StoreEntry<K, TV, CV> getCommittedEntry() {
+    return committedEntry;
   }
 
-  public K getKey() {
-    return commitedEntry.getKey();
+  K getKey() {
+    return committedEntry.getKey();
   }
 
-  public TV getValue() {
+  TV getValue() {
     return txValue;
   }
 
-  public boolean isNull() {
+  boolean isNull() {
     return txValue == null;
   }
 
-  public boolean isNotNull() {
+  boolean isNotNull() {
     return txValue != null;
   }
 
-  public TV getOrigValue() {
+  TV getOrigValue() {
     return origValue;
   }
 
-  public long getOrigVersion() {
+  long getOrigVersion() {
     return origVersion;
   }
 
-  public boolean isUpdated() {
+  boolean isUpdated() {
     return updated;
   }
 
-  public boolean isStale(JacisStoreTxView<K, TV, CV> txView) {
-    if (origVersion < commitedEntry.getVersion()) {
-      return true;
-    }
-    return commitedEntry.isLockedForOtherThan(txView);
+  boolean isStale(JacisStoreTxView<K, TV, CV> txView) {
+    return origVersion < committedEntry.getVersion() || committedEntry.isLockedForOtherThan(txView);
   }
 
-  public void assertNotStale(JacisStoreTxView<K, TV, CV> txView) {
-    if (commitedEntry.isLockedForOtherThan(txView)) {
+  void assertNotStale(JacisStoreTxView<K, TV, CV> txView) throws JacisStaleObjectException {
+    if (committedEntry.isLockedForOtherThan(txView)) {
       throwStale(txView);
-    } else if (origVersion < commitedEntry.getVersion()) {
+    } else if (origVersion < committedEntry.getVersion()) {
       throwStale(txView);
     }
   }
 
-  private void throwStale(JacisStoreTxView<K, TV, CV> txView) {
+  private void throwStale(JacisStoreTxView<K, TV, CV> txView) throws JacisStaleObjectException {
     StringBuilder msg = new StringBuilder();
     msg.append("Object ").append(getKey());
     msg.append(" updated by current TX ").append(txView.getTxId()).append(" (from v. ").append(getOrigVersion()).append(")");
-    JacisStoreTxView<K, TV, CV> otherTxView = commitedEntry.getLockedFor() != null ? commitedEntry.getLockedFor() : commitedEntry.getUpdatedBy();
-    if (commitedEntry.isLockedForOtherThan(txView)) {
+    JacisStoreTxView<K, TV, CV> otherTxView = committedEntry.getLockedFor() != null ? committedEntry.getLockedFor() : committedEntry.getUpdatedBy();
+    if (committedEntry.isLockedForOtherThan(txView)) {
       msg.append(" was already updated by prepared other TX ");
     } else {
       msg.append(" was already updated by other TX ");
@@ -109,10 +106,10 @@ class StoreEntryTxView<K, TV, CV> {
     StringBuilder details = new StringBuilder();
     details.append("// Details: \n");
     details.append(" - value changed by this TX: ").append(getValue()).append("\n");
-    if (commitedEntry.getStore().getObjectTypeSpec().isTrackOriginalValueEnabled()) {
+    if (committedEntry.getStore().getObjectTypeSpec().isTrackOriginalValueEnabled()) {
       details.append(" - original value          : ").append(getOrigValue()).append(" (v. ").append(getOrigVersion()).append(")").append("\n");
     }
-    details.append(" - committed value         : ").append(commitedEntry.getValue()).append(" (v. ").append(commitedEntry.getVersion()).append(")").append("\n");
+    details.append(" - committed value         : ").append(committedEntry.getValue()).append(" (v. ").append(committedEntry.getVersion()).append(")").append("\n");
     details.append(" - current TX: ").append(txView).append("\n");
     details.append(" - other TX: ").append(otherTxView).append("\n");
     details.append(" - store: ").append(this);
@@ -121,7 +118,7 @@ class StoreEntryTxView<K, TV, CV> {
 
   @Override
   public int hashCode() {
-    return commitedEntry.hashCode();
+    return committedEntry.hashCode();
   }
 
   @Override
@@ -134,7 +131,7 @@ class StoreEntryTxView<K, TV, CV> {
       return false;
     }
     StoreEntryTxView<?, ?, ?> that = (StoreEntryTxView<?, ?, ?>) obj;
-    return commitedEntry == null ? that.commitedEntry == null : commitedEntry.equals(that.commitedEntry);
+    return committedEntry == null ? that.committedEntry == null : committedEntry.equals(that.committedEntry);
   }
 
   @Override

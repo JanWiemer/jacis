@@ -34,9 +34,9 @@ public class TrackedViewRegistry<K, TV, CV> implements JacisModificationListener
 
   };
 
-  public TrackedViewRegistry(JacisStore<K, TV, CV> store, boolean checkConsistencAfterCommit) {
+  public TrackedViewRegistry(JacisStore<K, TV, CV> store, boolean checkConsistencyAfterCommit) {
     this.store = store;
-    if (checkConsistencAfterCommit) {
+    if (checkConsistencyAfterCommit) {
       store.getContainer().registerTransactionListener(txListener);
     }
 
@@ -78,9 +78,7 @@ public class TrackedViewRegistry<K, TV, CV> implements JacisModificationListener
   }
 
   public void clearViews() {
-    for (TrackedView<TV> view : viewMap.values()) {
-      view.clear();
-    }
+    viewMap.values().forEach(TrackedView::clear);
   }
 
   public <VT extends TrackedView<TV>> VT getView(Class<VT> viewType) {

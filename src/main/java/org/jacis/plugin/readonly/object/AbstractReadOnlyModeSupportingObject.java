@@ -10,7 +10,7 @@ import org.jacis.exception.ReadOnlyException;
  * Abstract base class for objects supporting switching them between the usual read-write mode and a read-only mode.
  * Therefore it implements the methods {@link #switchToReadOnlyMode()} and {@link #switchToReadWriteMode()} from
  * the {@link JacisReadonlyModeSupport} interface. Note that all the time only one single thread is allowed to
- * have write access to the object. When switching an object to reqa-write mode the current thread is stored
+ * have write access to the object. When switching an object to read-write mode the current thread is stored
  * as thread with write access (see {@link #threadWithWriteAccess}).
  *
  * For actual implementations the class provides the protected method {@link #checkWritable()}.

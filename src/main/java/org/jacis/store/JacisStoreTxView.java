@@ -29,7 +29,7 @@ class JacisStoreTxView<K, TV, CV> {
   private boolean commitPending = false; // internalCommit pending / prepare already called
   private String invalidationReason = null; // gives the reason (null means valid) why the tx has been invalidated. Attempts to internalCommit the tx will be ignored.
 
-  public JacisStoreTxView(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
+  JacisStoreTxView(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
     this.store = store;
     this.tx = transaction;
     this.readOnlyTxId = null;
@@ -37,7 +37,7 @@ class JacisStoreTxView<K, TV, CV> {
     this.storeTxView = new HashMap<>();
   }
 
-  public JacisStoreTxView(String readOnlyTxId, JacisStoreTxView<K, TV, CV> orig) { // only to create a read only snapshot
+  JacisStoreTxView(String readOnlyTxId, JacisStoreTxView<K, TV, CV> orig) { // only to create a read only snapshot
     this.tx = orig.tx;
     this.readOnlyTxId = readOnlyTxId;
     this.creationTimestamp = orig.creationTimestamp;
@@ -50,31 +50,31 @@ class JacisStoreTxView<K, TV, CV> {
     storeTxView = readOnlyCache;
   }
 
-  public String getTxId() {
+  String getTxId() {
     return readOnlyTxId == null ? tx.getTxId() : readOnlyTxId + "|" + tx.getTxId();
   }
 
-  public String getTxDescription() {
+  String getTxDescription() {
     return tx.getTxDescription();
   }
 
-  public JacisTransactionHandle getTransaction() {
+  JacisTransactionHandle getTransaction() {
     return tx;
   }
 
-  public long getCreationTimestamp() {
+  long getCreationTimestamp() {
     return creationTimestamp;
   }
 
-  public boolean isReadOnly() {
+  boolean isReadOnly() {
     return readOnlyTxId != null;
   }
 
-  public boolean isCommitPending() {
+  boolean isCommitPending() {
     return commitPending;
   }
 
-  public JacisStoreTxView<K, TV, CV> assertWritable() {
+  JacisStoreTxView<K, TV, CV> assertWritable() {
     if (commitPending) {
       throw new IllegalStateException("Commit already started for transaction " + this);
     } else if (isReadOnly()) {
@@ -83,25 +83,25 @@ class JacisStoreTxView<K, TV, CV> {
     return this;
   }
 
-  public boolean containsTxView(K key) {
+  boolean containsTxView(K key) {
     return storeTxView.containsKey(key);
   }
 
-  public StoreEntryTxView<K, TV, CV> getEntryTxView(K key) {
+  StoreEntryTxView<K, TV, CV> getEntryTxView(K key) {
     return storeTxView.get(key);
   }
 
-  public Collection<StoreEntryTxView<K, TV, CV>> getAllEntryTxViews() {
+  Collection<StoreEntryTxView<K, TV, CV>> getAllEntryTxViews() {
     return storeTxView.values();
   }
 
-  public StoreEntryTxView<K, TV, CV> createTxViewEntry(StoreEntry<K, TV, CV> commitedEntry) {
-    StoreEntryTxView<K, TV, CV> entry = new StoreEntryTxView<>(commitedEntry, store.getObjectTypeSpec().isTrackOriginalValueEnabled());
+  StoreEntryTxView<K, TV, CV> createTxViewEntry(StoreEntry<K, TV, CV> committedEntry) {
+    StoreEntryTxView<K, TV, CV> entry = new StoreEntryTxView<>(committedEntry, store.getObjectTypeSpec().isTrackOriginalValueEnabled());
     storeTxView.put(entry.getKey(), entry);
     return entry;
   }
 
-  public boolean removeTxViewEntry(K key, boolean forceIfUpdated) {
+  boolean removeTxViewEntry(K key, boolean forceIfUpdated) {
     StoreEntryTxView<K, TV, CV> entry = storeTxView.get(key);
     if (entry.isUpdated() && !forceIfUpdated) {
       return false;
@@ -110,24 +110,24 @@ class JacisStoreTxView<K, TV, CV> {
     return true;
   }
 
-  public void startCommitPhase() {
+  void startCommitPhase() {
     this.commitPending = true;
   }
 
-  public void destroy() {
+  void destroy() {
     storeTxView.clear();
     store.notifyTxViewDestroyed(this);
   }
 
-  public boolean isInvalidated() {
+  boolean isInvalidated() {
     return invalidationReason != null;
   }
 
-  public String getInvalidationReason() {
+  String getInvalidationReason() {
     return invalidationReason;
   }
 
-  public void invalidate(String reason) {
+  void invalidate(String reason) {
     this.invalidationReason = reason;
   }
 

@@ -7,6 +7,7 @@ import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.container.JacisTransactionHandle;
+import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
@@ -23,6 +24,13 @@ import java.util.stream.Stream;
 
 /**
  * Storing a single type of objects.
+ *
+ * All operations checking or returning entries of the store operate on the committed values merged with the
+ * current transactional view (obtained with the currently active transaction handle from the map {@link #txViewMap}).
+ * This means that first the transactional view is checked if it contains an entry for the desired key.
+ * If so this entry is returned, otherwise the committed value from the core store (see {@link #store}) is returned.
+ * Note that if an object is deleted in a transaction an entry with the value 'null' remains in the transactional view.
+ * Therefore also deletions are properly handled with respect to isolation.
  *
  * @param <K> Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
@@ -105,6 +113,13 @@ public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionA
     return trackedViewRegistry;
   }
 
+  /**
+   * Returns if the store contains an entry for the passed key.
+   * Note that the method operates on the committed values merged with the current transactional view (see class description).
+   *
+   * @param key The key of the entry to check.
+   * @return if the store contains an entry for the passed key.
+   */
   public boolean containsKey(K key) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
@@ -115,19 +130,46 @@ public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionA
     return coreEntry != null && coreEntry.isNotNull();
   }
 
+  /**
+   * Returns if the object for the passed key has been updated in the current transaction.
+   * Note that an update has to be explicitly called for an object (by calling {@link #update(Object, Object)}).
+   * The check returns true if there exists a transactional view
+   * and the updated flag of this entry (see {@link StoreEntryTxView#updated}) is set (set by the 'update' method).
+   * Note that this method does not cause the referred object to be copied to thr transactional view.
+   *
+   * @param key The key of the entry to check.
+   * @return if the object for the passed key has been updated in the current transaction.
+   */
   public boolean isUpdated(K key) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     return entryTxView != null && entryTxView.isUpdated();
   }
 
+  /**
+   * Returns if the object for the passed key is stale.
+   * An object is considered to be stale if after first reading it in the current transaction,
+   * an updated version of the same object has been committed by another transaction.
+   * Note that this method does not cause the referred object to be copied to thr transactional view.
+   * @param key The key of the entry to check.
+   * @return if the object for the passed key is stale.
+   */
   public boolean isStale(K key) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     return entryTxView != null && entryTxView.isStale(txView);
   }
 
-  public void checkStale(K key) {
+  /**
+   * Checks if the object for the passed key is stale and throws a {@link JacisStaleObjectException} if so.
+   * An object is considered to be stale if after first reading it in the current transaction,
+   * an updated version of the same object has been committed by another transaction.
+   * Note that this method does not cause the referred object to be copied to thr transactional view.
+   *
+   * @param key The key of the entry to check.
+   * @throws JacisStaleObjectException thrown if the object for the passed key is stale.
+   */
+  public void checkStale(K key) throws JacisStaleObjectException {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     if (entryTxView != null) {
@@ -135,10 +177,28 @@ public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionA
     }
   }
 
+  /**
+   * Returns the value for the passed key.
+   * Note that the method operates on the committed values merged with the current transactional view (see class description).
+   * If the transactional view did not already contain the entry for the key it is copied to the transactional view now.
+   *
+   * @param key The key of the desired entry.
+   * @return the value for the passed key.
+   */
   public TV get(K key) {
     return getOrCreateEntryTxView(getOrCreateTxView(), key).getValue();
   }
 
+  /**
+   * Returns the value for the passed key.
+   * If the object is already stored in the transactional view of the current transaction this value is returned.
+   * Otherwise the behaviour depends on the object type:
+   * If the object adapter for the store supports a read only mode, then a read only view on the committed value is returned.
+   * Otherwise the committed entry for the key it is copied to the transactional view now.
+   *
+   * @param key The key of the desired entry.
+   * @return the value for the passed key.
+   */
   public TV getReadOnly(K key) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
@@ -150,22 +210,56 @@ public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionA
     }
   }
 
+  /**
+   * Returns a read only projection of the object for the passed value.
+   * First a read only view (if supported) of the object is obtained by the {@link #getReadOnly(Object)} method.
+   * The projected is computed from the object by applying the passed projection function.
+   *
+   * @param key The key of the desired entry.
+   * @param projection The projection function computing the desired return value (of the passed type 'P') from the object.
+   * @param <P> The result type of the projection
+   * @return a read only projection of the object for the passed value.
+   */
   public <P> P getProjectionReadOnly(K key, Function<TV, P> projection) {
     return projection.apply(getReadOnly(key));
   }
 
+  /** @return a stream of all keys currently stored in the store. Note that the keys added by any pending transactions are contained (with null values if not jet committed).  */
   private Stream<K> keyStream() {
     return store.keySet().stream(); // store contains also new entries (with null value)! Therefore iterating the keys is usually enough
   }
 
+  /**
+   * Returns a stream of all objects (noz 'null') currently stored in the store.
+   * Note that the method operates on the committed values merged with the current transactional view (see class description).
+   * If the transactional view did not already contain an entry it is copied to the transactional view now.
+   *
+   * @return a stream of all objects (noz 'null') currently stored in the store.
+   */
   public Stream<TV> stream() { // Note this method will clone all objects into the TX view!
     return keyStream().map(this::get).filter(v -> v != null);
   }
 
+  /**
+   * Returns a stream of read only views for all objects (noz 'null') currently stored in the store.
+   * Note that the method operates on the committed values merged with the current transactional view (see class description).
+   * Further note that the behavior of the method is equivalent to the behavior of the {@link #getReadOnly} method for a single object.
+   *
+   * @return a stream of all objects (noz 'null') currently stored in the store.
+   */
   public Stream<TV> streamReadOnly() {
     return keyStream().map(this::getReadOnly).filter(v -> v != null);
   }
 
+  /**
+   * Returns a stream of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * Note that the method operates on the committed values merged with the current transactional view (see class description).
+   * If supported the filter predicate is checked on a read only view of the object (without cloning it).
+   * Only the objects passing the filter are is copied to the transactional view (if they are not yet contained there).
+   *
+   * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
+   * @return a stream of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   */
   public Stream<TV> stream(Predicate<TV> filter) {
     if (filter != null) {
       return keyStream().map(k -> pair(k, getReadOnly(k))).filter(e -> e.val != null && filter.test(e.val)).map(e -> get(e.key));
@@ -174,6 +268,16 @@ public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionA
     }
   }
 
+  /**
+   * Returns a stream of read only views for all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * Note that the method operates on the committed values merged with the current transactional view (see class description).
+   * If supported the filter predicate is checked on a read only view of the object (without cloning it).
+   * Further note that the behavior of the method is equivalent to the behavior of the {@link #getReadOnly} method for a single object
+   * (only the objects passing the filter may be copied to the transactional view if no read only view is supported (and they are not yet contained there)).
+   *
+   * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
+   * @return a stream of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   */
   public Stream<TV> streamReadOnly(Predicate<TV> filter) {
     if (filter != null) {
       return keyStream().map(this::getReadOnly).filter(v -> v != null && filter.test(v));
@@ -182,74 +286,201 @@ public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionA
     }
   }
 
+  /**
+   * Returns a list of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * The method uses the {@link #stream(Predicate)} method and collects the results to a list.
+   *
+   * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
+   * @return a list of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   */
   public List<TV> getAll(Predicate<TV> filter) {
     return stream(filter).collect(Collectors.toList());
   }
 
+  /**
+   * Returns a list of read-only views for all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * The method uses the {@link #streamReadOnly(Predicate)} method and collects the results to a list.
+   *
+   * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
+   * @return a list of read-only views for all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   */
   public List<TV> getAllReadOnly(Predicate<TV> filter) {
     return streamReadOnly(filter).collect(Collectors.toList());
   }
 
+  /**
+   * Returns a list of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * The method executes the {@link #getAll(Predicate)} method as an atomic operations.
+   * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
+   * The execution of atomic operations can not overlap with the execution of other atomic operations (but normal operations may overlap).
+   *
+   * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
+   * @return a list of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   */
   public List<TV> getAllAtomic(Predicate<TV> filter) {
     return computeAtomic(() -> getAll(filter));
   }
 
+  /**
+   * Returns a list of read-only views for all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * The method executes the {@link #getAllReadOnly(Predicate)} method as an atomic operations.
+   * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
+   * The execution of atomic operations can not overlap with the execution of other atomic operations (but normal operations may overlap).
+   *
+   * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
+   * @return a list of read-only views for all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   */
   public List<TV> getAllReadOnlyAtomic(Predicate<TV> filter) {
     return computeAtomic(() -> getAllReadOnly(filter));
   }
 
+  /**
+   * Update the object for the passed key with the passed object value.
+   * Note that the passed object instance may be the same (modified) instance obtained from the store before,
+   * but also can be another instance.
+   * Internally the value of the transactional view (see {@link StoreEntryTxView#txValue}) for this object is replaced with the passed value
+   * and the transactional view is marked as updated (see {@link StoreEntryTxView#updated}).
+   *
+   * @param key The key of the object to update.
+   * @param value The updated object instance.
+   */
   public void update(K key, TV value) {
     JacisStoreTxView<K, TV, CV> txView = getOrCreateTxView().assertWritable();
     StoreEntryTxView<K, TV, CV> entryTxView = getOrCreateEntryTxView(txView, key);
     entryTxView.updateValue(value);
   }
 
+  /**
+   * Remove the object for the passed key from the store (first only in the transactional view of course).
+   * The method is equivalent to simply calling the {@link #update(Object, Object)} method with a 'null' value.
+   *
+   * @param key The key of the object to remove.
+   */
   public void remove(K key) {
     update(key, null);
   }
 
+  /**
+   * Refresh the object for the passed key from the committed values. Note that all earlier modifications in the current transaction are lost.
+   * First the current transactional view (if updated or not) is discarded.
+   * Afterwards a fresh copy of the current committed value is stored in the transactional view by calling the {@link #get(Object)} method.
+   *
+   * @param key The key of the object to refresh.
+   * @return the object for the passed key refreshed from the committed values. Note that all earlier modifications in the current transaction are lost.
+   */
   public TV refresh(K key) { // refresh with committed version -> discard all changes made by the current TX
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     txView.removeTxViewEntry(key, true);
     return get(key);
   }
 
+  /**
+   * Refresh the object for the passed key from the committed values if the object is not marked as updated.
+   * Note that all earlier modifications in the current transaction are lost if the object is not marked as updated.
+   * First the current transactional view (if updated or not) is discarded.
+   * Afterwards a fresh copy of the current committed value is stored in the transactional view by calling the {@link #get(Object)} method.
+   *
+   * @param key The key of the object to refresh.
+   * @return the object for the passed key refreshed from the committed values if the object is not marked as updated.
+   */
   public TV refreshIfNotUpdated(K key) { // if not updated: refresh with committed version -> discard all changes made by the current TX
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     txView.removeTxViewEntry(key, false);
     return get(key);
   }
 
+  /**
+   * Returns the current size of the store.
+   * Note that the size is not exact because all entries in the committed values are counted.
+   * Since objects created or deleted in a pending transaction also have an entry with null value in the committed values
+   * these objects are counted as well.
+   * @return The current size of the store.
+   */
   public int size() { // heuristic (due to concurrent access)
     return store.size();
   }
 
+  /**
+   * Execute the passed operation (without return value) as an atomic operation.
+   * The execution of atomic operations can not overlap with the execution of other atomic operations
+   * (but normal operations may overlap).
+   * @param atomicOperation The operation to execute atomically
+   */
   public void executeAtomic(Runnable atomicOperation) { // Execute an atomic operation. No internalCommit of any other TX and no other atomic action will interleave.
     withReadLock(runnableWrapper(atomicOperation));
   }
 
+  /**
+   * Execute the passed operation (with return value) as an atomic operation.
+   * @param atomicOperation The operation to execute atomically
+   * @param <R> The return type of the operation
+   * @return The return value of the operation
+   */
   public <R> R computeAtomic(Supplier<R> atomicOperation) { // Execute an atomic operation. No internalCommit of any other TX and no other atomic action will interleave.
     return withReadLock(atomicOperation);
   }
 
-  public <C> C collect(C target, BiConsumer<C, TV> accumulator) {
+  /**
+   * Accumulate a value from all objects with the passed accumulator function.
+   * The accumulation starts with the initial value passed to the 'target' parameter.
+   * For all objects the accumulator method is called with the current value of the target and the object.
+   * Inside the accumulator method the target value is updated.
+   * The objects are passed to the accumulator in read-only mode if supported.
+   * The objects are collected by calling the {@link #getAllReadOnly(Predicate)} with 'null' as predicate.
+   * <p>
+   * Example (simply counting the objects):
+   * <p>
+   * ----
+   * int objectCount = store.accumulate(new AtomicInteger(), (i,o)-&gt;i.incrementAndGet()).get();
+   * ----
+   *
+   * @param target      The initial value for the target
+   * @param accumulator The accumulator method getting the current value of the accumulation target (type 'C') and an object (type 'TV').
+   * @param <C>         The type of the accumulation target.
+   * @return The accumulation result.
+   */
+  public <C> C accumulate(C target, BiConsumer<C, TV> accumulator) {
     for (TV entryTxView : getAllReadOnly(null)) {
       accumulator.accept(target, entryTxView);
     }
     return target;
   }
 
-  public <C> C collectAtomic(C target, BiConsumer<C, TV> accumulator) {
-    return computeAtomic(() -> collect(target, accumulator));
+  /**
+   * Accumulate a value from all objects with the passed accumulator function as an atomic operation.
+   * The method executes the {@link #accumulate(Object, BiConsumer)} method as an atomic operations.
+   * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
+   * The execution of atomic operations can not overlap with the execution of other atomic operations (but normal operations may overlap).
+   *
+   * @param target      The initial value for the target
+   * @param accumulator The accumulator method getting the current value of the accumulation target (type 'C') and an object (type 'TV').
+   * @param <C>         The type of the accumulation target.
+   * @return The accumulation result (computed as an atomic operation).
+   */
+  public <C> C accumulateAtomic(C target, BiConsumer<C, TV> accumulator) {
+    return computeAtomic(() -> accumulate(target, accumulator));
   }
 
-  public TV getTransactionStartValue(K key) { // value that was valid as the object was first accessed by the current TX (null if untouched).
+  /**
+   * Returns the value that was valid as the object was first accessed by the current TX (null if untouched).
+   *
+   * @param key The key of the desired object.
+   * @return the value that was valid as the object was first accessed by the current TX (null if untouched).
+   */
+  public TV getTransactionStartValue(K key) {
     assertTrackOriginalValue();
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     return entryTxView == null ? null : entryTxView.getOrigValue(); // if TX never touched the object we return null
   }
 
+  /**
+   * Returns a info object /type {@link StoreEntryInfo}) containing information regarding the current state of the object
+   * (regarding the committed values and the current transactional view).
+   *
+   * @param key The key of the desired object.
+   * @return a info object /type {@link StoreEntryInfo}) containing information regarding the current state of the object.
+   */
   public StoreEntryInfo<K, TV, CV> getObjectInfo(K key) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
