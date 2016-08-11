@@ -18,9 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class JacisTransactionAdapterLocal implements JacisTransactionAdapter {
 
-  /**
-   * Thread local to store the currently active transaction handle for the current thread.
-   */
+  /** Thread local to store the currently active transaction handle for the current thread. */
   protected final ThreadLocal<JacisTransactionHandle> transaction = new ThreadLocal<>();
   /** Sequence to give the started local transactions a unique id */
   private final AtomicLong txSeq = new AtomicLong(0);
