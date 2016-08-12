@@ -7,7 +7,7 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.8
-version = '1.1'
+version = '1.2'
 group = 'org.jacis'
 
 configurations {
@@ -17,9 +17,10 @@ configurations {
 jar {
     manifest {
         attributes 'Implementation-Title': 'Jacis',
-                'Implementation-Version': 1.1,
+                'Implementation-Version': 1.2,
                    'Implementation-Vendor' : "Jan Wiemer"
      }
+    exclude 'logback.xml'
  }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
