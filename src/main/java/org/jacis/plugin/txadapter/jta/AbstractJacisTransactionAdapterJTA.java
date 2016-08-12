@@ -29,7 +29,7 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
   /** Sequence to give the transaction handles a default unique id */
   private final AtomicLong txSeq = new AtomicLong(0);
 
-  /** @retur the JTA transaction manager (implementing the interface {@link TransactionManager}) */
+  /** @return the JTA transaction manager (implementing the interface {@link TransactionManager}) */
   protected abstract TransactionManager getTransactionManager();
 
   /**
@@ -81,20 +81,36 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
       tx = isTransactionActive(tx) ? tx : null;
       if (tx == null) {
         if (currentTxHandle == null) {
+          if (log.isTraceEnabled()) {
+            log.trace("{} no transaction active, no handle stored for thread {}", this, Thread.currentThread().getName());
+          }
           return null;
-        } else if (currentTxHandle != null) {
+        } else { // currentTxHandle != null
+          if (log.isTraceEnabled()) {
+            log.trace("{} no transaction active, handle stored: [{}] for thread {}", this, currentTxHandle, Thread.currentThread().getName());
+          }
           container.internalRollback(currentTxHandle); // transaction no longer active
-          log.warn("{}: JTA transaction for transaction handle {} no longer active!", this, currentTxHandle);
+          log.warn("{}: JTA transaction for transaction handle [{}] no longer active!", this, currentTxHandle);
           transaction.remove();
           return null;
         }
       } else if (currentTxHandle != null) {
         if (tx.equals(currentTxHandle.getExternalTransaction())) {
+          if (log.isTraceEnabled()) {
+            log.trace("{} transaction active and matching handle stored: [{}] for thread {}", this, currentTxHandle, Thread.currentThread().getName());
+          }
           return currentTxHandle;
         } else {
+          if (log.isTraceEnabled()) {
+            log.trace("{} transaction active and not matching handle stored: [{}] (active TX: [{}]) for thread {}", this, currentTxHandle, tx, Thread.currentThread().getName());
+          }
           container.internalRollback(currentTxHandle); // transaction no longer active
-          log.warn("{}: active JTA transaction {} no longer matches the transaction handle {}!", this, tx, currentTxHandle);
+          log.warn("{}: active JTA transaction [{}] no longer matches the transaction handle [{}]!", this, tx, currentTxHandle);
           // do not return but continue to join the new active tx
+        }
+      } else {
+        if (log.isTraceEnabled()) {
+          log.trace("{} transaction active and no handle stored (active TX: [{}])  for thread {}", this, tx, Thread.currentThread().getName());
         }
       }
       long txNr = txSeq.incrementAndGet();
@@ -102,6 +118,10 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
       String txDescription = computeJacisTxDescription(tx, txId);
       JacisTransactionHandle txHandle = new JacisTransactionHandle(txId, txDescription, tx);
       tx.registerSynchronization(new JacisSync(container, txHandle));
+      transaction.set(txHandle);
+      if (log.isTraceEnabled()) {
+        log.trace("{} created new handle [{}] for active TX: [{}] for thread {}", this, txHandle, tx, Thread.currentThread().getName());
+      }
       return txHandle;
     } catch (SystemException e) {
       throw new JacisTransactionException(e);
