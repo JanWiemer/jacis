@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
+@SuppressWarnings("CodeBlock2Expr")
 public class JacisStoreWithCloningTxTest {
 
   private static final Logger log = LoggerFactory.getLogger(JacisStoreWithCloningTxTest.class);

@@ -21,9 +21,7 @@ import org.jacis.exception.ReadOnlyException;
  */
 public abstract class AbstractReadOnlyModeSupportingObject implements JacisReadonlyModeSupport {
 
-  /**
-   * The thread currently permitted to modify the object (if any)
-   */
+  /** The thread currently permitted to modify the object (if any) */
   private Thread threadWithWriteAccess = null;
 
   protected AbstractReadOnlyModeSupportingObject() {

@@ -6,6 +6,7 @@ package org.jacis.store;
 
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.plugin.JacisModificationListener;
+import org.jacis.plugin.dirtycheck.JacisDirtyCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,30 @@ class StoreTxDemarcationExecutor {
 
   private Logger logger = LoggerFactory.getLogger(StoreTxDemarcationExecutor.class);
 
+  private <K, TV, CV> void executeDirtyCheck(JacisStore<K, TV, CV> store, JacisStoreTxView<K, TV, CV> txView) {
+    JacisDirtyCheck<K, TV> dirtyChecker = store.getObjectTypeSpec().getDirtyCheck();
+    if (dirtyChecker == null) {
+      return;
+    }
+    logger.trace("dirty check {} on {} by Thread {}", txView, this, Thread.currentThread().getName());
+    for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+      if (!entryTxView.isUpdated()) {
+        K key = entryTxView.getKey();
+        TV value = entryTxView.getValue();
+        TV origValue = entryTxView.getOrigValue();
+        boolean dirty = dirtyChecker.isDirty(key, origValue, value);
+        if (dirty) {
+          logger.debug("detected dirty object not marked as updated {}", key);
+          if (logger.isTraceEnabled()) {
+            logger.debug(" ... orig value: {}", origValue);
+            logger.debug(" ... new value : {}", value);
+          }
+          entryTxView.updateValue(value);
+        }
+      }
+    }
+  }
+
   <K, TV, CV> void executePrepare(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
@@ -28,6 +53,7 @@ class StoreTxDemarcationExecutor {
       logger.warn("ignored prepare invalidated {} on {} (invalidated because {}) by Thread {}", txView, store, txView.getInvalidationReason(), Thread.currentThread().getName());
       return;
     }
+    executeDirtyCheck(store, txView);
     logger.trace("prepare {} on {} by Thread {}", txView, this, Thread.currentThread().getName());
     txView.startCommitPhase();
     for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {

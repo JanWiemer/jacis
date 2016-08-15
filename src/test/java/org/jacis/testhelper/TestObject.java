@@ -4,8 +4,8 @@
 
 package org.jacis.testhelper;
 
+import org.jacis.plugin.dirtycheck.object.AbstractReadOnlyModeAndDirtyCheckSupportingObject;
 import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
-import org.jacis.plugin.readonly.object.AbstractReadOnlyModeSupportingObject;
 
 import java.io.Serializable;
 
@@ -14,7 +14,7 @@ import java.io.Serializable;
  *
  * @author Jan Wiemer
  */
-public class TestObject extends AbstractReadOnlyModeSupportingObject implements JacisCloneable<TestObject>, Serializable {
+public class TestObject extends AbstractReadOnlyModeAndDirtyCheckSupportingObject implements JacisCloneable<TestObject>, Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -41,6 +41,7 @@ public class TestObject extends AbstractReadOnlyModeSupportingObject implements 
     return name;
   }
 
+  @SuppressWarnings("unused")
   public TestObject setName(String name) {
     checkWritable();
     this.name = name;

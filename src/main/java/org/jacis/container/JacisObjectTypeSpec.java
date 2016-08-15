@@ -5,6 +5,9 @@
 package org.jacis.container;
 
 import org.jacis.container.JacisContainer.StoreIdentifier;
+import org.jacis.plugin.dirtycheck.JacisDirtyCheck;
+import org.jacis.plugin.dirtycheck.StoreEntryBasedDirtyCheck;
+import org.jacis.plugin.dirtycheck.object.JacisDirtyTrackingObject;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
@@ -30,6 +33,7 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
+@SuppressWarnings("unused")
 public class JacisObjectTypeSpec<K, TV, CV> {
 
   /** Type of the keys in the store */
@@ -37,10 +41,10 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   /** Type of the values in the store */
   private final Class<TV> valueClass;
   /** The object adapter defining how to copy the committed values to the transactional view and back. */
-  private final JacisObjectAdapter<TV, CV> objectAdapter;
-  /**
-   * Defining if the store keeps track of the original value of an object at the time it was copied to the transactional view (default: 'false')
-   */
+  private JacisObjectAdapter<TV, CV> objectAdapter;
+  /** The dirty check used to automatically set an transactional view to updated if it has changed */
+  private JacisDirtyCheck<K, TV> dirtyCheck;
+  /** Defining if the store keeps track of the original value of an object at the time it was copied to the transactional view (default: 'false') */
   private boolean trackOriginalValue = false;
   /** Defines if all registered tracked views are checked for consistency on each internalCommit (default: 'false'). */
   private boolean checkViewsOnCommit = false;
@@ -68,6 +72,33 @@ public class JacisObjectTypeSpec<K, TV, CV> {
     return objectAdapter;
   }
 
+  /**
+   * Set the passed object adapter defining how to copy the committed values to the transactional view and back.
+   *
+   * @param objectAdapter the object adapter to set.
+   * @return The object type specification itself for method chaining.
+   */
+  public JacisObjectTypeSpec<K, TV, CV> setObjectAdapter(JacisObjectAdapter<TV, CV> objectAdapter) {
+    this.objectAdapter = objectAdapter;
+    return this;
+  }
+
+  /** @return The dirty check used to automatically set an transactional view to updated if it has changed. */
+  public JacisDirtyCheck<K, TV> getDirtyCheck() {
+    return dirtyCheck;
+  }
+
+  /**
+   * Set the passed dirty check defining how to copy the committed values to the transactional view and back.
+   *
+   * @param dirtyCheck the dirty check to set.
+   * @return The object type specification itself for method chaining.
+   */
+  public JacisObjectTypeSpec<K, TV, CV> setDirtyCheck(JacisDirtyCheck<K, TV> dirtyCheck) {
+    this.dirtyCheck = dirtyCheck;
+    return this;
+  }
+
   /** @return if the store keeps track of the original value of an object at the time it was copied to the transactional view (default: 'false'). */
   public boolean isTrackOriginalValueEnabled() {
     return trackOriginalValue;
@@ -86,6 +117,20 @@ public class JacisObjectTypeSpec<K, TV, CV> {
    */
   public JacisObjectTypeSpec<K, TV, CV> setCheckViewsOnCommit(boolean checkViewsOnCommit) {
     this.checkViewsOnCommit = checkViewsOnCommit;
+    return this;
+  }
+
+  /**
+   * Sets the {@link StoreEntryBasedDirtyCheck} for the store.
+   *
+   * @return The object type specification itself for method chaining.
+   */
+  @SuppressWarnings("unchecked")
+  public JacisObjectTypeSpec<K, TV, CV> setObjectBasedDirtyCheck() {
+    if (!(JacisDirtyTrackingObject.class.isAssignableFrom(valueClass))) {
+      throw new IllegalStateException("Object based dirty check only suitable for object value types implementing " + JacisDirtyTrackingObject.class);
+    }
+    this.dirtyCheck = new StoreEntryBasedDirtyCheck();
     return this;
   }
 

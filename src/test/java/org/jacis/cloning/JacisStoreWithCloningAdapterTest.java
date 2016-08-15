@@ -162,7 +162,7 @@ public class JacisStoreWithCloningAdapterTest {
   }
 
   @Test(expected = ReadOnlyException.class)
-  public void testGetReadView() {
+  public void testGetReadOnlyView() {
     JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     TestObject testObject = new TestObject("name", 1);
     // init store
@@ -184,7 +184,7 @@ public class JacisStoreWithCloningAdapterTest {
   }
 
   @Test
-  public void testGetReadViewIsolation() {
+  public void testGetReadOnlyViewIsolation() {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
     TestObject testObject = new TestObject("name", 1);
@@ -196,7 +196,7 @@ public class JacisStoreWithCloningAdapterTest {
     TestObject objReadOnly = store.getReadOnly("name");
     assertEquals(1, objReadOnly.getValue());
     JacisTransactionHandle tx1Handle = testHelper.suspendTx();
-    // update in another comcurrent transaction
+    // update in another concurrent transaction
     store.getContainer().withLocalTx(() -> store.update("name", store.get("name").setValue(2)));
     testHelper.resumeTx(tx1Handle);
     assertEquals(1, objReadOnly.getValue()); // for the old read only view the value has not changed because writing back clones a new instance into the committed view store
@@ -222,6 +222,28 @@ public class JacisStoreWithCloningAdapterTest {
     // get as read only object
     store.getContainer().withLocalTx(() -> {
       TestObjectWithoutReadOnlyMode obj = store.getReadOnly(testObject.getName());
+      assertNotNull(obj);
+    });
+  }
+
+  @Test
+  public void testDirtyCheck() {
+    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    store.getObjectTypeSpec().setObjectBasedDirtyCheck();
+    String testObjectName = "obj-1";
+    // create object
+    TestObject testObject1 = new TestObject(testObjectName, 1);
+    store.getContainer().withLocalTx(() -> {
+      store.update(testObjectName, testObject1);
+    });
+    store.getContainer().withLocalTx(() -> {
+      TestObject testObject2 = store.get(testObjectName);
+      testObject2.setValue(2); // do not explicitly call update
+    });
+    // check if committed
+    store.getContainer().withLocalTx(() -> {
+      TestObject testObject3 = store.get(testObjectName);
+      assertEquals(2, testObject3.getValue());
     });
   }
 
