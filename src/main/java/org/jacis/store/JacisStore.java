@@ -8,6 +8,7 @@ import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisStaleObjectException;
+import org.jacis.exception.JacisTransactionAlreadyPreparedForCommitException;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
@@ -343,9 +344,13 @@ public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionA
    *
    * @param key The key of the object to update.
    * @param value The updated object instance.
+   * @throws JacisTransactionAlreadyPreparedForCommitException if the current transaction has already been prepared for commit
    */
-  public void update(K key, TV value) {
+  public void update(K key, TV value) throws JacisTransactionAlreadyPreparedForCommitException {
     JacisStoreTxView<K, TV, CV> txView = getOrCreateTxView().assertWritable();
+    if (txView.isCommitPending()) {
+      throw new JacisTransactionAlreadyPreparedForCommitException("Failed to update " + key + " because transaction is already prepared for commit: " + txView);
+    }
     StoreEntryTxView<K, TV, CV> entryTxView = getOrCreateEntryTxView(txView, key);
     entryTxView.updateValue(value);
   }
