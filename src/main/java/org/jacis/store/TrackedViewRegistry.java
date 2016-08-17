@@ -21,22 +21,23 @@ import java.util.*;
  * @param <TV> Value type of the store entry
  * @author Jan Wiemer
  */
+@SuppressWarnings("unused")
 public class TrackedViewRegistry<K, TV, CV> implements JacisModificationListener<K, TV> {
 
   private final JacisStore<K, TV, CV> store;
   private final Map<Class<? extends TrackedView<TV>>, TrackedView<TV>> viewMap = new HashMap<>();
-  private final JacisTransactionListener txListener = new JacisTransactionListenerAdapter() {
 
-    @Override
-    public void afterCommit(JacisContainer container, JacisTransactionHandle tx) {
-      checkTrackedViewsAfterCommit();
-    }
-
-  };
-
-  public TrackedViewRegistry(JacisStore<K, TV, CV> store, boolean checkConsistencyAfterCommit) {
+  TrackedViewRegistry(JacisStore<K, TV, CV> store, boolean checkConsistencyAfterCommit) {
     this.store = store;
     if (checkConsistencyAfterCommit) {
+      JacisTransactionListener txListener = new JacisTransactionListenerAdapter() {
+
+        @Override
+        public void afterCommit(JacisContainer container, JacisTransactionHandle tx) {
+          checkTrackedViewsAfterCommit();
+        }
+
+      };
       store.getContainer().registerTransactionListener(txListener);
     }
 
@@ -70,14 +71,14 @@ public class TrackedViewRegistry<K, TV, CV> implements JacisModificationListener
     }
   }
 
-  public void checkTrackedViewsAfterCommit() {
+  private void checkTrackedViewsAfterCommit() {
     List<TV> values = store.getAllReadOnly(null);
     for (TrackedView<TV> view : viewMap.values()) {
       view.checkView(values);
     }
   }
 
-  public void clearViews() {
+  void clearViews() {
     viewMap.values().forEach(TrackedView::clear);
   }
 
@@ -140,8 +141,7 @@ public class TrackedViewRegistry<K, TV, CV> implements JacisModificationListener
     } else if (!viewType.isInstance(view)) {
       throw new IllegalArgumentException("The view registered for the type " + viewType + " is no instance of this type: " + view);
     }
-    VT viewClone = (VT) view.clone();
-    return viewClone;
+    return (VT) view.clone();
   }
 
   private void initTrackedView(TrackedView<TV> view) {

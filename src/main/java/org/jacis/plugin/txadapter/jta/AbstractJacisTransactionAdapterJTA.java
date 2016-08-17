@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * @author Jan Wiemer
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransactionAdapter {
 
   private static final Logger log = LoggerFactory.getLogger(AbstractJacisTransactionAdapterJTA.class);

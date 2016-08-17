@@ -6,7 +6,7 @@ package org.jacis.plugin.readonly;
 
 /**
  * The read only mode adapter is used to define how objects are switched between the read-write and read-only mode (if supported).
- * <p>
+ *
  * The default implementation (class {@link DefaultJacisStoreEntryReadOnlyModeAdapter}) is applicable for objects
  * implementing the {@link org.jacis.plugin.readonly.object.JacisReadonlyModeSupport} interface
  * and uses the methods declared in this interface for switching the mode.

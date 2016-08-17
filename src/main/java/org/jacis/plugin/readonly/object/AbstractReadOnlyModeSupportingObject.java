@@ -28,6 +28,7 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
     threadWithWriteAccess = Thread.currentThread(); // when creating the object its writable
   }
 
+  @SuppressWarnings("CloneDoesntDeclareCloneNotSupportedException")
   @Override
   protected Object clone() {
     try {
