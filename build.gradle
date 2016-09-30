@@ -6,35 +6,105 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
-sourceCompatibility = 1.8
-version = '1.3'
 group = 'org.jacis'
+version = '1.3'
+
+ext {
+    vendor                 = 'Jan Wiemer'
+    projectName            = 'JACIS'
+    projectDescriotion     = 'Java ACS Store - Transient and transactional store for Java objects,'
+    projectURL             = 'https://github.com/JanWiemer/jacis'
+    isReleaseVersion       = !version.endsWith("SNAPSHOT")
+    deploy_user            = System.properties.get("deploy_user")
+    deploy_pw              = System.properties.get("deploy_pw")
+    deploy_repo_release    = System.properties.get("deploy_repo_release")
+    deploy_repo_snapshot   = System.properties.get("deploy_repo_snapshot")
+}
+
+print '---------- JACIS BUILD -------- '
+println new Date()
+println "- projectName = $projectName"
+println "- descriotion = $projectDescriotion"
+println "- URL         = $projectURL"
+println "- group       = $group"
+println "- version     = $version"
+println "- vendor      = $vendor"
+println "- deploy_repo_release  = $deploy_repo_release"
+println "- deploy_repo_snapshot = $deploy_repo_snapshot"
+println '------------------------------- '
 
 configurations {
     asciidoclet
 }
 
-jar {
+jar.doFirst {
     manifest {
-        attributes 'Implementation-Title': 'Jacis',
-                'Implementation-Version': 1.3,
-                   'Implementation-Vendor' : "Jan Wiemer"
-     }
-    exclude 'logback.xml'
- }
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
+        attributes 'Implementation-Title'     : projectName,
+                   'Implementation-Version'   : version,
+                   'Specification-Title'      : new Date(),
+                   'Implementation-Vendor'    : vendor
+    }
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar) {
     from javadoc.destinationDir
 }
 
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourceJar {
+                classifier "sources"
+            }
+            artifact javadocJar {
+                classifier "javadoc"
+            }
+            pom.withXml {
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name "$projectName"
+                    description  "$projectDescriotion"
+                    licenses {
+                        license {
+                            name 'GNU GENERAL PUBLIC LICENSE, Version 2'
+                            url 'https://github.com/JanWiemer/jacis/blob/master/LICENSE'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id 'JanWiemer'
+                            name 'Jan Wiemer'
+                            email 'jan.wiemer@online.de'
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            credentials {
+                username deploy_user
+                password deploy_pw
+            }
+            if (isReleaseVersion) {
+                url deploy_repo_release
+            } else {
+                url deploy_repo_snapshot
+            }
+        }
+    }
+}
+
 artifacts {
-    archives sourcesJar
+    archives sourceJar
     archives javadocJar
 }
 
@@ -53,6 +123,7 @@ uploadArchives {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
