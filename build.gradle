@@ -37,6 +37,10 @@ configurations {
     asciidoclet
 }
 
+jar {
+    exclude 'logback.xml'
+}
+
 jar.doFirst {
     manifest {
         attributes 'Implementation-Title'     : projectName,
