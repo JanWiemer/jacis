@@ -115,6 +115,38 @@ public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionA
   }
 
   /**
+   * Create a read only view of the current transaction context that can be used (read only) in a different thread.
+   * This can be used to share one single transaction view in several threads.
+   * Before accessing the object store the other thread should set the returned context
+   * with the method {@link #startReadOnlyTransactionWithContext(JacisReadOnlyTransactionContext)}.
+   *
+   * @param withTxName transaction name used for the read only view.
+   * @return a read only view of the current transaction context.
+   */
+  public JacisReadOnlyTransactionContext createReadOnlyTransactionView(String withTxName) {
+    JacisStoreTxView<K, TV, CV> originalTxView = getTxView(true);
+    return new JacisStoreTxView<>(withTxName, originalTxView);
+  }
+
+  /**
+   * Starts a new (read only) transaction with the passed transaction context.
+   * The new transaction will work on a read only snapshot of the original transaction (where the context is obtained from).
+   *
+   * @param readOnlyTxContext the transaction context of the original transaction.
+   */
+  public void startReadOnlyTransactionWithContext(JacisReadOnlyTransactionContext readOnlyTxContext) {
+    if (!(readOnlyTxContext instanceof JacisStoreTxView)) {
+      throw new IllegalArgumentException("Passed illegal transactional context: " + readOnlyTxContext);
+    }
+    JacisStoreTxView<K, TV, CV> oldTxView = getTxView(false);
+    if (oldTxView != null) {
+      throw new IllegalStateException("Failed to start a read only transaction while another transaction is active! Active transaction: " + oldTxView.getTransaction() + ", passed transaction context: " + readOnlyTxContext + ", Thread: " + Thread.currentThread().getName());
+    }
+    @SuppressWarnings("unchecked") JacisStoreTxView<K, TV, CV> newTx = (JacisStoreTxView<K, TV, CV>) readOnlyTxContext;
+    setTransactionContext(newTx);
+  }
+
+  /**
    * Returns if the store contains an entry for the passed key.
    * Note that the method operates on the committed values merged with the current transactional view (see class description).
    *
@@ -637,6 +669,11 @@ public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionA
       txViewMap.put(transaction, txView);
     }
     return txView;
+  }
+
+  private void setTransactionContext(JacisStoreTxView<K, TV, CV> newTxContext) {
+    JacisTransactionHandle transaction = container.getCurrentTransaction(true);
+    txViewMap.put(transaction, newTxContext);
   }
 
   void notifyTxViewDestroyed(JacisStoreTxView<K, TV, CV> txView) {

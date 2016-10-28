@@ -21,7 +21,7 @@ import java.util.Map.Entry;
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
-class JacisStoreTxView<K, TV, CV> {
+class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
 
   /** the handle for the transaction this view belongs to*/
   private final JacisTransactionHandle tx;
@@ -59,8 +59,12 @@ class JacisStoreTxView<K, TV, CV> {
     storeTxView = readOnlyCache;
   }
 
-  String getTxId() {
+  public String getTxId() {
     return readOnlyTxId == null ? tx.getTxId() : readOnlyTxId + "|" + tx.getTxId();
+  }
+
+  public String getReadOnlyTxId() {
+    return readOnlyTxId;
   }
 
   String getTxDescription() {
