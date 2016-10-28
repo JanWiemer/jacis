@@ -123,9 +123,7 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
         log.trace("{} created new handle [{}] for active TX: [{}] for thread {}", this, txHandle, tx, Thread.currentThread().getName());
       }
       return txHandle;
-    } catch (SystemException e) {
-      throw new JacisTransactionException(e);
-    } catch (RollbackException e) {
+    } catch (SystemException | RollbackException e) {
       throw new JacisTransactionException(e);
     }
   }
@@ -143,10 +141,6 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
     status = Status.STATUS_UNKNOWN == status ? tx.getStatus() : status; // if status unknown (transient state) -> call again
     switch (status) {
       case Status.STATUS_NO_TRANSACTION:
-        return false;
-      case Status.STATUS_COMMITTED:
-        return false;
-      case Status.STATUS_ROLLEDBACK:
         return false;
     }
     return true;
