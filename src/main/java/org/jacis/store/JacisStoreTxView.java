@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * Representing a committed version of an entry in the store.
+ * Representing the transactional view on the store entries for one transaction.
+ * An entry is cloned to this view if a transaction reads it from the store unless it reads it in read only mode.
+ * Modifications are always done only on the entries in the transactional view until the transaction is committed.
  *
  * @param <K> Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
@@ -21,13 +23,20 @@ import java.util.Map.Entry;
  */
 class JacisStoreTxView<K, TV, CV> {
 
-  private final JacisTransactionHandle tx; // the transaction
-  private final long creationTimestamp; // in system milliseconds (timestamp usually set at first access returning a TX view)
-  private final Map<K, StoreEntryTxView<K, TV, CV>> storeTxView; // entries with an own view in this TX
-  private final String readOnlyTxId; // the name of the TX if this is a read only snapshot (null <-> writable)
-  private JacisStore<K, TV, CV> store; // main store
-  private boolean commitPending = false; // internalCommit pending / prepare already called
-  private String invalidationReason = null; // gives the reason (null means valid) why the tx has been invalidated. Attempts to internalCommit the tx will be ignored.
+  /** the handle for the transaction this view belongs to*/
+  private final JacisTransactionHandle tx;
+  /** the creation timestamp in system milliseconds (timestamp usually set at first access returning a TX view)*/
+  private final long creationTimestamp;
+  /** the entries with an own view in this TX */
+  private final Map<K, StoreEntryTxView<K, TV, CV>> storeTxView;
+  /** the name of the TX if this is a read only snapshot (null <-> writable) */
+  private final String readOnlyTxId;
+  /** reference to the main store */
+  private JacisStore<K, TV, CV> store;
+  /** flag indicating if for the transaction a commit is pending, that means a prepare has already been called */
+  private boolean commitPending = false;
+  /** gives the reason (null means valid) why the tx has been invalidated. Attempts to internalCommit the tx will be ignored. */
+  private String invalidationReason = null;
 
   JacisStoreTxView(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
     this.store = store;
