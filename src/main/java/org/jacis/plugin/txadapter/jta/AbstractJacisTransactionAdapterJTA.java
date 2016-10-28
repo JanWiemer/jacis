@@ -135,7 +135,7 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
     transaction.remove();
   }
 
-  private boolean isTransactionActive(Transaction tx) throws SystemException {
+  protected boolean isTransactionActive(Transaction tx) throws SystemException {
     if (tx == null) {
       return false;
     }
@@ -153,7 +153,7 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
   }
 
   /** JTA Transaction Synchronisation enlisted at the JTA transaction to let the container join the transaction. */
-  private static class JacisSync implements Synchronization {
+  protected static class JacisSync implements Synchronization {
 
     /** The container (type {@link JacisContainer}) that shall join the external transaction */
     private final JacisContainer container;
