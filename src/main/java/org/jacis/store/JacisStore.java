@@ -263,35 +263,35 @@ public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionA
   }
 
   /**
-   * Returns a stream of all objects (noz 'null') currently stored in the store.
+   * Returns a stream of all objects (not 'null') currently stored in the store.
    * Note that the method operates on the committed values merged with the current transactional view (see class description).
    * If the transactional view did not already contain an entry it is copied to the transactional view now.
    *
-   * @return a stream of all objects (noz 'null') currently stored in the store.
+   * @return a stream of all objects (not 'null') currently stored in the store.
    */
   public Stream<TV> stream() { // Note this method will clone all objects into the TX view!
     return keyStream().map(this::get).filter(v -> v != null);
   }
 
   /**
-   * Returns a stream of read only views for all objects (noz 'null') currently stored in the store.
+   * Returns a stream of read only views for all objects (not 'null') currently stored in the store.
    * Note that the method operates on the committed values merged with the current transactional view (see class description).
    * Further note that the behavior of the method is equivalent to the behavior of the {@link #getReadOnly} method for a single object.
    *
-   * @return a stream of all objects (noz 'null') currently stored in the store.
+   * @return a stream of all objects (not 'null') currently stored in the store.
    */
   public Stream<TV> streamReadOnly() {
     return keyStream().map(this::getReadOnly).filter(v -> v != null);
   }
 
   /**
-   * Returns a stream of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * Returns a stream of all objects (not 'null') currently stored in the store filtered by the passed filter.
    * Note that the method operates on the committed values merged with the current transactional view (see class description).
    * If supported the filter predicate is checked on a read only view of the object (without cloning it).
    * Only the objects passing the filter are is copied to the transactional view (if they are not yet contained there).
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
-   * @return a stream of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * @return a stream of all objects (not 'null') currently stored in the store filtered by the passed filter.
    */
   public Stream<TV> stream(Predicate<TV> filter) {
     if (filter != null) {
@@ -302,14 +302,14 @@ public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionA
   }
 
   /**
-   * Returns a stream of read only views for all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * Returns a stream of read only views for all objects (not 'null') currently stored in the store filtered by the passed filter.
    * Note that the method operates on the committed values merged with the current transactional view (see class description).
    * If supported the filter predicate is checked on a read only view of the object (without cloning it).
    * Further note that the behavior of the method is equivalent to the behavior of the {@link #getReadOnly} method for a single object
    * (only the objects passing the filter may be copied to the transactional view if no read only view is supported (and they are not yet contained there)).
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
-   * @return a stream of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * @return a stream of all objects (not 'null') currently stored in the store filtered by the passed filter.
    */
   public Stream<TV> streamReadOnly(Predicate<TV> filter) {
     if (filter != null) {
@@ -320,48 +320,66 @@ public class JacisStore<K, TV, CV> extends JacisContainer.JacisStoreTransactionA
   }
 
   /**
-   * Returns a list of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * Returns a list of all objects (not 'null') currently stored in the store.
+   *
+   * @return a list of all objects (not 'null') currently stored in the store.
+   */
+  public List<TV> getAll() {
+    return getAll(null);
+  }
+
+  /**
+   * Returns a list of all objects (not 'null') currently stored in the store filtered by the passed filter.
    * The method uses the {@link #stream(Predicate)} method and collects the results to a list.
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
-   * @return a list of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * @return a list of all objects (not 'null') currently stored in the store filtered by the passed filter.
    */
   public List<TV> getAll(Predicate<TV> filter) {
     return stream(filter).collect(Collectors.toList());
   }
 
   /**
-   * Returns a list of read-only views for all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * Returns a list of read-only views for all objects (not 'null') currently stored in the store.
+   *
+   * @return a list of read-only views for all objects (not 'null') currently stored in the store.
+   */
+  public List<TV> getAllReadOnly() {
+    return getAllReadOnly(null);
+  }
+
+  /**
+   * Returns a list of read-only views for all objects (not 'null') currently stored in the store filtered by the passed filter.
    * The method uses the {@link #streamReadOnly(Predicate)} method and collects the results to a list.
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
-   * @return a list of read-only views for all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * @return a list of read-only views for all objects (not 'null') currently stored in the store filtered by the passed filter.
    */
   public List<TV> getAllReadOnly(Predicate<TV> filter) {
     return streamReadOnly(filter).collect(Collectors.toList());
   }
 
   /**
-   * Returns a list of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * Returns a list of all objects (not 'null') currently stored in the store filtered by the passed filter.
    * The method executes the {@link #getAll(Predicate)} method as an atomic operations.
    * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
    * The execution of atomic operations can not overlap with the execution of other atomic operations (but normal operations may overlap).
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
-   * @return a list of all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * @return a list of all objects (not 'null') currently stored in the store filtered by the passed filter.
    */
   public List<TV> getAllAtomic(Predicate<TV> filter) {
     return computeAtomic(() -> getAll(filter));
   }
 
   /**
-   * Returns a list of read-only views for all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * Returns a list of read-only views for all objects (not 'null') currently stored in the store filtered by the passed filter.
    * The method executes the {@link #getAllReadOnly(Predicate)} method as an atomic operations.
    * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
    * The execution of atomic operations can not overlap with the execution of other atomic operations (but normal operations may overlap).
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
-   * @return a list of read-only views for all objects (noz 'null') currently stored in the store filtered by the passed filter.
+   * @return a list of read-only views for all objects (not 'null') currently stored in the store filtered by the passed filter.
    */
   public List<TV> getAllReadOnlyAtomic(Predicate<TV> filter) {
     return computeAtomic(() -> getAllReadOnly(filter));
