@@ -19,7 +19,7 @@ public class JacisStoreWithSerializationTrackedViewTest {
   @Test
   public void testTrackedView() {
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, byte[]> store = testHelper.createTestStoreWithSerialization();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithSerialization();
     JacisContainer container = store.getContainer();
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1"));

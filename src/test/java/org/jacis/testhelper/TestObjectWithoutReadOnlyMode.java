@@ -13,6 +13,7 @@ import java.io.Serializable;
  *
  * @author Jan Wiemer
  */
+@SuppressWarnings("unused")
 public class TestObjectWithoutReadOnlyMode implements JacisCloneable<TestObjectWithoutReadOnlyMode>, Serializable {
 
   private static final long serialVersionUID = 1L;

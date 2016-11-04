@@ -5,7 +5,7 @@
 package org.jacis.trackedviews;
 
 import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
-import org.jacis.store.JacisStore;
+import org.jacis.store.JacisStoreImpl;
 
 import java.util.List;
 
@@ -48,7 +48,7 @@ public interface TrackedView<V> extends JacisCloneable<TrackedView<V>> {
   /**
    * Clear the tracked view.
    * After executing this method the view should reflect the state where no committed values are stored.
-   * The method is only called by the {@link JacisStore#clear()} method.
+   * The method is only called by the {@link JacisStoreImpl#clear()} method.
    */
   void clear();
 

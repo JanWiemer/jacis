@@ -26,7 +26,7 @@ public class JacisExample2 {
   public static void main(String[] args) {
     JacisContainer container = new JacisContainer();
     JacisObjectTypeSpec<String, Account, Account> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, Account.class, new JacisCloningObjectAdapter<>());
-    JacisStore<String, Account, Account> store = container.createStore(objectTypeSpec);
+    JacisStore<String, Account> store = container.createStore(objectTypeSpec).getStore();
 
     // First we create some accounts to have some test data...
 

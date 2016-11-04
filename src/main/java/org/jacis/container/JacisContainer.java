@@ -10,6 +10,8 @@ import org.jacis.plugin.txadapter.JacisTransactionAdapter;
 import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.plugin.txadapter.local.JacisTransactionAdapterLocal;
 import org.jacis.store.JacisStore;
+import org.jacis.store.JacisStoreAdminInterface;
+import org.jacis.store.JacisStoreImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +44,8 @@ public class JacisContainer {
 
   /** {@link JacisTransactionAdapter} to bind the Jacis Store to externally managed transactions. */
   private final JacisTransactionAdapter txAdapter;
-  /** Map assigning the stores (values of type {@link JacisStore}) to the store identifiers (keys of type {@link StoreIdentifier}). */
-  private final Map<StoreIdentifier, JacisStore<?, ?, ?>> storeMap = new ConcurrentHashMap<>();
+  /** Map assigning the stores (values of type {@link JacisStoreImpl}) to the store identifiers (keys of type {@link StoreIdentifier}). */
+  private final Map<StoreIdentifier, JacisStore<?, ?>> storeMap = new ConcurrentHashMap<>();
   /**
    * List of transaction listeners / observers (type {@link JacisTransactionListener}) providing call-backs before / after prepare / internalCommit / rollback.
    */
@@ -85,14 +87,14 @@ public class JacisContainer {
    * Create a store for the passed object type specification (type {@link JacisObjectTypeSpec}).
    * The passed specification determines the type of the keys and the type of the values stored in the created store.
    * @param objectTypeSpec object type specification describing the objects to be stored.
-   * @return A reference to the created store (type {@link JacisStore})
+   * @return A reference to the created store (type {@link JacisStoreImpl})
    * @param <K> Key type of the store entry
    * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
    * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    */
-  public <K, TV, CV> JacisStore<K, TV, CV> createStore(JacisObjectTypeSpec<K, TV, CV> objectTypeSpec) {
+  public <K, TV, CV> JacisStoreAdminInterface<K, TV, CV> createStore(JacisObjectTypeSpec<K, TV, CV> objectTypeSpec) {
     StoreIdentifier storeIdentifier = new StoreIdentifier(objectTypeSpec.getKeyClass(), objectTypeSpec.getValueClass());
-    JacisStore<K, TV, CV> store = new JacisStore<>(this, storeIdentifier, objectTypeSpec);
+    JacisStoreImpl<K, TV, CV> store = new JacisStoreImpl<>(this, storeIdentifier, objectTypeSpec);
     storeMap.put(storeIdentifier, store);
     return store;
   }
@@ -107,9 +109,24 @@ public class JacisContainer {
    * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    */
   @SuppressWarnings("unchecked")
-  public <K, TV, CV> JacisStore<K, TV, CV> getStore(Class<K> keyClass, Class<TV> valueClass) {
+  public <K, TV, CV> JacisStore<K, TV> getStore(Class<K> keyClass, Class<TV> valueClass) {
     StoreIdentifier storeIdentifier = new StoreIdentifier(keyClass, valueClass);
-    return (JacisStore<K, TV, CV>) storeMap.get(storeIdentifier);
+    return (JacisStoreImpl<K, TV, CV>) storeMap.get(storeIdentifier);
+  }
+
+  /**
+   * Get the store (type {@link JacisStoreAdminInterface}) for the passed key and value type.
+   * @param keyClass Class of the keys that should be stored in the searched store
+   * @param valueClass Class of the values that should be stored in the searched store
+   * @return A reference to the found store (type {@link JacisStoreAdminInterface}) (null if not found)
+   * @param <K> Key type of the store entry
+   * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
+   * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
+   */
+  @SuppressWarnings("unchecked")
+  public <K, TV, CV> JacisStoreAdminInterface<K, TV, CV> getStoreAdminInterface(Class<K> keyClass, Class<TV> valueClass) {
+    StoreIdentifier storeIdentifier = new StoreIdentifier(keyClass, valueClass);
+    return (JacisStoreImpl<K, TV, CV>) storeMap.get(storeIdentifier);
   }
 
   /**
@@ -253,7 +270,7 @@ public class JacisContainer {
    */
   public synchronized void internalPrepare(JacisTransactionHandle transaction) {
     txListeners.forEach(l -> l.beforePrepare(this, transaction));
-    for (JacisStore<?, ?, ?> store : storeMap.values()) {
+    for (JacisStore<?, ?> store : storeMap.values()) {
       ((JacisStoreTransactionAdapter) store).internalPrepare(transaction);
     }
     txListeners.forEach(l -> l.afterPrepare(this, transaction));
@@ -269,7 +286,7 @@ public class JacisContainer {
    */
   public synchronized void internalCommit(JacisTransactionHandle transaction) {
     txListeners.forEach(l -> l.beforeCommit(this, transaction));
-    for (JacisStore<?, ?, ?> store : storeMap.values()) {
+    for (JacisStore<?, ?> store : storeMap.values()) {
       ((JacisStoreTransactionAdapter) store).internalCommit(transaction);
     }
     txListeners.forEach(l -> l.afterCommit(this, transaction));
@@ -286,7 +303,7 @@ public class JacisContainer {
    */
   public synchronized void internalRollback(JacisTransactionHandle transaction) {
     txListeners.forEach(l -> l.beforeRollback(this, transaction));
-    for (JacisStore<?, ?, ?> store : storeMap.values()) {
+    for (JacisStore<?, ?> store : storeMap.values()) {
       ((JacisStoreTransactionAdapter) store).internalRollback(transaction);
     }
     txListeners.forEach(l -> l.afterRollback(this, transaction));

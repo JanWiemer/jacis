@@ -10,7 +10,7 @@ import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
 import java.io.Serializable;
 
 /**
- * A JACOS clonable test object that also provides a read only mode.
+ * A JACIS cloneable test object that also provides a read only mode.
  *
  * @author Jan Wiemer
  */

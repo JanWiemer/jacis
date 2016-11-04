@@ -6,12 +6,13 @@ package org.jacis.plugin;
 
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.container.JacisTransactionHandle;
+import org.jacis.store.JacisStoreImpl;
 
 /**
  *  = Listener that gets notified on each modification during commit.
  *
  * A listener implementing this interface can be registered at a transactional store
- * by passing it to the method {@link org.jacis.store.JacisStore#registerModificationListener(JacisModificationListener)}.
+ * by passing it to the method {@link JacisStoreImpl#registerModificationListener(JacisModificationListener)}.
  * Once registered the method {@link #onModification(Object, Object, Object, JacisTransactionHandle)} of the listener is called
  * for each modification on the committed values in the store. The callback method is called during the commit phase
  * of the transaction when the modified values in the transactional view are written back to the store.

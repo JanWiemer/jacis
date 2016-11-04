@@ -32,13 +32,13 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   /** the name of the TX if this is a read only snapshot (null <-> writable) */
   private final String readOnlyTxId;
   /** reference to the main store */
-  private JacisStore<K, TV, CV> store;
+  private JacisStoreImpl<K, TV, CV> store;
   /** flag indicating if for the transaction a commit is pending, that means a prepare has already been called */
   private boolean commitPending = false;
   /** gives the reason (null means valid) why the tx has been invalidated. Attempts to internalCommit the tx will be ignored. */
   private String invalidationReason = null;
 
-  JacisStoreTxView(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
+  JacisStoreTxView(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
     this.store = store;
     this.tx = transaction;
     this.readOnlyTxId = null;

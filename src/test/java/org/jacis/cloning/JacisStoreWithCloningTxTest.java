@@ -26,7 +26,7 @@ public class JacisStoreWithCloningTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisLocalTransaction writingTx = store.getContainer().beginLocalTransaction();
     JacisTransactionHandle writingTxHandle = testHelper.suspendTx();
     JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
@@ -67,7 +67,7 @@ public class JacisStoreWithCloningTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     store.getContainer().withLocalTx(() -> {
       store.update(testObject.getName(), testObject);
     });
@@ -115,7 +115,7 @@ public class JacisStoreWithCloningTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisLocalTransaction writingTx = store.getContainer().beginLocalTransaction();
     JacisTransactionHandle writingTxHandle = testHelper.suspendTx();
     JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
@@ -136,7 +136,7 @@ public class JacisStoreWithCloningTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     store.getContainer().withLocalTx(() -> {
       store.update(testObject.getName(), testObject);
     });
@@ -161,7 +161,7 @@ public class JacisStoreWithCloningTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     store.getContainer().withLocalTx(() -> {
       store.update(testObject.getName(), testObject);
     });
@@ -197,7 +197,7 @@ public class JacisStoreWithCloningTxTest {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     store.getContainer().withLocalTx(() -> {
       store.update(testObject.getName(), testObject);
     });

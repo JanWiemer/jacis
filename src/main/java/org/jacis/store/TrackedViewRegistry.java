@@ -22,12 +22,12 @@ import java.util.*;
  * @author Jan Wiemer
  */
 @SuppressWarnings("unused")
-public class TrackedViewRegistry<K, TV, CV> implements JacisModificationListener<K, TV> {
+public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, TV> {
 
-  private final JacisStore<K, TV, CV> store;
+  private final JacisStoreImpl<K, TV, ?> store;
   private final Map<Class<? extends TrackedView<TV>>, TrackedView<TV>> viewMap = new HashMap<>();
 
-  TrackedViewRegistry(JacisStore<K, TV, CV> store, boolean checkConsistencyAfterCommit) {
+  TrackedViewRegistry(JacisStoreImpl<K, TV, ?> store, boolean checkConsistencyAfterCommit) {
     this.store = store;
     if (checkConsistencyAfterCommit) {
       JacisTransactionListener txListener = new JacisTransactionListenerAdapter() {
@@ -84,9 +84,9 @@ public class TrackedViewRegistry<K, TV, CV> implements JacisModificationListener
 
   public <VT extends TrackedView<TV>> VT getView(Class<VT> viewType) {
     VT view = store.computeAtomic(() -> getAndCloneView(viewType));
-    JacisStoreTxView<K, TV, CV> txView = store.getTxView();
+    JacisStoreTxView<K, TV, ?> txView = store.getTxView();
     if (txView != null) {
-      for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+      for (StoreEntryTxView<K, TV, ?> entryTxView : txView.getAllEntryTxViews()) {
         view.trackModification(entryTxView.getOrigValue(), entryTxView.getValue());
       }
     }
@@ -124,9 +124,9 @@ public class TrackedViewRegistry<K, TV, CV> implements JacisModificationListener
       TrackedView<TV> subView = clusteredView.getSubView(subviewKey);
       return (VT) subView.clone();
     });
-    JacisStoreTxView<K, TV, CV> txView = store.getTxView();
+    JacisStoreTxView<K, TV, ?> txView = store.getTxView();
     if (txView != null) {
-      for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+      for (StoreEntryTxView<K, TV, ?> entryTxView : txView.getAllEntryTxViews()) {
         subViewClone.trackModification(entryTxView.getOrigValue(), entryTxView.getValue());
       }
     }

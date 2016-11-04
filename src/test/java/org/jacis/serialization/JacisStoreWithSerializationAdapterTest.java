@@ -21,19 +21,17 @@ public class JacisStoreWithSerializationAdapterTest {
 
   @Test
   public void testInsert() {
-    JacisStore<String, TestObject, byte[]> store = new JacisTestHelper().createTestStoreWithSerialization();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithSerialization();
     TestObject testObject = new TestObject("obj-1", 1);
     assertEquals(0, store.size());
-    store.getContainer().withLocalTx(() -> {
-      store.update(testObject.getName(), testObject);
-    });
+    store.getContainer().withLocalTx(() -> store.update(testObject.getName(), testObject));
     assertEquals(1, store.size());
     log.info("store={}", store);
   }
 
   @Test
   public void testInsertReadSameTx() {
-    JacisStore<String, TestObject, byte[]> store = new JacisTestHelper().createTestStoreWithSerialization();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithSerialization();
     TestObject testObject = new TestObject("obj-1", 1);
     assertEquals(0, store.size());
     store.getContainer().withLocalTx(() -> {
@@ -46,7 +44,7 @@ public class JacisStoreWithSerializationAdapterTest {
 
   @Test
   public void testInsertReadDifferentTx() {
-    JacisStore<String, TestObject, byte[]> store = new JacisTestHelper().createTestStoreWithSerialization();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithSerialization();
     TestObject testObject = new TestObject("obj-1", 1);
     assertEquals(0, store.size());
     store.getContainer().withLocalTx(() -> {
@@ -63,7 +61,7 @@ public class JacisStoreWithSerializationAdapterTest {
 
   @Test
   public void testInsertUpdateReadSameTx() {
-    JacisStore<String, TestObject, byte[]> store = new JacisTestHelper().createTestStoreWithSerialization();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithSerialization();
     TestObject testObject = new TestObject("obj-1", 1);
     assertEquals(0, store.size());
     store.getContainer().withLocalTx(() -> {
@@ -77,7 +75,7 @@ public class JacisStoreWithSerializationAdapterTest {
 
   @Test
   public void testInsertUpdateReadDifferentTx() {
-    JacisStore<String, TestObject, byte[]> store = new JacisTestHelper().createTestStoreWithSerialization();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithSerialization();
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     assertEquals(0, store.size());
@@ -104,7 +102,7 @@ public class JacisStoreWithSerializationAdapterTest {
 
   @Test
   public void testStream() {
-    JacisStore<String, TestObject, byte[]> store = new JacisTestHelper().createTestStoreWithSerialization();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithSerialization();
     store.getContainer().withLocalTx(() -> {
       store.update("1", new TestObject("A1", 1));
       store.update("2", new TestObject("A2", 2));
@@ -113,14 +111,14 @@ public class JacisStoreWithSerializationAdapterTest {
     });
     store.getContainer().withLocalTx(() -> {
       store.update("5", new TestObject("A3", 5));
-      long res = store.stream().filter(o -> o.getName().startsWith("A")).mapToLong(o -> o.getValue()).sum();
+      long res = store.stream().filter(o -> o.getName().startsWith("A")).mapToLong(TestObject::getValue).sum();
       assertEquals(1 + 2 + 5, res);
     });
   }
 
   @Test
   public void testAccumulate() {
-    JacisStore<String, TestObject, byte[]> store = new JacisTestHelper().createTestStoreWithSerialization();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithSerialization();
     store.getContainer().withLocalTx(() -> {
       store.update("1", new TestObject("A1", 1));
       store.update("2", new TestObject("A2", 2));
@@ -140,12 +138,10 @@ public class JacisStoreWithSerializationAdapterTest {
 
   @Test
   public void testTrackOriginalVersion() {
-    JacisStore<String, TestObject, byte[]> store = new JacisTestHelper().createTestStoreWithSerialization();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithSerialization();
     String testObjectName = "obj-1";
     TestObject testObject1 = new TestObject(testObjectName, 1);
-    store.getContainer().withLocalTx(() -> {
-      store.update(testObjectName, testObject1);
-    });
+    store.getContainer().withLocalTx(() -> store.update(testObjectName, testObject1));
     store.getContainer().withLocalTx(() -> {
       TestObject testObject2 = store.get(testObjectName);
       store.update(testObjectName, testObject2.setValue(2));

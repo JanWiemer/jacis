@@ -35,7 +35,7 @@ public class JacisExample1 {
 
     // now we create a store for our example object:
     JacisObjectTypeSpec<String, Account, Account> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, Account.class, new JacisCloningObjectAdapter<>());
-    JacisStore<String, Account, Account> store = container.createStore(objectTypeSpec);
+    JacisStore<String, Account> store = container.createStore(objectTypeSpec).getStore();
 
     // now we start a transaction
     JacisLocalTransaction tx = container.beginLocalTransaction();

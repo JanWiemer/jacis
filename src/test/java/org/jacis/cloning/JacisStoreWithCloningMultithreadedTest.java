@@ -28,7 +28,7 @@ public class JacisStoreWithCloningMultithreadedTest {
   }
 
   public void checkSimpleMultiThreadedAccess() {
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     String testObjName = "TST";
     store.getContainer().withLocalTx(() -> {
       store.update(testObjName, new TestObject(testObjName, 0).setStrValue("0"));

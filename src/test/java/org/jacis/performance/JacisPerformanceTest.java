@@ -17,7 +17,7 @@ public class JacisPerformanceTest {
 
   @Test
   public void testInsertPerformanceSerialization() {
-    JacisStore<String, TestObject, ?> store = new JacisTestHelper().createTestStoreWithSerialization();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithSerialization();
     long mem0 = getUsedMem();
     long t0 = System.nanoTime();
     int nTx = 10000;
@@ -30,7 +30,7 @@ public class JacisPerformanceTest {
 
   @Test
   public void testInsertPerformanceCloning() {
-    JacisStore<String, TestObject, ?> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     long mem0 = getUsedMem();
     long t0 = System.nanoTime();
     int nTx = 10000;
@@ -41,7 +41,7 @@ public class JacisPerformanceTest {
     log.info("Jacis Store based on cloning       {} TX a {} inserts: {} ms {} bytes", nTx, nIns, milliStr(duration), memStr(mem));
   }
 
-  protected void doInserts(JacisStore<String, TestObject, ?> store, int nTx, int sizeTx) {
+  private void doInserts(JacisStore<String, TestObject> store, int nTx, int sizeTx) {
     for (int i = 0; i < nTx; i++) {
       int txIdx = i;
       store.getContainer().withLocalTx(() -> {
@@ -60,11 +60,11 @@ public class JacisPerformanceTest {
     return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
   }
 
-  public String milliStr(long nanos) {
+  private String milliStr(long nanos) {
     return String.format("%.2f", ((double) nanos) / (double) (1000 * 1000 * 1000));
   }
 
-  public String memStr(long bytes) {
+  private String memStr(long bytes) {
     boolean si = true;
     int unit = si ? 1000 : 1024;
     if (bytes < unit) {

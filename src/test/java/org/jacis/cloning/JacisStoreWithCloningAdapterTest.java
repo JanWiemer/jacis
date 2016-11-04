@@ -28,7 +28,7 @@ public class JacisStoreWithCloningAdapterTest {
 
   @Test
   public void testInsert() {
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     TestObject testObject = new TestObject("obj-1", 1);
     assertEquals(0, store.size());
     store.getContainer().withLocalTx(() -> {
@@ -40,7 +40,7 @@ public class JacisStoreWithCloningAdapterTest {
 
   @Test
   public void testInsertReadSameTx() {
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     TestObject testObject = new TestObject("obj-1", 1);
     assertEquals(0, store.size());
     store.getContainer().withLocalTx(() -> {
@@ -53,7 +53,7 @@ public class JacisStoreWithCloningAdapterTest {
 
   @Test
   public void testInsertReadDifferentTx() {
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     TestObject testObject = new TestObject("obj-1", 1);
     assertEquals(0, store.size());
     store.getContainer().withLocalTx(() -> {
@@ -70,7 +70,7 @@ public class JacisStoreWithCloningAdapterTest {
 
   @Test
   public void testInsertUpdateReadSameTx() {
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     TestObject testObject = new TestObject("obj-1", 1);
     assertEquals(0, store.size());
     store.getContainer().withLocalTx(() -> {
@@ -84,7 +84,7 @@ public class JacisStoreWithCloningAdapterTest {
 
   @Test
   public void testInsertUpdateReadDifferentTx() {
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
     assertEquals(0, store.size());
@@ -111,7 +111,7 @@ public class JacisStoreWithCloningAdapterTest {
 
   @Test
   public void testStream() {
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     store.getContainer().withLocalTx(() -> {
       store.update("1", new TestObject("A1", 1));
       store.update("2", new TestObject("A2", 2));
@@ -127,7 +127,7 @@ public class JacisStoreWithCloningAdapterTest {
 
   @Test
   public void testAccumulate() {
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     store.getContainer().withLocalTx(() -> {
       store.update("1", new TestObject("A1", 1));
       store.update("2", new TestObject("A2", 2));
@@ -147,7 +147,7 @@ public class JacisStoreWithCloningAdapterTest {
 
   @Test
   public void testTrackOriginalVersion() {
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     String testObjectName = "obj-1";
     TestObject testObject1 = new TestObject(testObjectName, 1);
     store.getContainer().withLocalTx(() -> {
@@ -163,7 +163,7 @@ public class JacisStoreWithCloningAdapterTest {
 
   @Test(expected = ReadOnlyException.class)
   public void testGetReadOnlyView() {
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     TestObject testObject = new TestObject("name", 1);
     // init store
     store.getContainer().withLocalTx(() -> {
@@ -186,7 +186,7 @@ public class JacisStoreWithCloningAdapterTest {
   @Test
   public void testGetReadOnlyViewIsolation() {
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     TestObject testObject = new TestObject("name", 1);
     // init store
     store.getContainer().withLocalTx(() -> {
@@ -206,7 +206,7 @@ public class JacisStoreWithCloningAdapterTest {
 
   @Test(expected = ReadOnlyModeNotSupportedException.class)
   public void testObjectWithoutReadOnlySupport() {
-    JacisStore<String, TestObjectWithoutReadOnlyMode, TestObjectWithoutReadOnlyMode> store = new JacisTestHelper().createTestStoreWithCloningAndWithoutReadonlyMode();
+    JacisStore<String, TestObjectWithoutReadOnlyMode> store = new JacisTestHelper().createTestStoreWithCloningAndWithoutReadonlyMode();
     ((JacisCloningObjectAdapter) store.getObjectAdapter()).setThrowIfMissingReadOnlyModeDetected(true);
     TestObjectWithoutReadOnlyMode testObject = new TestObjectWithoutReadOnlyMode("name", 1).setName("name");
     // init store
@@ -228,7 +228,7 @@ public class JacisStoreWithCloningAdapterTest {
 
   @Test
   public void testDirtyCheck() {
-    JacisStore<String, TestObject, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
     store.getObjectTypeSpec().setObjectBasedDirtyCheck();
     String testObjectName = "obj-1";
     // create object

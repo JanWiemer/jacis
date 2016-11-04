@@ -19,7 +19,7 @@ class StoreTxDemarcationExecutor {
 
   private Logger logger = LoggerFactory.getLogger(StoreTxDemarcationExecutor.class);
 
-  private <K, TV, CV> void executeDirtyCheck(JacisStore<K, TV, CV> store, JacisStoreTxView<K, TV, CV> txView) {
+  private <K, TV, CV> void executeDirtyCheck(JacisStoreAdminInterface<K,TV,CV> store, JacisStoreTxView<K, TV, CV> txView) {
     JacisDirtyCheck<K, TV> dirtyChecker = store.getObjectTypeSpec().getDirtyCheck();
     if (dirtyChecker == null) {
       return;
@@ -43,7 +43,7 @@ class StoreTxDemarcationExecutor {
     }
   }
 
-  <K, TV, CV> void executePrepare(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
+  <K, TV, CV> void executePrepare(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
       return;
@@ -65,7 +65,7 @@ class StoreTxDemarcationExecutor {
     }
   }
 
-  <K, TV, CV> void executeCommit(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
+  <K, TV, CV> void executeCommit(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
       return;
@@ -98,7 +98,7 @@ class StoreTxDemarcationExecutor {
     txView.destroy();
   }
 
-  <K, TV, CV> void executeRollback(JacisStore<K, TV, CV> store, JacisTransactionHandle transaction) {
+  <K, TV, CV> void executeRollback(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
       return;
@@ -123,7 +123,7 @@ class StoreTxDemarcationExecutor {
     txView.destroy();
   }
 
-  private <K, TV, CV> void trackModification(JacisStore<K, TV, CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
+  private <K, TV, CV> void trackModification(JacisStoreImpl<K,TV,CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
     assert store.getObjectTypeSpec().isTrackOriginalValueEnabled() : "Tracking modification is only possible if original value is tracked";
     for (JacisModificationListener<K, TV> listener : store.getModificationListeners()) {
       listener.onModification(key, oldValue, newValue, tx);

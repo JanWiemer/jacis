@@ -8,6 +8,7 @@ import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.plugin.JacisTransactionListenerAdapter;
 import org.jacis.store.JacisStore;
+import org.jacis.store.JacisStoreImpl;
 import org.jacis.store.TrackedViewRegistry;
 import org.jacis.testhelper.JacisTestHelper;
 import org.jacis.testhelper.TestObject;
@@ -30,7 +31,7 @@ public class JacisStoreWithCloningAndTrackedViewMultithreadedTest {
   public void testMultiThreadedAccess() {
     JacisTestHelper testHelper = new JacisTestHelper();
     AtomicReference<Throwable> exception = new AtomicReference<>();
-    final JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
+    final JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     final JacisContainer container = store.getContainer();
     final TestJacisTransactionListenerAdapter txListener = new TestJacisTransactionListenerAdapter(store);
     container.registerTransactionListener(txListener);
@@ -69,7 +70,7 @@ public class JacisStoreWithCloningAndTrackedViewMultithreadedTest {
                   totalInc = (int) inc;
                 }
                 if (inc < 5) {
-                  TrackedViewRegistry<String, TestObject, TestObject> tvr = store.getTrackedViewRegistry();
+                  TrackedViewRegistry<String, TestObject> tvr = store.getTrackedViewRegistry();
                   log.debug("... read current view values: count={}, sum={}", tvr.getView(TrackedTestView.class).getCount(), tvr.getView(TrackedTestView.class).getSum());
                 }
                 String updateTxt = object.getName() + " form " + oldVal + " to " + (oldVal + inc);
@@ -143,11 +144,11 @@ public class JacisStoreWithCloningAndTrackedViewMultithreadedTest {
   public static class TestJacisTransactionListenerAdapter extends JacisTransactionListenerAdapter {
 
     private final AtomicLong sum = new AtomicLong(0l);
-    private JacisStore<String, TestObject, TestObject> store;
+    private JacisStore<String, TestObject> store;
     private ThreadLocal<Long> totalInc = new ThreadLocal<>();
     private ThreadLocal<String> updateTxt = new ThreadLocal<>();
 
-    public TestJacisTransactionListenerAdapter(JacisStore<String, TestObject, TestObject> store) {
+    public TestJacisTransactionListenerAdapter(JacisStore<String, TestObject> store) {
       this.store = store;
     }
 

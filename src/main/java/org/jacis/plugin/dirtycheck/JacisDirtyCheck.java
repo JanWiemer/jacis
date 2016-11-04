@@ -5,11 +5,12 @@
 package org.jacis.plugin.dirtycheck;
 
 import org.jacis.plugin.readonly.object.AbstractReadOnlyModeSupportingObject;
+import org.jacis.store.JacisStoreImpl;
 
 /**
  * This interface provides the possibility to register a dirty check for an object type.
  * The purpose of this check is to mark the object as updated without the need to explicitly call the
- * {@link org.jacis.store.JacisStore#update(Object, Object)} method. If this method returns 'true' the
+ * {@link JacisStoreImpl#update(Object, Object)} method. If this method returns 'true' the
  * object is marked as updated. Note that it is still possible to mark an object as update manually by
  * calling the 'update' method. For objects already marked as updated the dirty check is not called.
  * <p>
@@ -34,7 +35,7 @@ public interface JacisDirtyCheck<K, TV> {
   /**
    * Checks if the passed object is dirty.
    * The purpose of this check is to mark the object as updated without the need to explicitly call the
-   * {@link org.jacis.store.JacisStore#update(Object, Object)} method. If this method returns 'true' the
+   * {@link JacisStoreImpl#update(Object, Object)} method. If this method returns 'true' the
    * object is marked as updated. Note that it is still possible to mark an object as update manually by
    * calling the 'update' method. For objects already marked as updated the dirty check is not called.
    *

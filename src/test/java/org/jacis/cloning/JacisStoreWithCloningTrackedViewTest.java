@@ -19,7 +19,7 @@ public class JacisStoreWithCloningTrackedViewTest {
   @Test
   public void testTrackedView() {
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisContainer container = store.getContainer();
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1"));
