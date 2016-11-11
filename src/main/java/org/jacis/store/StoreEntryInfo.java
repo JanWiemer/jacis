@@ -9,11 +9,10 @@ package org.jacis.store;
  *
  * @param <K> Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
- * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
-@SuppressWarnings("ALL")
-public class StoreEntryInfo<K, TV, CV> {
+@SuppressWarnings({"unused", "WeakerAccess"})
+public class StoreEntryInfo<K, TV> {
 
   private final K key;
   private final long committedVersion;
@@ -26,13 +25,13 @@ public class StoreEntryInfo<K, TV, CV> {
   private final String txViewValueString;
   private final String originalTxViewValueString;
 
-  StoreEntryInfo(K key, StoreEntry<K, TV, CV> committedEntry, StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> txView) {
+  <CV> StoreEntryInfo(K key, StoreEntry<K, TV, CV> committedEntry, StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> txView) {
     this.key = key;
     if (committedEntry != null) {
       committedVersion = committedEntry.getVersion();
       committedVersionLastCommitter = committedEntry.getUpdatedBy().getTxId();
       committedValueString = String.valueOf(committedEntry.getValue());
-      JacisStoreTxView<K, TV, CV> lf = committedEntry.getLockedFor();
+      JacisStoreTxView<K, TV, ?> lf = committedEntry.getLockedFor();
       committedVersionLockedForTx = lf == null ? null : lf.getTxId();
     } else {
       committedVersion = -1;
@@ -128,7 +127,7 @@ public class StoreEntryInfo<K, TV, CV> {
     if (txViewStale) {
       b.append("[STALE]");
     }
-    b.append(", comittedVal=").append(committedValueString);
+    b.append(", committedVal=").append(committedValueString);
     b.append(" (v. ").append(committedVersion).append(committedVersionLockedForTx != null ? "-locked" : "").append(")");
     return b.toString();
   }

@@ -316,7 +316,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   @Override
-  public StoreEntryInfo<K, TV, CV> getObjectInfo(K key) {
+  public StoreEntryInfo<K, TV> getObjectInfo(K key) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);

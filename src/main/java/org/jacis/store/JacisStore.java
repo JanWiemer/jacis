@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.store;
 
 import org.jacis.container.JacisContainer;
@@ -365,7 +369,7 @@ public interface JacisStore<K, TV> {
      * @param key The key of the desired object.
      * @return a info object /type {@link StoreEntryInfo}) containing information regarding the current state of the object.
      */
-    StoreEntryInfo<K, TV, ?> getObjectInfo(K key);
+    StoreEntryInfo<K, TV> getObjectInfo(K key);
 
     /**
      * Clear the complete store, remove all committed values and invalidate all pending transactions.

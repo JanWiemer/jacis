@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016. Jan Wiemer
+ */
+
 package org.jacis.store;
 
 import org.jacis.container.JacisContainer;
@@ -36,5 +40,5 @@ public interface JacisStoreAdminInterface<K, TV, CV> {
      * @param key The key of the desired object.
      * @return a info object /type {@link StoreEntryInfo}) containing information regarding the current state of the object.
      */
-    StoreEntryInfo<K, TV, CV> getObjectInfo(K key);
+    StoreEntryInfo<K, TV> getObjectInfo(K key);
 }
