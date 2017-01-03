@@ -27,7 +27,7 @@ class StoreEntry<K, TV, CV> {
   }
 
   @SuppressWarnings("ObjectEquality")
-  public void update(StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> byTx) {
+  synchronized public  void update(StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> byTx) {
     TV txVal = entryTxView.getValue();
     if (txVal == null) { // deleted
       value = null;
@@ -38,22 +38,23 @@ class StoreEntry<K, TV, CV> {
     updatedBy = byTx;
   }
 
-  void lockedFor(JacisStoreTxView<K, TV, CV> lockingTx) {
+  synchronized void  lockedFor(JacisStoreTxView<K, TV, CV> lockingTx) {
     lockedFor = lockingTx;
   }
 
-  void releaseLockedFor(JacisStoreTxView<K, TV, CV> releasingTx) {
+  synchronized void  releaseLockedFor(JacisStoreTxView<K, TV, CV> releasingTx) {
     if (releasingTx.equals(getLockedFor())) {
       lockedFor = null;
     }
   }
 
-  boolean isLocked() {
+  synchronized boolean  isLocked() {
     return lockedFor != null;
   }
 
-  boolean isLockedForOtherThan(JacisStoreTxView<K, TV, CV> txView) {
-    return lockedFor != null && !lockedFor.equals(txView);
+  synchronized boolean  isLockedForOtherThan(JacisStoreTxView<K, TV, CV> txView) {
+    JacisStoreTxView<K, TV, CV> lf = lockedFor;
+    return lf != null && !lf.equals(txView);
   }
 
   JacisStoreAdminInterface<K,TV,CV> getStore() {
@@ -64,27 +65,27 @@ class StoreEntry<K, TV, CV> {
     return key;
   }
 
-  CV getValue() {
+  synchronized CV getValue() {
     return value;
   }
 
-  boolean isNull() {
+  synchronized boolean isNull() {
     return value == null;
   }
 
-  boolean isNotNull() {
+  synchronized boolean isNotNull() {
     return value != null;
   }
 
-  long getVersion() {
+  synchronized long getVersion() {
     return version;
   }
 
-  JacisStoreTxView<K, TV, CV> getUpdatedBy() {
+  synchronized JacisStoreTxView<K, TV, CV> getUpdatedBy() {
     return updatedBy;
   }
 
-  JacisStoreTxView<K, TV, CV> getLockedFor() {
+  synchronized JacisStoreTxView<K, TV, CV> getLockedFor() {
     return lockedFor;
   }
 
@@ -107,11 +108,12 @@ class StoreEntry<K, TV, CV> {
   }
 
   @Override
-  public String toString() {
+  synchronized public String toString() {
     StringBuilder b = new StringBuilder();
     b.append(key).append("->").append(value).append(" (v.").append(version).append(")");
-    if (lockedFor != null) {
-      b.append("lockedFor:").append(lockedFor);
+    JacisStoreTxView<K, TV, CV> lf = lockedFor;
+    if (lf != null) {
+      b.append("lockedFor:").append(lf);
     }
     return b.toString();
   }
