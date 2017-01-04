@@ -17,11 +17,16 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  */
 class StoreEntryTxView<K, TV, CV> {
 
-  private final StoreEntry<K, TV, CV> committedEntry; // link to the committed entry (note this is the real committed instance that might be changed by other TXs)
-  private TV txValue = null; // current value of the entry in this TX
-  private TV origValue; // original value of the entry when cloning it to the transaction view (only tracked if configured)
-  private long origVersion; // original version of the entry when cloning it to the transaction view (for optimistic locking)
-  private boolean updated = false; // entry was updated in the current transaction
+  /** link to the committed entry (note this is the real committed instance that might be changed by other TXs) */
+  private final StoreEntry<K, TV, CV> committedEntry;
+  /** current value of the entry in this TX */
+  private TV txValue = null;
+  /** original value of the entry when cloning it to the transaction view (only tracked if configured) */
+  private TV origValue;
+  /** original version of the entry when cloning it to the transaction view (for optimistic locking) */
+  private long origVersion;
+  /** flag indicating if entry was updated in the current transaction (initially false) */
+  private boolean updated = false;
 
   StoreEntryTxView(StoreEntry<K, TV, CV> committedEntry, boolean trackOriginal) {
     JacisObjectAdapter<TV, CV> ca = committedEntry.getStore().getObjectAdapter();

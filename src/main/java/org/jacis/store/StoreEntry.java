@@ -14,12 +14,18 @@ package org.jacis.store;
  */
 class StoreEntry<K, TV, CV> {
 
+  /** reference to the main store */
   private final JacisStoreAdminInterface<K,TV,CV> store;
+  /** the key of this entry */
   private final K key;
+  /** the current committed valued of this entry (visible to all transactions) (null if not existing / deleted) */
   private CV value = null;
-  private long version = 0; // version counter will be increased when an updated view of the entry is committed (used for optimistic locking)
-  private JacisStoreTxView<K, TV, CV> updatedBy = null; // transaction that has committed the current version (for logging / debugging only)
-  private JacisStoreTxView<K, TV, CV> lockedFor = null; // transaction this object is locked for (in the time between prepare and internalCommit)
+  /** version counter will be increased when an updated view of the entry is committed (used for optimistic locking) */
+  private long version = 0;
+  /** transaction that has committed the current version (for logging / debugging only) */
+  private JacisStoreTxView<K, TV, CV> updatedBy = null;
+  /** transaction this object is locked for (in the time between prepare and internalCommit) */
+  private JacisStoreTxView<K, TV, CV> lockedFor = null;
 
   StoreEntry(JacisStoreAdminInterface<K,TV,CV> store, K key) {
     this.store = store;
