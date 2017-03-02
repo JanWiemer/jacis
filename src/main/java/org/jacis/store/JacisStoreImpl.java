@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. Jan Wiemer
+ * Copyright (c) 2017. Jan Wiemer
  */
 package org.jacis.store;
 
@@ -194,12 +194,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
 
   @Override
   public Stream<TV> stream() { // Note this method will clone all objects into the TX view!
-    return keyStream().map(this::get).filter(v -> v != null);
+    return keyStream().map(this::get).filter(Objects::nonNull);
   }
 
   @Override
   public Stream<TV> streamReadOnly() {
-    return keyStream().map(this::getReadOnly).filter(v -> v != null);
+    return keyStream().map(this::getReadOnly).filter(Objects::nonNull);
   }
 
   @Override
@@ -249,6 +249,17 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   public List<TV> getAllReadOnlyAtomic(Predicate<TV> filter) {
     return computeAtomic(() -> getAllReadOnly(filter));
   }
+
+  @Override
+  public List<TV> getPageReadOnly(Predicate<TV> filter, Comparator<TV> comparator, long offset, long pageSize) {
+    return streamReadOnly(filter).sorted(comparator).skip(offset).limit(pageSize).collect(Collectors.toList());
+  }
+
+  @Override
+  public <PV> List<PV> getWrapperPageReadOnly(Function<TV, PV> wrapper, Predicate<PV> filter, Comparator<PV> comparator, long offset, long pageSize) {
+    return streamReadOnly().map(wrapper).filter(filter).sorted(comparator).skip(offset).limit(pageSize).collect(Collectors.toList());
+  }
+
 
   @Override
   public void update(K key, TV value) throws JacisTransactionAlreadyPreparedForCommitException {
