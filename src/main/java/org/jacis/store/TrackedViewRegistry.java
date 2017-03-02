@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. Jan Wiemer
+ * Copyright (c) 2017. Jan Wiemer
  */
 
 package org.jacis.store;
@@ -144,7 +144,12 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
     return (VT) view.clone();
   }
 
+  public <VT extends TrackedView<TV>> void reinitializeView(Class<VT> viewType) {
+    store.executeAtomic(() -> initTrackedView(getView(viewType)));
+  }
+
   private void initTrackedView(TrackedView<TV> view) {
+    view.clear();
     for (TV val : store.getAllReadOnly(null)) {
       view.trackModification(null, val);
     }

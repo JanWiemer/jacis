@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. Jan Wiemer
+ * Copyright (c) 2017. Jan Wiemer
  */
 
 package org.jacis.cloning;
@@ -44,6 +44,11 @@ public class JacisStoreWithCloningTrackedViewTest {
       int viewVal = store.getTrackedViewRegistry().getView(TrackedTestView.class).getCount();
       assertEquals(5, viewVal);
     });
+    int viewVal = store.getTrackedViewRegistry().getView(TrackedTestView.class).getCount();
+    assertEquals(5, viewVal);
+    store.getTrackedViewRegistry().reinitializeView(TrackedTestView.class);
+    viewVal = store.getTrackedViewRegistry().getView(TrackedTestView.class).getCount();
+    assertEquals(5, viewVal);
   }
 
 }
