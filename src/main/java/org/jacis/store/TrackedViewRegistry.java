@@ -24,7 +24,9 @@ import java.util.*;
 @SuppressWarnings("unused")
 public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, TV> {
 
+  /** Reference to the JACIS store the tracked view registry belongs to */
   private final JacisStoreImpl<K, TV, ?> store;
+  /** Map assigning the tracked views maintained by this registry to the view classes */
   private final Map<Class<? extends TrackedView<TV>>, TrackedView<TV>> viewMap = new HashMap<>();
 
   TrackedViewRegistry(JacisStoreImpl<K, TV, ?> store, boolean checkConsistencyAfterCommit) {
@@ -121,7 +123,7 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
         throw new IllegalArgumentException("The view registered for the type " + viewType + " is no instance of " + TrackedViewClustered.class + "! view: " + view);
       }
       TrackedViewClustered<TV, VK, TrackedView<TV>> clusteredView = (TrackedViewClustered<TV, VK, TrackedView<TV>>) view;
-      TrackedView<TV> subView = clusteredView.getSubView(subviewKey);
+      TrackedView<TV> subView = Objects.requireNonNull(clusteredView.getSubView(subviewKey), "No sub-view found for key " + subviewKey);
       return (VT) subView.clone();
     });
     JacisStoreTxView<K, TV, ?> txView = store.getTxView();
