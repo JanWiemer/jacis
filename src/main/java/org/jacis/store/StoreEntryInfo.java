@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. Jan Wiemer
+ * Copyright (c) 2017. Jan Wiemer
  */
 
 package org.jacis.store;
@@ -14,15 +14,25 @@ package org.jacis.store;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class StoreEntryInfo<K, TV> {
 
+  /** the key of the entry */
   private final K key;
+  /** version of the committed entry in the core store */
   private final long committedVersion;
+  /** transaction ID of the transaction that committed the committed entry */
   private final String committedVersionLastCommitter;
+  /** transaction ID of the transaction currently locking the committed entry (for commit) */
   private final String committedVersionLockedForTx;
+  /** original version of the transactional view of the entry (the version from the committet entry at the time it was cloned to the TX view) */
   private final long txViewOrigVersion;
+  /** flag indicating if the transaction view has been updated */
   private final boolean txViewUpdated;
+  /** flag indicating if the transaction view is stale (the committed version has been changed meanwhile) */
   private final boolean txViewStale;
+  /** String representation of the committed value of the entry */
   private final String committedValueString;
+  /** String representation of the value of the transactional view of the entry */
   private final String txViewValueString;
+  /** String representation of the original value of the transactional view of the entry (az the time it was cloned to the TX view) */
   private final String originalTxViewValueString;
 
   <CV> StoreEntryInfo(K key, StoreEntry<K, TV, CV> committedEntry, StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> txView) {
