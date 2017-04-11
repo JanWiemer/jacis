@@ -98,6 +98,7 @@ class StoreEntryTxView<K, TV, CV> {
   }
 
   private void throwStale(JacisStoreTxView<K, TV, CV> txView) throws JacisStaleObjectException {
+    JacisStoreAdminInterface<K, TV, CV> store = committedEntry.getStore();
     StringBuilder msg = new StringBuilder();
     msg.append("Object ").append(getKey());
     msg.append(" updated by current TX ").append(txView.getTxId()).append(" (from v. ").append(getOrigVersion()).append(")");
@@ -108,16 +109,17 @@ class StoreEntryTxView<K, TV, CV> {
       msg.append(" was already updated by other TX ");
     }
     msg.append(otherTxView == null ? "?" : otherTxView.getTxId()).append("!");
+    msg.append(" (store: ").append(store).append(")");
     StringBuilder details = new StringBuilder();
     details.append("// Details: \n");
     details.append(" - value changed by this TX: ").append(getValue()).append("\n");
-    if (committedEntry.getStore().getObjectTypeSpec().isTrackOriginalValueEnabled()) {
+    if (store.getObjectTypeSpec().isTrackOriginalValueEnabled()) {
       details.append(" - original value          : ").append(getOrigValue()).append(" (v. ").append(getOrigVersion()).append(")").append("\n");
     }
     details.append(" - committed value         : ").append(committedEntry.getValue()).append(" (v. ").append(committedEntry.getVersion()).append(")").append("\n");
     details.append(" - current TX: ").append(txView).append("\n");
     details.append(" - other TX: ").append(otherTxView).append("\n");
-    details.append(" - store: ").append(this);
+    details.append(" - store: ").append(store);
     throw new JacisStaleObjectException(msg.toString()).setDetails(details.toString());
   }
 
