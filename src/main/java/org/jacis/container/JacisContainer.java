@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. Jan Wiemer
+ * Copyright (c) 2017. Jan Wiemer
  */
 package org.jacis.container;
 
@@ -249,15 +249,26 @@ public class JacisContainer {
    * Otherwise the method simply returns null in case of a missing transaction.
    * If the container has not yet joined the transaction represented by the handle it is registered now.
    *
-   * @param enforceTx A flag indicating if {@link JacisNoTransactionException} is thrown when no transaction is active for the current thread
+   * @param createIfAbsent A flag indicating if a new transaction should be started if no transaction is active
    * @return a handle (type {@link JacisTransactionHandle}) for the transaction currently associated with the current thread.
    * @throws JacisNoTransactionException If no transaction is active and the enforceTx flag is set to true
    */
-  public JacisTransactionHandle getCurrentTransaction(boolean enforceTx) throws JacisNoTransactionException {
-    if (!txAdapter.isTransactionActive() && enforceTx) {
-      throw new JacisNoTransactionException("No active transaction!");
+  public JacisTransactionHandle getCurrentTransaction(boolean createIfAbsent) throws JacisNoTransactionException {
+    if (createIfAbsent) { // create a new TX if not yet present
+      if (txAdapter.isTransactionActive()) { // JTA TX active -> create (if not yet created) and join
+        return txAdapter.joinCurrentTransaction(this);
+      } else { // no JTA active -> can not create and join
+        txAdapter.disjoinCurrentTransaction();
+        throw new JacisNoTransactionException("No active transaction!");
+      }
+    } else { //  createIfAbsent == false // only return TX if already
+      if (txAdapter.isTransactionActive()) {
+        return txAdapter.joinCurrentTransaction(this);
+      } else {
+        txAdapter.disjoinCurrentTransaction();
+        return null;
+      }
     }
-    return txAdapter.joinCurrentTransaction(this);
   }
 
   /**
