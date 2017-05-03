@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. Jan Wiemer
+ * Copyright (c) 2017. Jan Wiemer
  */
 
 package org.jacis.store;
@@ -82,20 +82,23 @@ class StoreTxDemarcationExecutor {
     if (trace) {
       logger.trace("internalCommit {} on {} by Thread {}", txView, store, Thread.currentThread().getName());
     }
-    for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
-      K key = entryTxView.getKey();
-      StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
-      if (entryTxView.isUpdated()) {
-        if (trace) {
-          logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
+    try {
+      for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+        K key = entryTxView.getKey();
+        StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
+        if (entryTxView.isUpdated()) {
+          if (trace) {
+            logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
+          }
+          trackModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
+          entryCommitted.update(entryTxView, txView);
         }
-        trackModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
-        entryCommitted.update(entryTxView, txView);
+        entryCommitted.releaseLockedFor(txView);
+        store.checkRemoveCommittedEntry(entryCommitted, txView);
       }
-      entryCommitted.releaseLockedFor(txView);
-      store.checkRemoveCommittedEntry(entryCommitted, txView);
+    } finally { // even if exceptions occur TX view has to be destroyed! See https://github.com/JanWiemer/jacis/issues/8
+      txView.destroy();
     }
-    txView.destroy();
   }
 
   <K, TV, CV> void executeRollback(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {

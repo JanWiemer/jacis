@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. Jan Wiemer
+ * Copyright (c) 2017. Jan Wiemer
  */
 
 package org.jacis.plugin;
@@ -28,6 +28,7 @@ public interface JacisModificationListener<K, V> {
   /**
    * Callback method called during the commit phase of a transaction for each modified value written back
    * from the transactional view to the store of committed values.
+   * Note that implementing methods should not throw an exception since the original transaction could be broken by this.
    *
    * @param key      The key of the modified object
    * @param oldValue The original value of the modified object when it was copied to the transactional view.
