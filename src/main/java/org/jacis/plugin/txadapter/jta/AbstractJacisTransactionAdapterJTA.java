@@ -179,6 +179,10 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
     switch (status) {
       case Status.STATUS_NO_TRANSACTION:
         return false;
+      case Status.STATUS_COMMITTED:
+        return false;
+      case Status.STATUS_ROLLEDBACK:
+        return false;
     }
     return true;
   }
