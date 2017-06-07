@@ -180,9 +180,9 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
       case Status.STATUS_NO_TRANSACTION:
         return false;
       case Status.STATUS_COMMITTED:
-        return false;
+        return getCurrentTransaction() != null; // if state is committed we consider the Jacis TX to be still active (if there is one) since the sync committing the Jacis changes may still stand out
       case Status.STATUS_ROLLEDBACK:
-        return false;
+        return getCurrentTransaction() != null;
     }
     return true;
   }
