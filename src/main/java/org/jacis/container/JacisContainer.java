@@ -258,14 +258,12 @@ public class JacisContainer {
       if (txAdapter.isTransactionActive()) { // JTA TX active -> create (if not yet created) and join
         return txAdapter.joinCurrentTransaction(this);
       } else { // no JTA active -> can not create and join
-        txAdapter.disjoinCurrentTransaction();
         throw new JacisNoTransactionException("No active transaction!");
       }
     } else { //  createIfAbsent == false // only return TX if already
       if (txAdapter.isTransactionActive()) {
         return txAdapter.joinCurrentTransaction(this);
       } else {
-        txAdapter.disjoinCurrentTransaction();
         return null;
       }
     }

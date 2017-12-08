@@ -279,14 +279,18 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   @Override
   public TV refresh(K key) { // refresh with committed version -> discard all changes made by the current TX
     JacisStoreTxView<K, TV, CV> txView = getTxView();
-    txView.removeTxViewEntry(key, true);
+    if(txView!=null) {
+      txView.removeTxViewEntry(key, true);
+    }
     return get(key);
   }
 
   @Override
   public TV refreshIfNotUpdated(K key) { // if not updated: refresh with committed version -> discard all changes made by the current TX
     JacisStoreTxView<K, TV, CV> txView = getTxView();
-    txView.removeTxViewEntry(key, false);
+    if(txView!=null) {
+      txView.removeTxViewEntry(key, false);
+    }
     return get(key);
   }
 

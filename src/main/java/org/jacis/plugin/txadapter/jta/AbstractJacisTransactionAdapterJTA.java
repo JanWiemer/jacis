@@ -4,16 +4,24 @@
 
 package org.jacis.plugin.txadapter.jta;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.transaction.RollbackException;
+import javax.transaction.Status;
+import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
+
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
+import org.jacis.exception.JacisNoTransactionException;
 import org.jacis.exception.JacisTransactionException;
 import org.jacis.plugin.txadapter.JacisTransactionAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.transaction.*;
-import java.util.Stack;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Default implementation of the transaction adapter using JTA transactions.
@@ -23,13 +31,10 @@ import java.util.concurrent.atomic.AtomicLong;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransactionAdapter {
 
-  private static final boolean DEFAULT_ALLOW_STACKED_TRANSACTIONS = true;
-
   private static final Logger log = LoggerFactory.getLogger(AbstractJacisTransactionAdapterJTA.class);
-  /** Thread local to store the currently active transaction handle for the current thread. */
-  protected final ThreadLocal<Stack<JacisTransactionHandle>> transactionStacks = new ThreadLocal<>();
-  /** indicates if stacked transactions should be allowed */
-  private final boolean allowStackedTransactions = DEFAULT_ALLOW_STACKED_TRANSACTIONS;
+
+  /** Map storing the transaction handles for the active JTA transactions. */
+  private final Map<Transaction, JacisTransactionHandle> transactionMap = new ConcurrentHashMap<>();
   /** Sequence to give the transaction handles a default unique id */
   private final AtomicLong txSeq = new AtomicLong(0);
 
@@ -40,8 +45,8 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
    * Compute a transaction ID for the transaction handle.
    * The default implementation uses the passes sequence Id.
    *
-   * @param tx         The external JTA transaction.
-   * @param sequenceId The inernally manager transaction sequence.
+   * @param tx The external JTA transaction.
+   * @param sequenceId The internally manager transaction sequence.
    * @return a transaction ID for the transaction handle.
    */
   protected String computeJacisTxId(@SuppressWarnings("UnusedParameters") Transaction tx, long sequenceId) {
@@ -52,7 +57,7 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
    * Compute a transaction description for the transaction handle.
    * The default implementation uses the passes transaction id and a 'toString()' of the external transaction.
    *
-   * @param tx   The external JTA transaction.
+   * @param tx The external JTA transaction.
    * @param txId The transaction ID for the transaction handle.
    * @return a transaction ID for the transaction handle.
    */
@@ -65,99 +70,81 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
     return getClass().getSimpleName();
   }
 
-  @Override
-  public boolean isTransactionActive() {
+  protected Transaction getJtaTransaction() {
     try {
       TransactionManager txManager = getTransactionManager();
-      return isTransactionActive(txManager.getTransaction());
+      Transaction tx = txManager.getTransaction();
+      return tx;
     } catch (SystemException e) {
       throw new JacisTransactionException(e);
     }
   }
 
-  protected JacisTransactionHandle getCurrentTransaction() {
-    Stack<JacisTransactionHandle> txStack = transactionStacks.get();
-    return txStack == null ? null : txStack.peek();
+  protected boolean isJtaTransactionActive(Transaction tx) {
+    try {
+      if (tx == null) {
+        return false;
+      }
+      int status = tx.getStatus();
+      status = Status.STATUS_UNKNOWN == status ? tx.getStatus() : status; // if status unknown (transient state) -> call again
+      switch (status) {
+        case Status.STATUS_NO_TRANSACTION:
+          return false;
+        case Status.STATUS_COMMITTED:
+          return transactionMap.get(tx) != null; // if state is committed we consider the Jacis TX to be still active (if there is one) since the sync committing the Jacis changes may still stand out
+        case Status.STATUS_ROLLEDBACK:
+          return transactionMap.get(tx) != null;
+      }
+      return true;
+    } catch (SystemException e) {
+      throw new JacisTransactionException(e);
+    }
   }
 
   protected JacisTransactionHandle removeCurrentTransaction() {
-    Stack<JacisTransactionHandle> txStack = transactionStacks.get();
-    if (txStack == null) {
-      throw new IllegalStateException("No TX stack initialized for Thread " + Thread.currentThread().getName());
+    Transaction tx = getJtaTransaction();
+    if (tx == null) {
+      throw new JacisNoTransactionException("No transaction!");
     }
-    JacisTransactionHandle res = txStack.pop();
-    if (txStack.isEmpty()) {
-      transactionStacks.remove();
-    }
+    JacisTransactionHandle txHandle = transactionMap.remove(tx);
     if (log.isTraceEnabled()) {
-      log.trace("{} remove TX {} from stack (->stack size= {}) Thread: {}", this, res, txStack.size(), Thread.currentThread().getName());
+      log.trace("{} remove TX handle [{}] for JTA-Tx=[{}]. Thread: {}", this, txHandle, tx, Thread.currentThread().getName());
     }
-    return res;
-  }
-
-  protected JacisTransactionHandle setCurrentTransaction(JacisTransactionHandle txHandle) {
-    Stack<JacisTransactionHandle> txStack = transactionStacks.get();
-    if (txStack == null) {
-      txStack = new Stack<>();
-      transactionStacks.set(txStack);
-    }
-    txStack.push(txHandle);
-    if (log.isTraceEnabled()) {
-      log.trace("{} add TX {} to stack (->stack size= {}) Thread: {}", this, txHandle, txStack.size(), Thread.currentThread().getName());
+    if (txHandle == null) {
+      throw new IllegalStateException("No TX handle associated for TX" + tx);
     }
     return txHandle;
   }
 
   @Override
+  public boolean isTransactionActive() {
+    return isJtaTransactionActive(getJtaTransaction());
+  }
+
+  @Override
   public JacisTransactionHandle joinCurrentTransaction(JacisContainer container) {
     try {
-      JacisTransactionHandle currentTxHandle = getCurrentTransaction();
-      TransactionManager txManager = getTransactionManager();
-      Transaction tx = txManager.getTransaction();
-      tx = isTransactionActive(tx) ? tx : null;
+      Transaction tx = getJtaTransaction();
       if (tx == null) {
-        if (currentTxHandle == null) {
-          if (log.isTraceEnabled()) {
-            log.trace("{} no transaction active, no handle stored for thread {}", this, Thread.currentThread().getName());
-          }
-          return null;
-        } else { // currentTxHandle != null
-          if (log.isTraceEnabled()) {
-            log.trace("{} no transaction active, handle stored: [{}] for thread {}", this, currentTxHandle, Thread.currentThread().getName());
-          }
-          container.internalRollback(currentTxHandle); // transaction no longer active
-          log.warn("{}: JTA transaction for transaction handle [{}] no longer active!", this, currentTxHandle);
-          removeCurrentTransaction();
-          return null;
-        }
-      } else if (currentTxHandle != null) {
-        if (tx.equals(currentTxHandle.getExternalTransaction())) {
-          if (log.isTraceEnabled()) {
-            log.trace("{} transaction active and matching handle stored: [{}] for thread {}", this, currentTxHandle, Thread.currentThread().getName());
-          }
-          return currentTxHandle;
-        } else {
-          if (log.isTraceEnabled()) {
-            log.trace("{} transaction active and not matching handle stored: [{}] (active TX: [{}]) (-> start stacked TX) for thread {}", this, currentTxHandle, tx, Thread.currentThread().getName());
-          }
-          if (!allowStackedTransactions) {
-            throw new IllegalStateException("Stacked transactions are not allowed for " + container + "! Can not start new store transaction for " + tx + " while " + currentTxHandle + " is active!");
-          }
-          // continue and create a stacked transaction
-        }
-      } else {
+        throw new JacisNoTransactionException("No transaction!");
+      } else if (!isJtaTransactionActive(tx)) {
+        throw new JacisNoTransactionException("No active transaction! Current Transaction: " + tx + " (state=" + tx.getStatus() + ")");
+      }
+      JacisTransactionHandle currentTxHandle = transactionMap.get(tx);
+      if (currentTxHandle != null) {
         if (log.isTraceEnabled()) {
-          log.trace("{} transaction active and no handle stored (active TX: [{}])  for thread {}", this, tx, Thread.currentThread().getName());
+          log.trace("{} found existing handle [{}] for JTA-Tx=[{}]. Thread: {}", this, currentTxHandle, tx, Thread.currentThread().getName());
         }
+        return currentTxHandle;
       }
       long txNr = txSeq.incrementAndGet();
       String txId = computeJacisTxId(tx, txNr);
       String txDescription = computeJacisTxDescription(tx, txId);
       JacisTransactionHandle txHandle = new JacisTransactionHandle(txId, txDescription, tx);
       tx.registerSynchronization(new JacisSync(container, txHandle));
-      setCurrentTransaction(txHandle);
+      transactionMap.put(tx, txHandle);
       if (log.isTraceEnabled()) {
-        log.trace("{} created new handle [{}] for active TX: [{}] for thread {}", this, txHandle, tx, Thread.currentThread().getName());
+        log.trace("{} created new handle [{}] for JTA-Tx=[{}]. Thread: {}", this, currentTxHandle, tx, Thread.currentThread().getName());
       }
       return txHandle;
     } catch (SystemException | RollbackException e) {
@@ -170,18 +157,6 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
     removeCurrentTransaction();
   }
 
-  protected boolean isTransactionActive(Transaction tx) throws SystemException {
-    if (tx == null) {
-      return false;
-    }
-    int status = tx.getStatus();
-    status = Status.STATUS_UNKNOWN == status ? tx.getStatus() : status; // if status unknown (transient state) -> call again
-    switch (status) {
-      case Status.STATUS_NO_TRANSACTION:
-        return false;
-    }
-    return true;
-  }
 
   /** JTA Transaction Synchronisation enlisted at the JTA transaction to let the container join the transaction. */
   protected static class JacisSync implements Synchronization {

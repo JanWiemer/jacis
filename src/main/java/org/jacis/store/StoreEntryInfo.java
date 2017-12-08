@@ -39,7 +39,7 @@ public class StoreEntryInfo<K, TV> {
     this.key = key;
     if (committedEntry != null) {
       committedVersion = committedEntry.getVersion();
-      committedVersionLastCommitter = committedEntry.getUpdatedBy().getTxId();
+      committedVersionLastCommitter = committedEntry.getUpdatedByTxId();
       committedValueString = String.valueOf(committedEntry.getValue());
       JacisStoreTxView<K, TV, ?> lf = committedEntry.getLockedFor();
       committedVersionLockedForTx = lf == null ? null : lf.getTxId();
