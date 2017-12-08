@@ -13,6 +13,8 @@ package org.jacis.exception;
  */
 public class ReadOnlyModeNotSupportedException extends IllegalStateException {
 
+  private static final long serialVersionUID = 1L;
+
   public ReadOnlyModeNotSupportedException(String s) {
     super(s);
   }

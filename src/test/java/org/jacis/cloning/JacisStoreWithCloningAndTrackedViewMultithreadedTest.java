@@ -4,11 +4,16 @@
 
 package org.jacis.cloning;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.plugin.JacisTransactionListenerAdapter;
 import org.jacis.store.JacisStore;
-import org.jacis.store.JacisStoreImpl;
 import org.jacis.store.TrackedViewRegistry;
 import org.jacis.testhelper.JacisTestHelper;
 import org.jacis.testhelper.TestObject;
@@ -16,12 +21,6 @@ import org.jacis.testhelper.TrackedTestView;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class JacisStoreWithCloningAndTrackedViewMultithreadedTest {
 

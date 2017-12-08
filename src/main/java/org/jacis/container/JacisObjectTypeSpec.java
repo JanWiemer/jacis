@@ -130,7 +130,7 @@ public class JacisObjectTypeSpec<K, TV, CV> {
     if (!(JacisDirtyTrackingObject.class.isAssignableFrom(valueClass))) {
       throw new IllegalStateException("Object based dirty check only suitable for object value types implementing " + JacisDirtyTrackingObject.class);
     }
-    this.dirtyCheck = new StoreEntryBasedDirtyCheck();
+    this.dirtyCheck = (JacisDirtyCheck<K, TV>) new StoreEntryBasedDirtyCheck<K, JacisDirtyTrackingObject>();
     return this;
   }
 

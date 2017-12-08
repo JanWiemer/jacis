@@ -4,6 +4,13 @@
 
 package org.jacis.cloning;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.ReadOnlyException;
 import org.jacis.exception.ReadOnlyModeNotSupportedException;
@@ -16,10 +23,6 @@ import org.jacis.testhelper.TestObjectWithoutReadOnlyMode;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.Assert.*;
 
 @SuppressWarnings("CodeBlock2Expr")
 public class JacisStoreWithCloningAdapterTest {
@@ -180,7 +183,7 @@ public class JacisStoreWithCloningAdapterTest {
       TestObject obj = store.getReadOnly(testObject.getName());
       assertEquals(2, obj.getValue());
       obj.setValue(3); // exception expected here!
-    });
+      });
   }
 
   @Test
@@ -204,6 +207,7 @@ public class JacisStoreWithCloningAdapterTest {
     tx1.commit();
   }
 
+  @SuppressWarnings("rawtypes")
   @Test(expected = ReadOnlyModeNotSupportedException.class)
   public void testObjectWithoutReadOnlySupport() {
     JacisStore<String, TestObjectWithoutReadOnlyMode> store = new JacisTestHelper().createTestStoreWithCloningAndWithoutReadonlyMode();
@@ -239,7 +243,7 @@ public class JacisStoreWithCloningAdapterTest {
     store.getContainer().withLocalTx(() -> {
       TestObject testObject2 = store.get(testObjectName);
       testObject2.setValue(2); // do not explicitly call update
-    });
+      });
     // check if committed
     store.getContainer().withLocalTx(() -> {
       TestObject testObject3 = store.get(testObjectName);
