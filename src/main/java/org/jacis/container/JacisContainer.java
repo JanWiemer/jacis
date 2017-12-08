@@ -3,6 +3,12 @@
  */
 package org.jacis.container;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+
 import org.jacis.exception.JacisNoTransactionException;
 import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.plugin.JacisTransactionListener;
@@ -14,12 +20,6 @@ import org.jacis.store.JacisStoreAdminInterface;
 import org.jacis.store.JacisStoreImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 //       _   _    ____ ___ ____
 //      | | / \  / ___|_ _/ ___|
@@ -46,9 +46,7 @@ public class JacisContainer {
   private final JacisTransactionAdapter txAdapter;
   /** Map assigning the stores (values of type {@link JacisStoreImpl}) to the store identifiers (keys of type {@link StoreIdentifier}). */
   private final Map<StoreIdentifier, JacisStore<?, ?>> storeMap = new ConcurrentHashMap<>();
-  /**
-   * List of transaction listeners / observers (type {@link JacisTransactionListener}) providing call-backs before / after prepare / internalCommit / rollback.
-   */
+  /** List of transaction listeners / observers (type {@link JacisTransactionListener}) providing call-backs before / after prepare / internalCommit / rollback. */
   private final List<JacisTransactionListener> txListeners = new ArrayList<>();
 
   /**

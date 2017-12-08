@@ -13,9 +13,7 @@ package org.jacis.container;
  */
 public class JacisTransactionHandle {
 
-  /**
-   * The id of the transaction
-   */
+  /** The id of the transaction */
   private final String txId;
   /** Description for the transaction giving some more information about the purpose of the transaction (for logging and debugging) */
   private final String txDescription;
@@ -72,7 +70,7 @@ public class JacisTransactionHandle {
 
   @Override
   public String toString() {
-    return "TX(" + txId + ": "+ txDescription+")";
+    return "TX(" + txId + ": " + txDescription + ")";
   }
 
 }
