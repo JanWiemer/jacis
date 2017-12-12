@@ -4,12 +4,12 @@
 
 package org.jacis.store;
 
-import org.jacis.container.JacisTransactionHandle;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.jacis.container.JacisTransactionHandle;
 
 /**
  * Representing the transactional view on the store entries for one transaction.
@@ -37,6 +37,8 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   private boolean commitPending = false;
   /** gives the reason (null means valid) why the tx has been invalidated. Attempts to internalCommit the tx will be ignored. */
   private String invalidationReason = null;
+  /** the number of updated entries of this TX view */
+  private int numberOfUpdatedEntries = 0;
 
   JacisStoreTxView(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
     this.store = store;
@@ -87,6 +89,14 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
     return commitPending;
   }
 
+  public int getNumberOfEntries() {
+    return storeTxView.size();
+  }
+
+  public int getNumberOfUpdatedEntries() {
+    return numberOfUpdatedEntries;
+  }
+
   JacisStoreTxView<K, TV, CV> assertWritable() {
     if (commitPending) {
       throw new IllegalStateException("Commit already started for transaction " + this);
@@ -116,11 +126,21 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
 
   boolean removeTxViewEntry(K key, boolean forceIfUpdated) {
     StoreEntryTxView<K, TV, CV> entry = storeTxView.get(key);
-    if (entry.isUpdated() && !forceIfUpdated) {
-      return false;
+    if (entry.isUpdated()) {
+      if (!forceIfUpdated) {
+        return false;
+      }
+      numberOfUpdatedEntries--; // removed an updated element
     }
     storeTxView.remove(key);
     return true;
+  }
+
+  void updateValue(StoreEntryTxView<K, TV, CV> entryTxView, TV newValue) {
+    if (!entryTxView.isUpdated()) {
+      numberOfUpdatedEntries++; // a new updated element
+    }
+    entryTxView.updateValue(newValue);
   }
 
   void startCommitPhase() {
@@ -129,6 +149,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
 
   void destroy() {
     storeTxView.clear();
+    numberOfUpdatedEntries = 0;
     store.notifyTxViewDestroyed(this);
   }
 

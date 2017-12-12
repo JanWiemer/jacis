@@ -38,9 +38,7 @@ public class JacisTransactionHandle {
     return txId;
   }
 
-  /**
-   * @return A description for the transaction giving some more information about the purpose of the transaction (for logging and debugging)
-   */
+  /** @return A description for the transaction giving some more information about the purpose of the transaction (for logging and debugging) */
   public String getTxDescription() {
     return txDescription;
   }

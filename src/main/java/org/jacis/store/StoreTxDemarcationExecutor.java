@@ -19,7 +19,7 @@ class StoreTxDemarcationExecutor {
 
   private Logger logger = LoggerFactory.getLogger(StoreTxDemarcationExecutor.class);
 
-  private <K, TV, CV> void executeDirtyCheck(JacisStoreAdminInterface<K,TV,CV> store, JacisStoreTxView<K, TV, CV> txView) {
+  private <K, TV, CV> void executeDirtyCheck(JacisStoreAdminInterface<K, TV, CV> store, JacisStoreTxView<K, TV, CV> txView) {
     JacisDirtyCheck<K, TV> dirtyChecker = store.getObjectTypeSpec().getDirtyCheck();
     if (dirtyChecker == null) {
       return;
@@ -37,7 +37,7 @@ class StoreTxDemarcationExecutor {
             logger.debug(" ... orig value: {}", origValue);
             logger.debug(" ... new value : {}", value);
           }
-          entryTxView.updateValue(value);
+          txView.updateValue(entryTxView, value);
         }
       }
     }
@@ -126,7 +126,7 @@ class StoreTxDemarcationExecutor {
     txView.destroy();
   }
 
-  private <K, TV, CV> void trackModification(JacisStoreImpl<K,TV,CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
+  private <K, TV, CV> void trackModification(JacisStoreImpl<K, TV, CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
     assert store.getObjectTypeSpec().isTrackOriginalValueEnabled() : "Tracking modification is only possible if original value is tracked";
     for (JacisModificationListener<K, TV> listener : store.getModificationListeners()) {
       listener.onModification(key, oldValue, newValue, tx);

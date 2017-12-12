@@ -4,6 +4,7 @@
 package org.jacis.container;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +19,7 @@ import org.jacis.plugin.txadapter.local.JacisTransactionAdapterLocal;
 import org.jacis.store.JacisStore;
 import org.jacis.store.JacisStoreAdminInterface;
 import org.jacis.store.JacisStoreImpl;
+import org.jacis.store.JacisTransactionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -267,6 +269,20 @@ public class JacisContainer {
     }
   }
 
+  public List<JacisTransactionInfo> getTransactionInfos() {
+    Collection<JacisTransactionHandle> handles = txAdapter.getAllTransactionHandles();
+    List<JacisTransactionInfo> res = new ArrayList<>(handles.size());
+    for (JacisTransactionHandle txHandle : handles) {
+      res.add(new JacisTransactionInfo(txHandle, this, storeMap.values()));
+    }
+    return res;
+  }
+
+  public JacisTransactionInfo getTransactionInfo(Object externalTransaction) {
+    JacisTransactionHandle txHandle = txAdapter.getTransactionHandle(externalTransaction);
+    return txHandle == null ? null : new JacisTransactionInfo(txHandle, this, storeMap.values());
+  }
+
   /**
    * Prepare the transaction represented by the passed transaction handle.
    * Note that this method usually is only called internally.
@@ -383,11 +399,13 @@ public class JacisContainer {
   } // END OF:  public static class StoreIdentifier {
 
   public static abstract class JacisStoreTransactionAdapter {
+
     protected abstract void internalPrepare(JacisTransactionHandle transaction);
 
     protected abstract void internalCommit(JacisTransactionHandle transaction);
 
     protected abstract void internalRollback(JacisTransactionHandle transaction);
 
-  }
+  } // END OF:  public static abstract class JacisStoreTransactionAdapter {
+
 }

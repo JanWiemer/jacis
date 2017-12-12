@@ -4,6 +4,8 @@
 
 package org.jacis.plugin.txadapter;
 
+import java.util.Collection;
+
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 
@@ -40,5 +42,16 @@ public interface JacisTransactionAdapter {
    * Remove the association between the container and the external transaction (when the transaction is finished).
    */
   void disjoinCurrentTransaction();
+
+  /**
+   * @param externalTransaction The external (global or local transaction)
+   * @return the JACIS transaction handle associated with the external transaction
+   */
+  JacisTransactionHandle getTransactionHandle(Object externalTransaction);
+
+  /**
+   * @return all JACIS transaction handles for all active transactions
+   */
+  Collection<JacisTransactionHandle> getAllTransactionHandles();
 
 }

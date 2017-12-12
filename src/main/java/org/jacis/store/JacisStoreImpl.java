@@ -3,16 +3,14 @@
  */
 package org.jacis.store;
 
-import org.jacis.container.JacisContainer;
-import org.jacis.container.JacisContainer.StoreIdentifier;
-import org.jacis.container.JacisObjectTypeSpec;
-import org.jacis.container.JacisTransactionHandle;
-import org.jacis.exception.JacisStaleObjectException;
-import org.jacis.exception.JacisTransactionAlreadyPreparedForCommitException;
-import org.jacis.plugin.JacisModificationListener;
-import org.jacis.plugin.objectadapter.JacisObjectAdapter;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -22,6 +20,15 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.jacis.container.JacisContainer;
+import org.jacis.container.JacisContainer.StoreIdentifier;
+import org.jacis.container.JacisObjectTypeSpec;
+import org.jacis.container.JacisTransactionHandle;
+import org.jacis.exception.JacisStaleObjectException;
+import org.jacis.exception.JacisTransactionAlreadyPreparedForCommitException;
+import org.jacis.plugin.JacisModificationListener;
+import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
  * Storing a single type of objects.
@@ -127,7 +134,8 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     if (oldTxView != null) {
       throw new IllegalStateException("Failed to start a read only transaction while another transaction is active! Active transaction: " + oldTxView.getTransaction() + ", passed transaction context: " + readOnlyTxContext + ", Thread: " + Thread.currentThread().getName());
     }
-    @SuppressWarnings("unchecked") JacisStoreTxView<K, TV, CV> newTx = (JacisStoreTxView<K, TV, CV>) readOnlyTxContext;
+    @SuppressWarnings("unchecked")
+    JacisStoreTxView<K, TV, CV> newTx = (JacisStoreTxView<K, TV, CV>) readOnlyTxContext;
     setTransactionContext(newTx);
   }
 
@@ -260,7 +268,6 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return streamReadOnly().map(wrapper).filter(filter).sorted(comparator).skip(offset).limit(pageSize).collect(Collectors.toList());
   }
 
-
   @Override
   public void update(K key, TV value) throws JacisTransactionAlreadyPreparedForCommitException {
     JacisStoreTxView<K, TV, CV> txView = getOrCreateTxView().assertWritable();
@@ -268,7 +275,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
       throw new JacisTransactionAlreadyPreparedForCommitException("Failed to update " + key + " because transaction is already prepared for commit: " + txView);
     }
     StoreEntryTxView<K, TV, CV> entryTxView = getOrCreateEntryTxView(txView, key);
-    entryTxView.updateValue(value);
+    txView.updateValue(entryTxView, value);
   }
 
   @Override
@@ -279,7 +286,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   @Override
   public TV refresh(K key) { // refresh with committed version -> discard all changes made by the current TX
     JacisStoreTxView<K, TV, CV> txView = getTxView();
-    if(txView!=null) {
+    if (txView != null) {
       txView.removeTxViewEntry(key, true);
     }
     return get(key);
@@ -288,7 +295,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   @Override
   public TV refreshIfNotUpdated(K key) { // if not updated: refresh with committed version -> discard all changes made by the current TX
     JacisStoreTxView<K, TV, CV> txView = getTxView();
-    if(txView!=null) {
+    if (txView != null) {
       txView.removeTxViewEntry(key, false);
     }
     return get(key);
