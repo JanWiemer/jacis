@@ -378,6 +378,11 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeRollback(this, transaction)));
   }
 
+  @Override
+  protected void internalDestroy(JacisTransactionHandle transaction) {
+    withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeDestroy(this, transaction)));
+  }
+
   //======================================================================================
   // helper methods to deal with transaction views of entries
   //======================================================================================

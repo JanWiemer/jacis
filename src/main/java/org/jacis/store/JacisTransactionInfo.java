@@ -30,8 +30,12 @@ public class JacisTransactionInfo implements Serializable {
   private final Object externalTransaction;
   /** For each store participating in the transaction some monitoring data */
   private final List<StoreTxInfo> storeTxInfos;
+  /** Creation timestamp of the transaction in milliseconds (System.currentTimeMillis())*/
+  private final long creationTimestampMs;
+  /** Snapshot timestamp of the transaction in milliseconds (System.currentTimeMillis())*/
+  private final long snapshotTimestampMs;
 
-  public JacisTransactionInfo(JacisTransactionHandle txHandle, JacisContainer container, Collection<JacisStore<?, ?>> stores) {
+  public JacisTransactionInfo(JacisTransactionHandle txHandle, JacisContainer container, Collection<JacisStore<?, ?>> stores, long snapshotTimestampMs) {
     this.txId = txHandle.getTxId();
     this.txDescription = txHandle.getTxDescription();
     this.externalTransaction = txHandle.getExternalTransaction();
@@ -43,7 +47,9 @@ public class JacisTransactionInfo implements Serializable {
         storeInfo.add(new StoreTxInfo(storeImpl, txView));
       }
     }
-    storeTxInfos = storeInfo;
+    this.storeTxInfos = storeInfo;
+    this.creationTimestampMs = txHandle.getCreationTimestampMs();
+    this.snapshotTimestampMs = snapshotTimestampMs;
   }
 
   /** @return The id of the transaction*/
@@ -66,6 +72,18 @@ public class JacisTransactionInfo implements Serializable {
     return storeTxInfos;
   }
 
+  public long getCreationTimestampMs() {
+    return creationTimestampMs;
+  }
+
+  public long getSnapshotTimestampMs() {
+    return snapshotTimestampMs;
+  }
+
+  public long getDurationMs() {
+    return snapshotTimestampMs - creationTimestampMs;
+  }
+
   @Override
   public int hashCode() {
     return externalTransaction.hashCode();
@@ -86,7 +104,7 @@ public class JacisTransactionInfo implements Serializable {
 
   @Override
   public String toString() {
-    return "TX-INFO(" + txId + ": " + txDescription + ")";
+    return "TX-INFO(" + txId + ": " + storeTxInfos + ", duration " + getDurationMs() + " ms)";
   }
 
   /** Transaction information regarding a certain store. */
@@ -96,26 +114,45 @@ public class JacisTransactionInfo implements Serializable {
 
     /** The store identifier uniquely identifying this store inside the container */
     private final StoreIdentifier storeIdentifier;
+    /** Indicates if the transaction is a read only transaction */
+    private boolean readOnly;
     /** the number of entries cloned to this TX view */
     private final int numberOfTxViewEntries;
     /** the number of updated entries of this TX view */
     private final int numberOfUpdatedTxViewEntries;
     /** flag indicating if for the transaction a commit is pending, that means a prepare has already been called */
-    private boolean commitPending;
+    private final boolean commitPending;
+    /** flag indicating if the transaction is already committed */
+    private final boolean committed;
+    /** flag indicating if the transaction is rolled back */
+    private final boolean rolledBack;
+    /** gives the reason (null means valid) why the tx has been invalidated. Attempts to internalCommit the tx will be ignored. */
+    private String invalidationReason = null;
 
     private StoreTxInfo(JacisStoreImpl<?, ?, ?> storeImpl, JacisStoreTxView<?, ?, ?> txView) {
       this.storeIdentifier = storeImpl.getStoreIdentifier();
       numberOfTxViewEntries = txView.getNumberOfEntries();
       numberOfUpdatedTxViewEntries = txView.getNumberOfUpdatedEntries();
       commitPending = txView.isCommitPending();
+      committed = txView.isCommitted();
+      rolledBack = txView.isRolledBack();
+      invalidationReason = txView.getInvalidationReason();
     }
 
     public boolean isCommitPending() {
       return commitPending;
     }
 
-    public void setCommitPending(boolean commitPending) {
-      this.commitPending = commitPending;
+    public boolean isCommitted() {
+      return committed;
+    }
+
+    public boolean isRolledBack() {
+      return rolledBack;
+    }
+
+    public String getInvalidationReason() {
+      return invalidationReason;
     }
 
     public StoreIdentifier getStoreIdentifier() {
@@ -132,9 +169,29 @@ public class JacisTransactionInfo implements Serializable {
 
     @Override
     public String toString() {
-      return getClass().getSimpleName() + "[" + storeIdentifier + ": updated " + numberOfUpdatedTxViewEntries + " / " + numberOfTxViewEntries + "]";
+      StringBuilder b = new StringBuilder();
+      b.append(getClass().getSimpleName()).append("(");
+      b.append(storeIdentifier.toShortString());
+      b.append(": cloned: ").append(numberOfTxViewEntries);
+      b.append(", updated ").append(numberOfUpdatedTxViewEntries);
+      if (commitPending) {
+        b.append("[COMMIT-PENDING]");
+      }
+      if (committed) {
+        b.append("[COMMITTED]");
+      }
+      if (rolledBack) {
+        b.append("[ROLLED-BACK]");
+      }
+      if (readOnly) {
+        b.append("[READ-ONLY]");
+      }
+      if (invalidationReason != null) {
+        b.append("[INVALIDATED because ").append(getInvalidationReason()).append("]");
+      }
+      b.append(")");
+      return b.toString();
     }
-
   } // end of public static class StoreTxInfo 
 
 }

@@ -35,8 +35,14 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   private JacisStoreImpl<K, TV, CV> store;
   /** flag indicating if for the transaction a commit is pending, that means a prepare has already been called */
   private boolean commitPending = false;
+  /** flag indicating if the transaction is already committed */
+  private boolean committed = false;
+  /** flag indicating if the transaction is rolled back */
+  private boolean rolledBack = false;
   /** gives the reason (null means valid) why the tx has been invalidated. Attempts to internalCommit the tx will be ignored. */
   private String invalidationReason = null;
+  /** the number of entries of this TX view */
+  private int numberOfEntries = 0;
   /** the number of updated entries of this TX view */
   private int numberOfUpdatedEntries = 0;
 
@@ -59,6 +65,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
       readOnlyCache.put(mapEntry.getKey(), cacheEntry);
     }
     storeTxView = readOnlyCache;
+    numberOfEntries = storeTxView.size();
   }
 
   public String getTxId() {
@@ -89,8 +96,16 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
     return commitPending;
   }
 
+  public boolean isCommitted() {
+    return committed;
+  }
+
+  public boolean isRolledBack() {
+    return rolledBack;
+  }
+
   public int getNumberOfEntries() {
-    return storeTxView.size();
+    return numberOfEntries;
   }
 
   public int getNumberOfUpdatedEntries() {
@@ -121,6 +136,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   StoreEntryTxView<K, TV, CV> createTxViewEntry(StoreEntry<K, TV, CV> committedEntry) {
     StoreEntryTxView<K, TV, CV> entry = new StoreEntryTxView<>(committedEntry, store.getObjectTypeSpec().isTrackOriginalValueEnabled());
     storeTxView.put(entry.getKey(), entry);
+    numberOfEntries = storeTxView.size();
     return entry;
   }
 
@@ -133,6 +149,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
       numberOfUpdatedEntries--; // removed an updated element
     }
     storeTxView.remove(key);
+    numberOfEntries = storeTxView.size();
     return true;
   }
 
@@ -147,9 +164,18 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
     this.commitPending = true;
   }
 
+  void afterCommit() {
+    committed = true;
+    commitPending = false;
+  }
+
+  void afterRollback() {
+    rolledBack = true;
+    commitPending = false;
+  }
+
   void destroy() {
     storeTxView.clear();
-    numberOfUpdatedEntries = 0;
     store.notifyTxViewDestroyed(this);
   }
 
@@ -176,6 +202,12 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
     b.append("(#entries=").append(storeTxView.size()).append(")");
     if (commitPending) {
       b.append("[COMMIT-PENDING]");
+    }
+    if (committed) {
+      b.append("[COMMITTED]");
+    }
+    if (rolledBack) {
+      b.append("[ROLLED-BACK]");
     }
     if (isReadOnly()) {
       b.append("[READ-ONLY]");

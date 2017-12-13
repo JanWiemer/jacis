@@ -19,6 +19,8 @@ public class JacisTransactionHandle {
   private final String txDescription;
   /** A reference to the external (global) transaction (e.g. a JTA transaction) */
   private final Object externalTransaction;
+  /** Creation timestamp in milliseconds (System.currentTimeMillis())*/
+  private final long creationTimestampMs;
 
   /**
    * Creates a transaction handle with the passed parameters.
@@ -31,6 +33,7 @@ public class JacisTransactionHandle {
     this.txId = txId;
     this.txDescription = txDescription;
     this.externalTransaction = externalTransaction;
+    this.creationTimestampMs = System.currentTimeMillis();
   }
 
   /** @return The id of the transaction*/
@@ -46,6 +49,11 @@ public class JacisTransactionHandle {
   /** @return A reference to the external (global) transaction (e.g. a JTA transaction) this handle represents */
   public Object getExternalTransaction() {
     return externalTransaction;
+  }
+
+  /** @return Creation timestamp in milliseconds (System.currentTimeMillis()) */
+  public long getCreationTimestampMs() {
+    return creationTimestampMs;
   }
 
   @Override

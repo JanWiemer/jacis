@@ -50,6 +50,8 @@ public class JacisContainer {
   private final Map<StoreIdentifier, JacisStore<?, ?>> storeMap = new ConcurrentHashMap<>();
   /** List of transaction listeners / observers (type {@link JacisTransactionListener}) providing call-backs before / after prepare / internalCommit / rollback. */
   private final List<JacisTransactionListener> txListeners = new ArrayList<>();
+  /** ThreadLocal storing the transaction info object for the last finished transaction */
+  private ThreadLocal<JacisTransactionInfo> lastFinishedTransactionInfo = new ThreadLocal<>();
 
   /**
    * Create a container with the passed transaction adapter.
@@ -272,15 +274,24 @@ public class JacisContainer {
   public List<JacisTransactionInfo> getTransactionInfos() {
     Collection<JacisTransactionHandle> handles = txAdapter.getAllTransactionHandles();
     List<JacisTransactionInfo> res = new ArrayList<>(handles.size());
+    long snapshotTimeMs = System.currentTimeMillis();
     for (JacisTransactionHandle txHandle : handles) {
-      res.add(new JacisTransactionInfo(txHandle, this, storeMap.values()));
+      res.add(new JacisTransactionInfo(txHandle, this, storeMap.values(), snapshotTimeMs));
     }
     return res;
   }
 
+  public JacisTransactionInfo getLastFinishedTransactionInfo() {
+    return lastFinishedTransactionInfo.get();
+  }
+
   public JacisTransactionInfo getTransactionInfo(Object externalTransaction) {
     JacisTransactionHandle txHandle = txAdapter.getTransactionHandle(externalTransaction);
-    return txHandle == null ? null : new JacisTransactionInfo(txHandle, this, storeMap.values());
+    return getTransactionInfo(txHandle);
+  }
+
+  protected JacisTransactionInfo getTransactionInfo(JacisTransactionHandle txHandle) {
+    return txHandle == null ? null : new JacisTransactionInfo(txHandle, this, storeMap.values(), System.currentTimeMillis());
   }
 
   /**
@@ -312,6 +323,13 @@ public class JacisContainer {
     for (JacisStore<?, ?> store : storeMap.values()) {
       ((JacisStoreTransactionAdapter) store).internalCommit(transaction);
     }
+    JacisTransactionInfo txInfo = getTransactionInfo(transaction);
+    if (txInfo != null) {
+      lastFinishedTransactionInfo.set(txInfo);
+    }
+    for (JacisStore<?, ?> store : storeMap.values()) {
+      ((JacisStoreTransactionAdapter) store).internalDestroy(transaction);
+    }
     txListeners.forEach(l -> l.afterCommit(this, transaction));
     txAdapter.disjoinCurrentTransaction();
   }
@@ -328,6 +346,13 @@ public class JacisContainer {
     txListeners.forEach(l -> l.beforeRollback(this, transaction));
     for (JacisStore<?, ?> store : storeMap.values()) {
       ((JacisStoreTransactionAdapter) store).internalRollback(transaction);
+    }
+    JacisTransactionInfo txInfo = getTransactionInfo(transaction);
+    if (txInfo != null) {
+      lastFinishedTransactionInfo.set(txInfo);
+    }
+    for (JacisStore<?, ?> store : storeMap.values()) {
+      ((JacisStoreTransactionAdapter) store).internalDestroy(transaction);
     }
     txListeners.forEach(l -> l.afterRollback(this, transaction));
     txAdapter.disjoinCurrentTransaction();
@@ -362,6 +387,10 @@ public class JacisContainer {
     /** @return The type of the values in the store. */
     public Class<?> getValueClass() {
       return valueClass;
+    }
+
+    public String toShortString() {
+      return keyClass.getSimpleName() + "->" + valueClass.getSimpleName();
     }
 
     @Override
@@ -405,6 +434,8 @@ public class JacisContainer {
     protected abstract void internalCommit(JacisTransactionHandle transaction);
 
     protected abstract void internalRollback(JacisTransactionHandle transaction);
+
+    protected abstract void internalDestroy(JacisTransactionHandle transaction);
 
   } // END OF:  public static abstract class JacisStoreTransactionAdapter {
 

@@ -97,7 +97,7 @@ class StoreTxDemarcationExecutor {
         store.checkRemoveCommittedEntry(entryCommitted, txView);
       }
     } finally { // even if exceptions occur TX view has to be destroyed! See https://github.com/JanWiemer/jacis/issues/8
-      txView.destroy();
+      txView.afterCommit();
     }
   }
 
@@ -123,7 +123,14 @@ class StoreTxDemarcationExecutor {
       entryCommitted.releaseLockedFor(txView);
       store.checkRemoveCommittedEntry(entryCommitted, txView);
     }
-    txView.destroy();
+    txView.afterRollback();
+  }
+
+  <K, TV, CV> void executeDestroy(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
+    JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
+    if (txView != null) {
+      txView.destroy();
+    }
   }
 
   private <K, TV, CV> void trackModification(JacisStoreImpl<K, TV, CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
