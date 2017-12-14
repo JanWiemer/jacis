@@ -206,12 +206,9 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
       b.append(getClass().getSimpleName());
       b.append("(").append(txHandle.getTxId());
       b.append(":");
-      JacisTransactionInfo txInfo = container.getTransactionInfo(txHandle);
-      if (txInfo == null) {
-        txInfo = container.getLastFinishedTransactionInfo();
-        if (txInfo != null && !txInfo.getTxId().equals(txHandle.getTxId())) {
-          txInfo = null;
-        }
+      JacisTransactionInfo txInfo = container.getLastFinishedTransactionInfo();
+      if (txInfo == null || !txInfo.getTxId().equals(txHandle.getTxId())) {
+        txInfo = container.getTransactionInfo(txHandle);
       }
       if (txInfo != null) {
         //        b.append("#stores: ").append(txInfo.getStoreTxInfos().size()).append(":");

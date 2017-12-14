@@ -180,7 +180,7 @@ public class JacisContainer {
   public JacisLocalTransaction beginLocalTransaction(String description) throws IllegalStateException {
     if (txAdapter instanceof JacisTransactionAdapterLocal) {
       JacisTransactionAdapterLocal txAdapterLocal = (JacisTransactionAdapterLocal) txAdapter;
-      lastFinishedTransactionInfo.set(null);
+      lastFinishedTransactionInfo.remove();
       return txAdapterLocal.startLocalTransaction(this, description);
     } else {
       throw new IllegalStateException("Local transactions not supported! Local transactions need TX adapter " + JacisTransactionAdapterLocal.class.getSimpleName() + " but the configured is: " + txAdapter.getClass().getSimpleName());
@@ -271,7 +271,7 @@ public class JacisContainer {
     }
     JacisTransactionInfo lastFinishedTxInfo = lastFinishedTransactionInfo.get();
     if(lastFinishedTxInfo!=null) {
-      if (handle == null || !lastFinishedTxInfo.getTxId().equals(handle.getTxId())) {
+      if (handle != null && !lastFinishedTxInfo.getTxId().equals(handle.getTxId())) {
         lastFinishedTransactionInfo.remove();
       }
     }
