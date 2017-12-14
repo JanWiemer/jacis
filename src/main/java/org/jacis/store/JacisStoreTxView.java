@@ -176,7 +176,9 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
 
   void destroy() {
     storeTxView.clear();
-    store.notifyTxViewDestroyed(this);
+    if(!isReadOnly()) {
+      store.notifyTxViewDestroyed(this);
+    }
   }
 
   boolean isInvalidated() {
