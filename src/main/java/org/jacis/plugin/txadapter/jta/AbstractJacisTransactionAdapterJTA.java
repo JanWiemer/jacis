@@ -21,6 +21,7 @@ import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisNoTransactionException;
 import org.jacis.exception.JacisTransactionException;
 import org.jacis.plugin.txadapter.JacisTransactionAdapter;
+import org.jacis.store.JacisTransactionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,8 +85,7 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
   protected Transaction getJtaTransaction() {
     try {
       TransactionManager txManager = getTransactionManager();
-      Transaction tx = txManager.getTransaction();
-      return tx;
+      return txManager.getTransaction();
     } catch (SystemException e) {
       throw new JacisTransactionException(e);
     }
@@ -155,7 +155,7 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
       tx.registerSynchronization(new JacisSync(container, txHandle));
       transactionMap.put(tx, txHandle);
       if (log.isTraceEnabled()) {
-        log.trace("{} created new handle [{}] for JTA-Tx=[{}]. Thread: {}", this, currentTxHandle, tx, Thread.currentThread().getName());
+        log.trace("{} created new handle [{}] for JTA-Tx=[{}]. Thread: {}", this, txHandle, tx, Thread.currentThread().getName());
       }
       return txHandle;
     } catch (SystemException | RollbackException e) {
@@ -202,7 +202,33 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
 
     @Override
     public String toString() {
-      return getClass().getSimpleName() + "(" + txHandle + "@" + container + ")";
+      StringBuilder b = new StringBuilder();
+      b.append(getClass().getSimpleName());
+      b.append("(").append(txHandle.getTxId());
+      b.append(":");
+      JacisTransactionInfo txInfo = container.getTransactionInfo(txHandle);
+      if (txInfo == null) {
+        txInfo = container.getLastFinishedTransactionInfo();
+        if (txInfo != null && !txInfo.getTxId().equals(txHandle.getTxId())) {
+          txInfo = null;
+        }
+      }
+      if (txInfo != null) {
+        //        b.append("#stores: ").append(txInfo.getStoreTxInfos().size()).append(":");
+        for (JacisTransactionInfo.StoreTxInfo storeTxInfo : txInfo.getStoreTxInfos()) {
+          b.append(storeTxInfo.getStoreIdentifier().getValueClass().getSimpleName());
+          b.append("(#: ").append(storeTxInfo.getNumberOfTxViewEntries());
+          b.append(",upd.: ").append(storeTxInfo.getNumberOfUpdatedTxViewEntries());
+          b.append("), ");
+        }
+        b.append("took ").append(txInfo.getDurationMs()).append(" ms");
+      } else {
+        b.append("-noTxInfo-");
+      }
+      b.append(", desc: ").append(txHandle.getTxDescription());
+      b.append(")");
+      return b.toString();
     }
   }
+
 }

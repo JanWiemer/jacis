@@ -180,6 +180,7 @@ public class JacisContainer {
   public JacisLocalTransaction beginLocalTransaction(String description) throws IllegalStateException {
     if (txAdapter instanceof JacisTransactionAdapterLocal) {
       JacisTransactionAdapterLocal txAdapterLocal = (JacisTransactionAdapterLocal) txAdapter;
+      lastFinishedTransactionInfo.set(null);
       return txAdapterLocal.startLocalTransaction(this, description);
     } else {
       throw new IllegalStateException("Local transactions not supported! Local transactions need TX adapter " + JacisTransactionAdapterLocal.class.getSimpleName() + " but the configured is: " + txAdapter.getClass().getSimpleName());
@@ -256,21 +257,28 @@ public class JacisContainer {
    * @throws JacisNoTransactionException If no transaction is active and the enforceTx flag is set to true
    */
   public JacisTransactionHandle getCurrentTransaction(boolean createIfAbsent) throws JacisNoTransactionException {
+    JacisTransactionHandle handle = null;
     if (createIfAbsent) { // create a new TX if not yet present
       if (txAdapter.isTransactionActive()) { // JTA TX active -> create (if not yet created) and join
-        return txAdapter.joinCurrentTransaction(this);
+        handle = txAdapter.joinCurrentTransaction(this);
       } else { // no JTA active -> can not create and join
         throw new JacisNoTransactionException("No active transaction!");
       }
     } else { //  createIfAbsent == false // only return TX if already
       if (txAdapter.isTransactionActive()) {
-        return txAdapter.joinCurrentTransaction(this);
-      } else {
-        return null;
+        handle = txAdapter.joinCurrentTransaction(this);
       }
     }
+    JacisTransactionInfo lastFinishedTxInfo = lastFinishedTransactionInfo.get();
+    if(lastFinishedTxInfo!=null) {
+      if (handle == null || !lastFinishedTxInfo.getTxId().equals(handle.getTxId())) {
+        lastFinishedTransactionInfo.remove();
+      }
+    }
+    return handle;
   }
 
+  @SuppressWarnings("unused")
   public List<JacisTransactionInfo> getTransactionInfos() {
     Collection<JacisTransactionHandle> handles = txAdapter.getAllTransactionHandles();
     List<JacisTransactionInfo> res = new ArrayList<>(handles.size());
@@ -290,7 +298,7 @@ public class JacisContainer {
     return getTransactionInfo(txHandle);
   }
 
-  protected JacisTransactionInfo getTransactionInfo(JacisTransactionHandle txHandle) {
+  public JacisTransactionInfo getTransactionInfo(JacisTransactionHandle txHandle) {
     return txHandle == null ? null : new JacisTransactionInfo(txHandle, this, storeMap.values(), System.currentTimeMillis());
   }
 
