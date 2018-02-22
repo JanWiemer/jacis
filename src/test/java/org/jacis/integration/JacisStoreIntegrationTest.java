@@ -27,6 +27,65 @@ public class JacisStoreIntegrationTest {
   private static final Logger log = LoggerFactory.getLogger(JacisStoreIntegrationTest.class);
 
   @Test
+  public void testPreventDirtyRead() {
+    String testObjectName = "obj-1";
+    TestObject testObject = new TestObject(testObjectName, 1);
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    // INIT
+    JacisLocalTransaction initTx = store.getContainer().beginLocalTransaction();
+    store.update(testObjectName, testObject);
+    initTx.commit();
+    // UPDATE (without commit)
+    JacisLocalTransaction updatingTx = store.getContainer().beginLocalTransaction();
+    TestObject obj2update = store.get(testObjectName);
+    obj2update.setValue(2);
+    store.update(testObjectName, obj2update);
+    JacisTransactionHandle updatingTxHandle = testHelper.suspendTx();
+    // READ
+    JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
+    assertEquals(1, store.get(testObjectName).getValue()); //===== READ => committed value ====
+    readingTx.commit();
+    // COMMIT
+    testHelper.resumeTx(updatingTxHandle);
+    updatingTx.commit();
+    // READ COMMITTED
+    JacisLocalTransaction checkingTx = store.getContainer().beginLocalTransaction();
+    assertEquals(2, store.get(testObjectName).getValue()); //===== READ => committed value ====
+    checkingTx.commit();
+  }
+
+  @Test
+  public void testPreventNonRepeatableRead() {
+    String testObjectName = "obj-1";
+    TestObject testObject = new TestObject(testObjectName, 1);
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    // INIT
+    JacisLocalTransaction initTx = store.getContainer().beginLocalTransaction();
+    store.update(testObjectName, testObject);
+    initTx.commit();
+    // READ 1
+    JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
+    assertEquals(1, store.get(testObjectName).getValue()); //===== READ => committed value ====
+    JacisTransactionHandle readingTxHandle = testHelper.suspendTx();
+    // UPDATE (with commit)
+    JacisLocalTransaction updatingTx = store.getContainer().beginLocalTransaction();
+    TestObject obj2update = store.get(testObjectName);
+    obj2update.setValue(2);
+    store.update(testObjectName, obj2update);
+    updatingTx.commit();
+    // REPEATED READ
+    testHelper.resumeTx(readingTxHandle);
+    assertEquals(1, store.get(testObjectName).getValue()); //===== READ => same value as first read ====
+    readingTx.commit();
+    // READ COMMITTED IN NEW TX
+    JacisLocalTransaction checkingTx = store.getContainer().beginLocalTransaction();
+    assertEquals(2, store.get(testObjectName).getValue()); //===== READ => committed value ====
+    checkingTx.commit();
+  }
+
+  @Test
   public void testTransactionIsolation() {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);
