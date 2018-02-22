@@ -453,11 +453,11 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   private <R> R withReadLock(Supplier<R> task) {
-    storeAccessLock.readLock().lock(); // <======= **WRITE** LOCK =====
+    storeAccessLock.readLock().lock(); // <======= **READ** LOCK =====
     try {
       return task.get();
     } finally {
-      storeAccessLock.readLock().unlock(); // <======= **WRITE** UNLOCK =====
+      storeAccessLock.readLock().unlock(); // <======= **READ** UNLOCK =====
     }
   }
 
