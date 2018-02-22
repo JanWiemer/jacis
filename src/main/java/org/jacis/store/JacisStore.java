@@ -237,7 +237,7 @@ public interface JacisStore<K, TV> {
    * Returns a list of all objects (not 'null') currently stored in the store filtered by the passed filter.
    * The method executes the {@link #getAll(Predicate)} method as an atomic operations.
    * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
-   * The execution of atomic operations can not overlap with the execution of other atomic operations (but normal operations may overlap).
+   * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
    * @return a list of all objects (not 'null') currently stored in the store filtered by the passed filter.
@@ -248,7 +248,7 @@ public interface JacisStore<K, TV> {
    * Returns a list of read-only views for all objects (not 'null') currently stored in the store filtered by the passed filter.
    * The method executes the {@link #getAllReadOnly(Predicate)} method as an atomic operations.
    * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
-   * The execution of atomic operations can not overlap with the execution of other atomic operations (but normal operations may overlap).
+   * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
    * @return a list of read-only views for all objects (not 'null') currently stored in the store filtered by the passed filter.
@@ -339,8 +339,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Execute the passed operation (without return value) as an atomic operation.
-   * The execution of atomic operations can not overlap with the execution of other atomic operations
-   * (but normal operations may overlap).
+   * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
    * @param atomicOperation The operation to execute atomically
    */
@@ -348,6 +347,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Execute the passed operation (with return value) as an atomic operation.
+   * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
    * @param atomicOperation The operation to execute atomically
    * @param <R>             The return type of the operation
@@ -380,7 +380,7 @@ public interface JacisStore<K, TV> {
    * Accumulate a value from all objects with the passed accumulator function as an atomic operation.
    * The method executes the {@link #accumulate(Object, BiConsumer)} method as an atomic operations.
    * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
-   * The execution of atomic operations can not overlap with the execution of other atomic operations (but normal operations may overlap).
+   * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
    * @param target      The initial value for the target
    * @param accumulator The accumulator method getting the current value of the accumulation target (type 'C') and an object (type 'TV').
