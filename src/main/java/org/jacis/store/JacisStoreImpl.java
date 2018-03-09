@@ -390,7 +390,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   private StoreEntryTxView<K, TV, CV> getOrCreateEntryTxView(JacisStoreTxView<K, TV, CV> txView, K key) {
     StoreEntryTxView<K, TV, CV> entryTxView = txView.getEntryTxView(key);
     if (entryTxView == null) {
-      entryTxView = withWriteLock(() -> txView.createTxViewEntry(getOrCreateCommittedEntry(key)));
+      entryTxView = withReadLock(() -> txView.createTxViewEntry(getOrCreateCommittedEntry(key)));
     }
     return entryTxView;
   }
