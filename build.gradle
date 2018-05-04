@@ -81,7 +81,7 @@ publishing {
                     description  "$projectDescriotion"
                     licenses {
                         license {
-                            name 'GNU GENERAL PUBLIC LICENSE, Version 2'
+                            name 'GNU LESSER GENERAL PUBLIC LICENSE, Version 3'
                             url 'https://github.com/JanWiemer/jacis/blob/master/LICENSE'
                         }
                     }
