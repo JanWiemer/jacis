@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2017. Jan Wiemer
  */
+
 package org.jacis.container;
 
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
 import org.jacis.exception.JacisNoTransactionException;
@@ -32,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * = The Jacis Container Holding the Stores for the Different Object Types
- *
  * The 'JacisContainer' is the main class of the Java ACI Store.
  * The container stores a number of individual stores for different object types.
  * Transactions are managed by the container and are valid for all stores in the container.
@@ -52,10 +53,13 @@ public class JacisContainer {
   private final List<JacisTransactionListener> txListeners = new ArrayList<>();
   /** ThreadLocal storing the transaction info object for the last finished transaction */
   private ThreadLocal<JacisTransactionInfo> lastFinishedTransactionInfo = new ThreadLocal<>();
+  /** Lock object to synchronize the TX demarcation operations (prepare / commit / rollback) over all threads and stores. */
+  private final ReentrantLock transactionDemarcationLock = new ReentrantLock();
 
   /**
    * Create a container with the passed transaction adapter.
-   * @param txAdapter The transaction adapter binding the container to  externally managed transactions
+   *
+   * @param txAdapter The transaction adapter binding the container to externally managed transactions
    */
   public JacisContainer(JacisTransactionAdapter txAdapter) {
     this.txAdapter = txAdapter;
@@ -77,6 +81,7 @@ public class JacisContainer {
   /**
    * Register the passed transaction listener ({@link JacisTransactionListener}).
    * All registered listeners will be informed before / after each prepare / internalCommit / rollback of any transaction on this container.
+   *
    * @param listener The transaction listener to register.
    * @return This container itself for method chaining.
    */
@@ -88,6 +93,7 @@ public class JacisContainer {
   /**
    * Create a store for the passed object type specification (type {@link JacisObjectTypeSpec}).
    * The passed specification determines the type of the keys and the type of the values stored in the created store.
+   *
    * @param objectTypeSpec object type specification describing the objects to be stored.
    * @return A reference to the created store (type {@link JacisStoreImpl})
    * @param <K> Key type of the store entry
@@ -103,6 +109,7 @@ public class JacisContainer {
 
   /**
    * Get the store (type {@link JacisStore}) for the passed key and value type.
+   *
    * @param keyClass Class of the keys that should be stored in the searched store
    * @param valueClass Class of the values that should be stored in the searched store
    * @return A reference to the found store (type {@link JacisStore}) (null if not found)
@@ -118,6 +125,7 @@ public class JacisContainer {
 
   /**
    * Get the store (type {@link JacisStoreAdminInterface}) for the passed key and value type.
+   *
    * @param keyClass Class of the keys that should be stored in the searched store
    * @param valueClass Class of the values that should be stored in the searched store
    * @return A reference to the found store (type {@link JacisStoreAdminInterface}) (null if not found)
@@ -137,8 +145,13 @@ public class JacisContainer {
    * It is not necessary to start a transaction to call this method.
    * All ending transactions are invalidated, that means any attempt to prepare or internalCommit them is ignored (without an exception).
    */
-  public synchronized void clearAllStores() {
-    storeMap.values().forEach(JacisStore::clear);
+  public void clearAllStores() {
+    transactionDemarcationLock.lock();
+    try {
+      storeMap.values().forEach(JacisStore::clear);
+    } finally {
+      transactionDemarcationLock.unlock();
+    }
   }
 
   /** @return If for the current thread there is a transaction active on this container. */
@@ -156,13 +169,14 @@ public class JacisContainer {
    * Note that each transaction is started with a description for logging and monitoring.
    * It is recommended to pass an explicit description by calling the method {@link #beginLocalTransaction(String)} ).
    * This convenience method tries to compute a default description by analyzing the call stack to determine the calling method.
+   *
    * @return An object representing the stated transaction (type {@link JacisLocalTransaction})
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
    */
   public JacisLocalTransaction beginLocalTransaction() throws IllegalStateException {
     String description = Stream.of(new Exception("-").getStackTrace()) // go through the stack trace elements
-        .filter(se -> !getClass().getName().equals(se.getClassName())) // ignore all stack trace elements for this class
-        .map(StackTraceElement::toString).findFirst().orElse("-"); // use the first from outside (the calling method) as description
+            .filter(se -> !getClass().getName().equals(se.getClassName())) // ignore all stack trace elements for this class
+            .map(StackTraceElement::toString).findFirst().orElse("-"); // use the first from outside (the calling method) as description
     return beginLocalTransaction(description);
   }
 
@@ -173,6 +187,7 @@ public class JacisContainer {
    * has been initialized with a transaction adapter for locally managed transactions
    * (calling the constructor {@link #JacisContainer()}. Otherwise an {@link IllegalStateException} is thrown.
    * The returned object represents the started transaction and provides method to internalCommit or rollback the transaction.
+   *
    * @param description a description of the transaction for logging and monitoring
    * @return An object representing the stated transaction (type {@link JacisLocalTransaction})
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
@@ -193,6 +208,7 @@ public class JacisContainer {
    * Then the passed task is executed.
    * If execution of the task succeeds the transaction is committed.
    * In case of any exception the transaction is rolled back.
+   *
    * @param task The task to execute inside a locally managed transaction
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
    */
@@ -227,6 +243,7 @@ public class JacisContainer {
    * This method catches this exception and retries to execute the passed task inside a new transaction for the passed number of attempts.
    * If the {@link JacisStaleObjectException} is thrown repeatedly for all these attempts the exception is propagated to the caller.
    * In case of any other exception the transaction is rolled back and the exception is propagated to the caller immediately.
+   *
    * @param task The task to execute inside a locally managed transaction
    * @param retries Number of retries if transaction failed with {@link JacisStaleObjectException}
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
@@ -270,7 +287,7 @@ public class JacisContainer {
       }
     }
     JacisTransactionInfo lastFinishedTxInfo = lastFinishedTransactionInfo.get();
-    if(lastFinishedTxInfo!=null) {
+    if (lastFinishedTxInfo != null) {
       if (handle != null && !lastFinishedTxInfo.getTxId().equals(handle.getTxId())) {
         lastFinishedTransactionInfo.remove();
       }
@@ -302,20 +319,63 @@ public class JacisContainer {
     return txHandle == null ? null : new JacisTransactionInfo(txHandle, this, storeMap.values(), System.currentTimeMillis());
   }
 
+  protected boolean hasAnyUpdatesPendingForTx() {
+    for (JacisStore<?, ?> store : storeMap.values()) {
+      if (((JacisStoreImpl<?, ?, ?>) store).hasObjectsUpdatedInCurrentTxView()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  protected boolean hasStoreWithPendingDirtyCheck() {
+    for (JacisStore<?, ?> store : storeMap.values()) {
+      if (store.getObjectTypeSpec().getDirtyCheck() != null) {
+        JacisStoreImpl<?, ?, ?> storeImpl = (JacisStoreImpl<?, ?, ?>) store;
+        if (!storeImpl.isInReadOnlyTransaction() && !storeImpl.isCommitPending()) { // read only or already prepared TXs will not do (another) dirty check
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  protected boolean hasAnyTransactionListenersNeedingSynchronousExecutoion() {
+    for (JacisTransactionListener txListener : txListeners) {
+      if (txListener.isSynchronizedExceutionRequired()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * Prepare the transaction represented by the passed transaction handle.
    * Note that this method usually is only called internally.
    * Usually the internalCommit is called either at the local transaction returned
    * by the method starting this transaction ({@link #beginLocalTransaction(String)}),
    * or by the external transaction framework via the transaction adapter.
+   *
    * @param transaction The transaction handle representing the transaction to prepare.
    */
-  public synchronized void internalPrepare(JacisTransactionHandle transaction) {
-    txListeners.forEach(l -> l.beforePrepare(this, transaction));
-    for (JacisStore<?, ?> store : storeMap.values()) {
-      ((JacisStoreTransactionAdapter) store).internalPrepare(transaction);
+  public void internalPrepare(JacisTransactionHandle transaction) {
+    boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries  we need to synchronize
+            || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
+            || hasAnyTransactionListenersNeedingSynchronousExecutoion(); // if any transaction listener requires sync. execution we need to synchronize
+    if (executeSyncronized) {
+      transactionDemarcationLock.lock();
     }
-    txListeners.forEach(l -> l.afterPrepare(this, transaction));
+    try {
+      txListeners.forEach(l -> l.beforePrepare(this, transaction));
+      for (JacisStore<?, ?> store : storeMap.values()) {
+        ((JacisStoreTransactionAdapter) store).internalPrepare(transaction);
+      }
+      txListeners.forEach(l -> l.afterPrepare(this, transaction));
+    } finally {
+      if (executeSyncronized) {
+        transactionDemarcationLock.unlock();
+      }
+    }
   }
 
   /**
@@ -324,22 +384,35 @@ public class JacisContainer {
    * Usually the internalCommit is called either at the local transaction returned
    * by the method starting this transaction ({@link #beginLocalTransaction(String)}),
    * or by the external transaction framework via the transaction adapter.
+   *
    * @param transaction The transaction handle representing the transaction to internalCommit.
    */
-  public synchronized void internalCommit(JacisTransactionHandle transaction) {
-    txListeners.forEach(l -> l.beforeCommit(this, transaction));
-    for (JacisStore<?, ?> store : storeMap.values()) {
-      ((JacisStoreTransactionAdapter) store).internalCommit(transaction);
+  public void internalCommit(JacisTransactionHandle transaction) {
+    boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries  we need to synchronize
+            || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
+            || hasAnyTransactionListenersNeedingSynchronousExecutoion(); // if any transaction listener requires sync. execution we need to synchronize
+    if (executeSyncronized) {
+      transactionDemarcationLock.lock();
     }
-    JacisTransactionInfo txInfo = getTransactionInfo(transaction);
-    if (txInfo != null) {
-      lastFinishedTransactionInfo.set(txInfo);
+    try {
+      txListeners.forEach(l -> l.beforeCommit(this, transaction));
+      for (JacisStore<?, ?> store : storeMap.values()) {
+        ((JacisStoreTransactionAdapter) store).internalCommit(transaction);
+      }
+      JacisTransactionInfo txInfo = getTransactionInfo(transaction);
+      if (txInfo != null) {
+        lastFinishedTransactionInfo.set(txInfo);
+      }
+      for (JacisStore<?, ?> store : storeMap.values()) {
+        ((JacisStoreTransactionAdapter) store).internalDestroy(transaction);
+      }
+      txListeners.forEach(l -> l.afterCommit(this, transaction));
+      txAdapter.disjoinCurrentTransaction();
+    } finally {
+      if (executeSyncronized) {
+        transactionDemarcationLock.unlock();
+      }
     }
-    for (JacisStore<?, ?> store : storeMap.values()) {
-      ((JacisStoreTransactionAdapter) store).internalDestroy(transaction);
-    }
-    txListeners.forEach(l -> l.afterCommit(this, transaction));
-    txAdapter.disjoinCurrentTransaction();
   }
 
   /**
@@ -348,22 +421,35 @@ public class JacisContainer {
    * Usually the internalCommit is called either at the local transaction returned
    * by the method starting this transaction ({@link #beginLocalTransaction(String)}),
    * or by the external transaction framework via the transaction adapter.
+   *
    * @param transaction The transaction handle representing the transaction to rollback.
    */
-  public synchronized void internalRollback(JacisTransactionHandle transaction) {
-    txListeners.forEach(l -> l.beforeRollback(this, transaction));
-    for (JacisStore<?, ?> store : storeMap.values()) {
-      ((JacisStoreTransactionAdapter) store).internalRollback(transaction);
+  public void internalRollback(JacisTransactionHandle transaction) {
+    boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries  we need to synchronize (dirty check can be ignored here)
+            || hasAnyTransactionListenersNeedingSynchronousExecutoion(); // if any transaction listener requires sync. execution we need to synchronize
+    if (executeSyncronized) {
+      transactionDemarcationLock.lock();
     }
-    JacisTransactionInfo txInfo = getTransactionInfo(transaction);
-    if (txInfo != null) {
-      lastFinishedTransactionInfo.set(txInfo);
+    try {
+      txListeners.forEach(l -> l.beforeRollback(this, transaction));
+      for (JacisStore<?, ?> store : storeMap.values()) {
+        ((JacisStoreTransactionAdapter) store).internalRollback(transaction);
+      }
+      JacisTransactionInfo txInfo = getTransactionInfo(transaction);
+      if (txInfo != null) {
+        lastFinishedTransactionInfo.set(txInfo);
+      }
+      for (JacisStore<?, ?> store : storeMap.values()) {
+        ((JacisStoreTransactionAdapter) store).internalDestroy(transaction);
+      }
+      txListeners.forEach(l -> l.afterRollback(this, transaction));
+      txAdapter.disjoinCurrentTransaction();
+    } finally {
+      if (executeSyncronized) {
+        transactionDemarcationLock.unlock();
+      }
     }
-    for (JacisStore<?, ?> store : storeMap.values()) {
-      ((JacisStoreTransactionAdapter) store).internalDestroy(transaction);
-    }
-    txListeners.forEach(l -> l.afterRollback(this, transaction));
-    txAdapter.disjoinCurrentTransaction();
+
   }
 
   /**
@@ -379,6 +465,7 @@ public class JacisContainer {
 
     /**
      * Create a store identifier with the passed types for the keys and values.
+     *
      * @param keyClass Type of the keys in the store
      * @param valueClass Type of the values in the store
      */
@@ -425,8 +512,8 @@ public class JacisContainer {
         return false;
       }
       StoreIdentifier that = (StoreIdentifier) obj;
-      if (this.keyClass == null ? that.keyClass == null : this.keyClass.equals(that.keyClass)) {
-        if (this.valueClass == null ? that.valueClass == null : this.valueClass.equals(that.valueClass)) {
+      if (keyClass == null ? that.keyClass == null : keyClass.equals(that.keyClass)) {
+        if (valueClass == null ? that.valueClass == null : valueClass.equals(that.valueClass)) {
           return true;
         }
       }

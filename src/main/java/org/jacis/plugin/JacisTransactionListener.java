@@ -25,6 +25,13 @@ import org.jacis.container.JacisTransactionHandle;
 public interface JacisTransactionListener {
 
   /**
+   * @return if this transaction listener has to be executed synchronized together with the prepare / commit / rollback.
+   */
+  default boolean isSynchronizedExceutionRequired() {
+    return true;
+  }
+
+  /**
    * Callback method called before the prepare phase of a transaction is executed for the stores of the container.
    *
    * @param container Reference to the corresponding container instance.

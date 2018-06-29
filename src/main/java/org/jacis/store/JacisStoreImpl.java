@@ -139,6 +139,26 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     setTransactionContext(newTx);
   }
 
+  public boolean isInReadOnlyTransaction() {
+    JacisStoreTxView<K, TV, CV> txView = getTxView(false);
+    return txView != null && txView.isReadOnly();
+  }
+
+  public boolean isCommitPending() {
+    JacisStoreTxView<K, TV, CV> txView = getTxView(false);
+    return txView != null && txView.isCommitPending();
+  }
+
+  public boolean hasObjectsUpdatedInCurrentTxView() {
+    JacisStoreTxView<K, TV, CV> txView = getTxView(false);
+    return txView != null && txView.getNumberOfUpdatedEntries() > 0;
+  }
+
+  public boolean hasObjectsInCurrentTxView() {
+    JacisStoreTxView<K, TV, CV> txView = getTxView(false);
+    return txView != null && txView.getNumberOfEntries() > 0;
+  }
+
   @Override
   public boolean containsKey(K key) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
