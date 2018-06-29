@@ -85,20 +85,18 @@ class StoreTxDemarcationExecutor {
       logger.trace("internalCommit {} on {} by Thread {}", txView, store, Thread.currentThread().getName());
     }
     try {
-      if (txView.getNumberOfUpdatedEntries() > 0) {
-        for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
-          K key = entryTxView.getKey();
-          StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
-          if (entryTxView.isUpdated()) {
-            if (trace) {
-              logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
-            }
-            trackModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
-            entryCommitted.update(entryTxView, txView);
+      for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+        K key = entryTxView.getKey();
+        StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
+        if (entryTxView.isUpdated()) {
+          if (trace) {
+            logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
           }
-          entryCommitted.releaseLockedFor(txView);
-          store.checkRemoveCommittedEntry(entryCommitted, txView);
+          trackModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
+          entryCommitted.update(entryTxView, txView);
         }
+        entryCommitted.releaseLockedFor(txView);
+        store.checkRemoveCommittedEntry(entryCommitted, txView);
       }
     } finally { // even if exceptions occur TX view has to be destroyed! See https://github.com/JanWiemer/jacis/issues/8
       txView.afterCommit();
