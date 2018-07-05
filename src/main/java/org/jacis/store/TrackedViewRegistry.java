@@ -96,6 +96,11 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
   }
 
   @SuppressWarnings("unchecked")
+  public <VT extends TrackedView<TV>> VT getLifeView(Class<VT> viewType) {
+    return (VT) viewMap.get(viewType);
+  }
+
+  @SuppressWarnings("unchecked")
   public <SVK> Collection<SVK> getSubViewKeys(Class<? extends TrackedViewClustered<TV, SVK, ? extends TrackedView<TV>>> viewType) {
     return store.computeAtomic(() -> {
       TrackedView<TV> view = viewMap.get(viewType);
