@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.jacis.exception.JacisNoTransactionException;
@@ -121,6 +123,29 @@ public class JacisContainer {
   public <K, TV, CV> JacisStore<K, TV> getStore(Class<K> keyClass, Class<TV> valueClass) {
     StoreIdentifier storeIdentifier = new StoreIdentifier(keyClass, valueClass);
     return (JacisStoreImpl<K, TV, CV>) storeMap.get(storeIdentifier);
+  }
+
+  /**
+   * Get all stores (type {@link JacisStore}) matching the passed filter.
+   *
+   * @param filter Filter for the list of stores that should be returned.
+   * @return A List of all stores (type {@link JacisStore}) matching the passed filter.
+   */
+  public Collection<JacisStore<?, ?>> getAllStores(Predicate<JacisStore<?, ?>> filter) {
+    if(filter!=null) {
+      return storeMap.values().stream().filter(filter).collect(Collectors.toList());
+    } else {
+      return storeMap.values();
+    }
+  }
+
+  /**
+   * Get all stores (type {@link JacisStore}).
+   *
+   * @return A List of all stores (type {@link JacisStore}).
+   */
+  public Collection<JacisStore<?, ?>> getAllStores() {
+      return getAllStores(null);
   }
 
   /**
