@@ -53,6 +53,11 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
     return threadWithWriteAccess == null;
   }
 
+  @Override
+  public boolean isWritable() {
+    return Thread.currentThread().equals(threadWithWriteAccess);
+  }
+
   /**
    * This method should be called prior to all modifying accesses to the object (e.g. in al setter-methods).
    * The method will check if the current thread has write access to the object and will throw a {@link ReadOnlyException} otherwise.

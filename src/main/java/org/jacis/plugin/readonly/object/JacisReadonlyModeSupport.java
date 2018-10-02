@@ -38,6 +38,11 @@ public interface JacisReadonlyModeSupport {
   boolean isReadOnly();
 
   /**
+   * @return if the object is writable for the current thread
+   */
+  boolean isWritable();
+
+  /**
    * Switches the read / write mode depending on the passed parameter
    *
    * @param readOnlyMode if 'true' switch to read-only mode, if 'false' switch to read-write mode
