@@ -8,8 +8,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Supplier;
 
 import org.jacis.container.JacisTransactionHandle;
+import org.jacis.trackedviews.TrackedView;
 
 /**
  * Representing the transactional view on the store entries for one transaction.
@@ -23,9 +25,9 @@ import org.jacis.container.JacisTransactionHandle;
  */
 class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
 
-  /** the handle for the transaction this view belongs to*/
+  /** the handle for the transaction this view belongs to */
   private final JacisTransactionHandle tx;
-  /** the creation timestamp in system milliseconds (timestamp usually set at first access returning a TX view)*/
+  /** the creation timestamp in system milliseconds (timestamp usually set at first access returning a TX view) */
   private final long creationTimestamp;
   /** the entries with an own view in this TX */
   private final Map<K, StoreEntryTxView<K, TV, CV>> storeTxView;
@@ -45,6 +47,8 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   private int numberOfEntries = 0;
   /** the number of updated entries of this TX view */
   private int numberOfUpdatedEntries = 0;
+  /** tracked views by this transaction view */
+  private final Map<Class<? extends TrackedView<TV>>, TrackedViewTransactionLocal<TV, K>> trackedViews;
 
   JacisStoreTxView(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
     this.store = store;
@@ -52,6 +56,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
     this.readOnlyTxId = null;
     this.creationTimestamp = System.currentTimeMillis();
     this.storeTxView = new HashMap<>();
+    this.trackedViews = new HashMap<>();
   }
 
   JacisStoreTxView(String readOnlyTxId, JacisStoreTxView<K, TV, CV> orig) { // only to create a read only snapshot
@@ -65,6 +70,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
       readOnlyCache.put(mapEntry.getKey(), cacheEntry);
     }
     storeTxView = readOnlyCache;
+    trackedViews = new HashMap<>(orig.trackedViews);
     numberOfEntries = storeTxView.size();
   }
 
@@ -158,6 +164,9 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
       numberOfUpdatedEntries++; // a new updated element
     }
     entryTxView.updateValue(newValue);
+    for (TrackedViewTransactionLocal<TV, K> trackedView : trackedViews.values()) {
+      trackedView.trackModification(entryTxView.getOrigValue(), newValue, entryTxView);
+    }
   }
 
   void startCommitPhase() {
@@ -176,7 +185,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
 
   void destroy() {
     storeTxView.clear();
-    if(!isReadOnly()) {
+    if (!isReadOnly()) {
       store.notifyTxViewDestroyed(this);
     }
   }
@@ -191,6 +200,20 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
 
   void invalidate(String reason) {
     this.invalidationReason = reason;
+  }
+
+  @SuppressWarnings("unchecked")
+  <VT extends TrackedView<TV>> VT getTrackedView(Class<VT> viewType, Supplier<VT> initialViewSupplier) {
+    if (!this.trackedViews.containsKey(viewType)) {
+      VT view = initialViewSupplier.get();
+      TrackedViewTransactionLocal<TV, K> local = new TrackedViewTransactionLocal<>(view);
+
+      for (StoreEntryTxView<K, TV, ?> entryTxView : getAllEntryTxViews()) {
+        local.trackModification(entryTxView.getOrigValue(), entryTxView.getValue(), entryTxView);
+      }
+      this.trackedViews.put(viewType, local);
+    }
+    return (VT) this.trackedViews.get(viewType).getTrackedView();
   }
 
   @Override

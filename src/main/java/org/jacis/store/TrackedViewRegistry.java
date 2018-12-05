@@ -4,6 +4,14 @@
 
 package org.jacis.store;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Supplier;
+
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.plugin.JacisModificationListener;
@@ -11,8 +19,6 @@ import org.jacis.plugin.JacisTransactionListener;
 import org.jacis.plugin.JacisTransactionListenerAdapter;
 import org.jacis.trackedviews.TrackedView;
 import org.jacis.trackedviews.TrackedViewClustered;
-
-import java.util.*;
 
 /**
  * Registry where tracked views can be registered for an object store.
@@ -85,12 +91,13 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
   }
 
   public <VT extends TrackedView<TV>> VT getView(Class<VT> viewType) {
-    VT view = store.computeAtomic(() -> getAndCloneView(viewType));
     JacisStoreTxView<K, TV, ?> txView = store.getTxView();
+    VT view;
     if (txView != null) {
-      for (StoreEntryTxView<K, TV, ?> entryTxView : txView.getAllEntryTxViews()) {
-        view.trackModification(entryTxView.getOrigValue(), entryTxView.getValue());
-      }
+      Supplier<VT> vtSupplier = () -> store.computeAtomic(() -> getAndCloneView(viewType));
+      view = txView.getTrackedView(viewType, vtSupplier);
+    } else {
+      view = store.computeAtomic(() -> getAndCloneView(viewType));
     }
     return view;
   }
