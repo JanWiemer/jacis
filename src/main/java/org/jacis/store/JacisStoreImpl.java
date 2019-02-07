@@ -327,13 +327,21 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   @Override
-  public void executeAtomic(Runnable atomicOperation) { // Execute an atomic operation. No internalCommit of any other TX and no other atomic action will interleave.
+  public void executeAtomic(Runnable atomicOperation) { // Execute an atomic operation for the current store. No internalCommit of any other TX and no other atomic action for this store will interleave.
     withReadLock(runnableWrapper(atomicOperation));
   }
 
   @Override
-  public <R> R computeAtomic(Supplier<R> atomicOperation) { // Execute an atomic operation. No internalCommit of any other TX and no other atomic action will interleave.
+  public <R> R computeAtomic(Supplier<R> atomicOperation) { // Execute an atomic operation for the current store. No internalCommit of any other TX and no other atomic action for this store will interleave.
     return withReadLock(atomicOperation);
+  }
+
+  public void executeGlobalAtomic(Runnable atomicOperation) { // Execute an global atomic operation. No prepare / commit / rollback  of any other TX and no other global atomic action for any store will interleave.
+  	executeAtomic(()->container.executeGlobalAtomic(atomicOperation));
+  }
+
+  public <R> R computeGlobalAtomic(Supplier<R> atomicOperation) { // Execute an global atomic operation for the current store. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
+  	return computeAtomic(()->container.computeGlobalAtomic(atomicOperation));
   }
 
   @Override

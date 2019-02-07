@@ -340,6 +340,7 @@ public interface JacisStore<K, TV> {
   /**
    * Execute the passed operation (without return value) as an atomic operation.
    * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
+   * Note that this operation ensures only to be atomic for the current store. It does not guarantee that e.g. simultaneously a commit for another store is done.
    *
    * @param atomicOperation The operation to execute atomically
    */
@@ -348,6 +349,7 @@ public interface JacisStore<K, TV> {
   /**
    * Execute the passed operation (with return value) as an atomic operation.
    * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
+   * Note that this operation ensures only to be atomic for the current store. It does not guarantee that e.g. simultaneously a commit for another store is done.
    *
    * @param atomicOperation The operation to execute atomically
    * @param <R>             The return type of the operation
@@ -355,6 +357,26 @@ public interface JacisStore<K, TV> {
    */
   <R> R computeAtomic(Supplier<R> atomicOperation);
 
+  /**
+   * Execute the passed operation (without return value) as a global atomic operation (atomic over all stores).
+   * The execution of global atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap),
+   * even if the commit is (currently) executed for any other store belonging to the same JACIS container.
+   *
+   * @param atomicOperation The operation to execute atomically
+   */
+  void executeGlobalAtomic(Runnable atomicOperation);
+
+  /**
+   * Execute the passed operation (with return value) as an global atomic operation (atomic over all stores).
+   * The execution of global atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap),
+   * even if the commit is (currently) executed for any other store belonging to the same JACIS container.
+   *
+   * @param atomicOperation The operation to execute atomically
+   * @param <R>             The return type of the operation
+   * @return The return value of the operation
+   */
+  <R> R computeGlobalAtomic(Supplier<R> atomicOperation);
+  
   /**
    * Accumulate a value from all objects with the passed accumulator function.
    * The accumulation starts with the initial value passed to the 'target' parameter.

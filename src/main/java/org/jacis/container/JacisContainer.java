@@ -9,8 +9,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -56,7 +58,7 @@ public class JacisContainer {
   /** ThreadLocal storing the transaction info object for the last finished transaction */
   private ThreadLocal<JacisTransactionInfo> lastFinishedTransactionInfo = new ThreadLocal<>();
   /** Lock object to synchronize the TX demarcation operations (prepare / commit / rollback) over all threads and stores. */
-  private final ReentrantLock transactionDemarcationLock = new ReentrantLock();
+  private final ReadWriteLock transactionDemarcationLock = new ReentrantReadWriteLock(true);
 
   /**
    * Create a container with the passed transaction adapter.
@@ -171,11 +173,11 @@ public class JacisContainer {
    * All ending transactions are invalidated, that means any attempt to prepare or internalCommit them is ignored (without an exception).
    */
   public void clearAllStores() {
-    transactionDemarcationLock.lock();
+    transactionDemarcationLock.writeLock().lock();;
     try {
       storeMap.values().forEach(JacisStore::clear);
     } finally {
-      transactionDemarcationLock.unlock();
+      transactionDemarcationLock.writeLock().unlock();
     }
   }
 
@@ -365,7 +367,7 @@ public class JacisContainer {
     return false;
   }
 
-  protected boolean hasAnyTransactionListenersNeedingSynchronousExecutoion() {
+  protected boolean hasAnyTransactionListenersNeedingSynchronousExecution() {
     for (JacisTransactionListener txListener : txListeners) {
       if (txListener.isSynchronizedExceutionRequired()) {
         return true;
@@ -386,9 +388,9 @@ public class JacisContainer {
   public void internalPrepare(JacisTransactionHandle transaction) {
     boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries  we need to synchronize
             || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
-            || hasAnyTransactionListenersNeedingSynchronousExecutoion(); // if any transaction listener requires sync. execution we need to synchronize
+            || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSyncronized) {
-      transactionDemarcationLock.lock();
+      transactionDemarcationLock.writeLock().lock();
     }
     try {
       txListeners.forEach(l -> l.beforePrepare(this, transaction));
@@ -398,9 +400,54 @@ public class JacisContainer {
       txListeners.forEach(l -> l.afterPrepare(this, transaction));
     } finally {
       if (executeSyncronized) {
-        transactionDemarcationLock.unlock();
+        transactionDemarcationLock.writeLock().unlock();
       }
     }
+  }
+
+  
+  //======================================================================================
+  // synchronized execution
+  //======================================================================================
+
+  private Supplier<Object> runnableWrapper(Runnable r) {
+	    return () -> {
+	      r.run();
+	      return null;
+	    };
+	  }
+
+  private <R> R withReadLock(Supplier<R> task) {
+	  transactionDemarcationLock.readLock().lock(); // <======= **READ** LOCK =====
+    try {
+      return task.get();
+    } finally {
+    	transactionDemarcationLock.readLock().unlock(); // <======= **READ** UNLOCK =====
+    }
+  }
+
+  /**
+   * Execute the passed operation (without return value) as a global atomic operation (atomic over all stores).
+   * The execution of global atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap),
+   * even if the commit is (currently) executed for any other store belonging to the same JACIS container.
+   *
+   * @param atomicOperation The operation to execute atomically
+   */
+  public void executeGlobalAtomic(Runnable atomicOperation) { // Execute an global atomic operation. No prepare / commit / rollback  of any other TX and no other global atomic action for any store will interleave.
+    withReadLock(runnableWrapper(atomicOperation));
+  }
+
+  /**
+   * Execute the passed operation (with return value) as an global atomic operation (atomic over all stores).
+   * The execution of global atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap),
+   * even if the commit is (currently) executed for any other store belonging to the same JACIS container.
+   *
+   * @param atomicOperation The operation to execute atomically
+   * @param <R>             The return type of the operation
+   * @return The return value of the operation
+   */
+  public <R> R computeGlobalAtomic(Supplier<R> atomicOperation) { // Execute an global atomic operation for the current store. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
+    return withReadLock(atomicOperation);
   }
 
   /**
@@ -415,9 +462,9 @@ public class JacisContainer {
   public void internalCommit(JacisTransactionHandle transaction) {
     boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries  we need to synchronize
             || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
-            || hasAnyTransactionListenersNeedingSynchronousExecutoion(); // if any transaction listener requires sync. execution we need to synchronize
+            || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSyncronized) {
-      transactionDemarcationLock.lock();
+      transactionDemarcationLock.writeLock().lock();
     }
     try {
       txListeners.forEach(l -> l.beforeCommit(this, transaction));
@@ -435,7 +482,7 @@ public class JacisContainer {
       txAdapter.disjoinCurrentTransaction();
     } finally {
       if (executeSyncronized) {
-        transactionDemarcationLock.unlock();
+        transactionDemarcationLock.writeLock().unlock();
       }
     }
   }
@@ -451,9 +498,9 @@ public class JacisContainer {
    */
   public void internalRollback(JacisTransactionHandle transaction) {
     boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries  we need to synchronize (dirty check can be ignored here)
-            || hasAnyTransactionListenersNeedingSynchronousExecutoion(); // if any transaction listener requires sync. execution we need to synchronize
+            || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSyncronized) {
-      transactionDemarcationLock.lock();
+      transactionDemarcationLock.writeLock().lock();
     }
     try {
       txListeners.forEach(l -> l.beforeRollback(this, transaction));
@@ -471,7 +518,7 @@ public class JacisContainer {
       txAdapter.disjoinCurrentTransaction();
     } finally {
       if (executeSyncronized) {
-        transactionDemarcationLock.unlock();
+        transactionDemarcationLock.writeLock().unlock();
       }
     }
 
