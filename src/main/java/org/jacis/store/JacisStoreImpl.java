@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
@@ -64,7 +65,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   /** The registry of tracked views for this store that are kept up to date on each commit automatically */
   private final TrackedViewRegistry<K, TV> trackedViewRegistry;
   /** List of listeners notified on each modification on the committed values in the store */
-  private final List<JacisModificationListener<K, TV>> modificationListeners = new ArrayList<>();
+  private final List<JacisModificationListener<K, TV>> modificationListeners = new CopyOnWriteArrayList<>();
 
   public JacisStoreImpl(JacisContainer container, StoreIdentifier storeIdentifier, JacisObjectTypeSpec<K, TV, CV> spec) {
     this.container = container;

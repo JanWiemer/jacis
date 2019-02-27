@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
@@ -54,7 +55,7 @@ public class JacisContainer {
   /** Map assigning the stores (values of type {@link JacisStoreImpl}) to the store identifiers (keys of type {@link StoreIdentifier}). */
   private final Map<StoreIdentifier, JacisStore<?, ?>> storeMap = new ConcurrentHashMap<>();
   /** List of transaction listeners / observers (type {@link JacisTransactionListener}) providing call-backs before / after prepare / internalCommit / rollback. */
-  private final List<JacisTransactionListener> txListeners = new ArrayList<>();
+  private final List<JacisTransactionListener> txListeners = new CopyOnWriteArrayList<>();
   /** ThreadLocal storing the transaction info object for the last finished transaction */
   private ThreadLocal<JacisTransactionInfo> lastFinishedTransactionInfo = new ThreadLocal<>();
   /** Lock object to synchronize the TX demarcation operations (prepare / commit / rollback) over all threads and stores. */
