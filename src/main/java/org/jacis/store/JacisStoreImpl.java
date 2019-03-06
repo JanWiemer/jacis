@@ -329,11 +329,15 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
       if (!store.isEmpty()) {
         throw new IllegalStateException("Store must be empty before initialization!");
       }
+      List<JacisModificationListener<K, TV>> modListeners = new ArrayList<>(getModificationListeners());
       if (nThreads <= 1 || entries.size() <= 1000) {
         for (ST entry : entries) {
           K key = keyExtractor.apply(entry);
           TV val = valueExtractor.apply(entry);
           store.put(key, new StoreEntry<K, TV, CV>(this, key, val));
+          for (JacisModificationListener<K, TV> listener : modListeners) {
+            listener.onModification(key, null, val, null);
+          }
         }
       } else {
         int usedThreads = Math.min(nThreads, entries.size() / 100);
@@ -350,7 +354,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
                 K key = keyExtractor.apply(entry);
                 TV val = valueExtractor.apply(entry);
                 store.put(key, new StoreEntry<K, TV, CV>(JacisStoreImpl.this, key, val));
-                for (JacisModificationListener<K, TV> listener : getModificationListeners()) {
+                for (JacisModificationListener<K, TV> listener : modListeners) {
                   synchronized (listener) {
                     listener.onModification(key, null, val, null);
                   }
