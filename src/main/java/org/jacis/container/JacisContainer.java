@@ -4,6 +4,8 @@
 
 package org.jacis.container;
 
+import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -17,8 +19,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.jacis.exception.JacisInternalException;
 import org.jacis.exception.JacisNoTransactionException;
 import org.jacis.exception.JacisStaleObjectException;
+import org.jacis.exception.JacisTxCommitException;
+import org.jacis.exception.JacisTxRollbackException;
 import org.jacis.plugin.JacisTransactionListener;
 import org.jacis.plugin.txadapter.JacisTransactionAdapter;
 import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
@@ -469,18 +474,32 @@ public class JacisContainer {
     }
     try {
       txListeners.forEach(l -> l.beforeCommit(this, transaction));
+      List<AbstractMap.SimpleImmutableEntry<JacisStore<?, ?>, Throwable>> exceptions = null;
       for (JacisStore<?, ?> store : storeMap.values()) {
-        ((JacisStoreTransactionAdapter) store).internalCommit(transaction);
+        try {
+          ((JacisStoreTransactionAdapter) store).internalCommit(transaction);
+        } catch (Throwable e) {
+          exceptions = exceptions != null ? exceptions : new ArrayList<>();
+          exceptions.add(new SimpleImmutableEntry<>(store, e));
+        }
       }
       JacisTransactionInfo txInfo = getTransactionInfo(transaction);
       if (txInfo != null) {
         lastFinishedTransactionInfo.set(txInfo);
       }
       for (JacisStore<?, ?> store : storeMap.values()) {
-        ((JacisStoreTransactionAdapter) store).internalDestroy(transaction);
+        try {
+          ((JacisStoreTransactionAdapter) store).internalDestroy(transaction);
+        } catch (Throwable e) {
+          exceptions = exceptions != null ? exceptions : new ArrayList<>();
+          exceptions.add(new SimpleImmutableEntry<>(store, new JacisInternalException("Exception during internalDestroy after commit for TX " + transaction.getTxId() + " on store " + store.getStoreIdentifier().toShortString())));
+        }
       }
       txListeners.forEach(l -> l.afterCommit(this, transaction));
       txAdapter.disjoinCurrentTransaction();
+      if (exceptions != null && !exceptions.isEmpty()) {
+        buildAndThrowException(transaction, true, exceptions);
+      }
     } finally {
       if (executeSyncronized) {
         transactionDemarcationLock.writeLock().unlock();
@@ -512,17 +531,46 @@ public class JacisContainer {
       if (txInfo != null) {
         lastFinishedTransactionInfo.set(txInfo);
       }
+      List<AbstractMap.SimpleImmutableEntry<JacisStore<?, ?>, Throwable>> exceptions = null;
       for (JacisStore<?, ?> store : storeMap.values()) {
-        ((JacisStoreTransactionAdapter) store).internalDestroy(transaction);
+        try {
+          ((JacisStoreTransactionAdapter) store).internalDestroy(transaction);
+        } catch (Throwable e) {
+          exceptions = exceptions != null ? exceptions : new ArrayList<>();
+          exceptions.add(new SimpleImmutableEntry<>(store, new JacisInternalException("Exception during internalDestroy during rollback for TX " + transaction.getTxId() + " on store " + store.getStoreIdentifier().toShortString())));
+        }
       }
       txListeners.forEach(l -> l.afterRollback(this, transaction));
       txAdapter.disjoinCurrentTransaction();
+      if (exceptions != null && !exceptions.isEmpty()) {
+        buildAndThrowException(transaction, true, exceptions);
+      }
     } finally {
       if (executeSyncronized) {
         transactionDemarcationLock.writeLock().unlock();
       }
     }
+  }
 
+  protected void buildAndThrowException(JacisTransactionHandle transaction, boolean commit, List<AbstractMap.SimpleImmutableEntry<JacisStore<?, ?>, Throwable>> exceptions) {
+    Throwable firstException = exceptions.get(0).getValue(); // use the first exception as master
+    RuntimeException masterException;
+    if (firstException instanceof RuntimeException) {
+      masterException = (RuntimeException) firstException;
+      if (commit) {
+        masterException.addSuppressed(new JacisTxCommitException("Commiting TX " + transaction.getTxId() + " caused " + exceptions.size() + " exceptions (committing " + storeMap.size() + " stores)."));
+      } else {
+        masterException.addSuppressed(new JacisTxRollbackException("Rollback TX " + transaction.getTxId() + " caused " + exceptions.size() + " exceptions (rolling " + storeMap.size() + " stores back)"));
+      }
+    } else if (commit) {
+      masterException = new JacisTxCommitException("Commiting TX " + transaction.getTxId() + " caused " + exceptions.size() + " exceptions (committing " + storeMap.size() + " stores).", firstException);
+    } else {
+      masterException = new JacisTxRollbackException("Rollback TX " + transaction.getTxId() + " caused " + exceptions.size() + " exceptions (rolling" + storeMap.size() + " stores back).", firstException);
+    }
+    for (int i = 1; i < exceptions.size(); i++) { // skipping the first since it is the master
+      masterException.addSuppressed(exceptions.get(i).getValue());
+    }
+    throw masterException;
   }
 
   /**
