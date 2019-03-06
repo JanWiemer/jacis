@@ -353,6 +353,34 @@ public class JacisContainer {
     return txHandle == null ? null : new JacisTransactionInfo(txHandle, this, storeMap.values(), System.currentTimeMillis());
   }
 
+  /**
+   * Create a read only view of the current transaction context for all stores in this container.
+   * This view can be used (read only) in a different thread.
+   * This can be used to share one single transaction view in several threads.
+   * Before accessing the object store the other thread should set the returned context
+   * with the method {@link #startReadOnlyTransactionWithContext(JacisContainerReadOnlyTransactionContext)}.
+   *
+   * @param withTxName transaction name used for the read only view.
+   * @return a read only view of the current transaction context of all stores.
+   */
+  public JacisContainerReadOnlyTransactionContext createReadOnlyTransactionView(String withTxName) {
+    JacisContainerReadOnlyTransactionContext ctx = new JacisContainerReadOnlyTransactionContext();
+    for (JacisStore<?, ?> store : storeMap.values()) {
+      ctx.add(store, store.createReadOnlyTransactionView(withTxName));
+    }
+    return ctx;
+  }
+
+  /**
+   * Starts a new (read only) transaction with the passed transaction context for all stores in this container.
+   * The new transaction will work on a read only snapshot of the original transaction (where the context is obtained from).
+   *
+   * @param readOnlyTxContext the transaction context of the original transaction.
+   */
+  public void startReadOnlyTransactionWithContext(JacisContainerReadOnlyTransactionContext readOnlyTxContext) {
+    readOnlyTxContext.startReadOnlyTransactionWithContext();
+  }
+
   protected boolean hasAnyUpdatesPendingForTx() {
     for (JacisStore<?, ?> store : storeMap.values()) {
       if (((JacisStoreImpl<?, ?, ?>) store).hasObjectsUpdatedInCurrentTxView()) {
