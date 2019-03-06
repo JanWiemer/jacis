@@ -26,7 +26,6 @@ public class TestObjectWithoutReadOnlyMode implements JacisCloneable<TestObjectW
     this.value = value;
   }
 
-
   @Override
   public TestObjectWithoutReadOnlyMode clone() {
     try {
@@ -53,7 +52,6 @@ public class TestObjectWithoutReadOnlyMode implements JacisCloneable<TestObjectW
     this.value = value;
     return this;
   }
-
 
   @Override
   public String toString() {

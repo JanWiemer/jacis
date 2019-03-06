@@ -15,7 +15,7 @@ package org.jacis.store;
 class StoreEntry<K, TV, CV> {
 
   /** reference to the main store */
-  private final JacisStoreAdminInterface<K,TV,CV> store;
+  private final JacisStoreAdminInterface<K, TV, CV> store;
   /** the key of this entry */
   private final K key;
   /** the current committed valued of this entry (visible to all transactions) (null if not existing / deleted) */
@@ -27,13 +27,13 @@ class StoreEntry<K, TV, CV> {
   /** transaction this object is locked for (in the time between prepare and internalCommit) */
   private JacisStoreTxView<K, TV, CV> lockedFor = null;
 
-  StoreEntry(JacisStoreAdminInterface<K,TV,CV> store, K key) {
+  StoreEntry(JacisStoreAdminInterface<K, TV, CV> store, K key) {
     this.store = store;
     this.key = key;
   }
 
   @SuppressWarnings("ObjectEquality")
-  synchronized public  void update(StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> byTx) {
+  synchronized public void update(StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> byTx) {
     TV txVal = entryTxView.getValue();
     if (txVal == null) { // deleted
       value = null;
@@ -44,26 +44,26 @@ class StoreEntry<K, TV, CV> {
     updatedBy = byTx.getTxId();
   }
 
-  synchronized void  lockedFor(JacisStoreTxView<K, TV, CV> lockingTx) {
+  synchronized void lockedFor(JacisStoreTxView<K, TV, CV> lockingTx) {
     lockedFor = lockingTx;
   }
 
-  synchronized void  releaseLockedFor(JacisStoreTxView<K, TV, CV> releasingTx) {
+  synchronized void releaseLockedFor(JacisStoreTxView<K, TV, CV> releasingTx) {
     if (releasingTx.equals(getLockedFor())) {
       lockedFor = null;
     }
   }
 
-  synchronized boolean  isLocked() {
+  synchronized boolean isLocked() {
     return lockedFor != null;
   }
 
-  synchronized boolean  isLockedForOtherThan(JacisStoreTxView<K, TV, CV> txView) {
+  synchronized boolean isLockedForOtherThan(JacisStoreTxView<K, TV, CV> txView) {
     JacisStoreTxView<K, TV, CV> lf = lockedFor;
     return lf != null && !lf.equals(txView);
   }
 
-  JacisStoreAdminInterface<K,TV,CV> getStore() {
+  JacisStoreAdminInterface<K, TV, CV> getStore() {
     return store;
   }
 

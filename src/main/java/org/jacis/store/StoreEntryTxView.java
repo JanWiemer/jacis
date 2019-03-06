@@ -103,8 +103,8 @@ class StoreEntryTxView<K, TV, CV> {
     msg.append("Object ").append(getKey());
     msg.append(" updated by current TX ").append(txView.getTxId()).append(" (from v. ").append(getOrigVersion()).append(")");
     JacisStoreTxView<K, TV, CV> lockedFor = committedEntry.getLockedFor();
-    String otherTxId =  lockedFor != null ? lockedFor.getTxId() : committedEntry.getUpdatedByTxId();
-    if (lockedFor!=null && !lockedFor.equals(txView)) {
+    String otherTxId = lockedFor != null ? lockedFor.getTxId() : committedEntry.getUpdatedByTxId();
+    if (lockedFor != null && !lockedFor.equals(txView)) {
       msg.append(" was already updated by prepared other TX ");
     } else {
       msg.append(" was already updated by other TX ");
@@ -119,12 +119,12 @@ class StoreEntryTxView<K, TV, CV> {
     }
     details.append(" - committed value         : ").append(committedEntry.getValue()).append(" (v. ").append(committedEntry.getVersion()).append(")").append("\n");
     details.append(" - current TX: ").append(txView).append("\n");
-    if(lockedFor != null) {
+    if (lockedFor != null) {
       details.append(" - other TX: ").append(lockedFor).append("\n");
     } else {
       details.append(" - other TX: ").append(committedEntry.getUpdatedByTxId()).append("\n");
     }
-     details.append(" - store: ").append(store);
+    details.append(" - store: ").append(store);
     throw new JacisStaleObjectException(msg.toString()).setDetails(details.toString());
   }
 

@@ -59,7 +59,6 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
     this(new DefaultJacisStoreEntryReadOnlyModeAdapter<>());
   }
 
-
   /**
    * Set the flag indicating if the object adapter should throw an exception if a read only mode is required, but not supported.
    * @param throwIfMissingReadOnlyModeDetected  flag indicating if the object adapter should throw an exception if a read only mode is required, but not supported.
@@ -125,7 +124,6 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
     }
   }
 
-
   @SuppressWarnings("unchecked")
   private V cloneValue(V value) {
     if (value == null) {
@@ -160,7 +158,7 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() + "(readOnlyModeAdapter=" + readOnlyModeAdapter + ", throwIfMissingReadOnlyModeDetected=" + throwIfMissingReadOnlyModeDetected +")";
+    return getClass().getSimpleName() + "(readOnlyModeAdapter=" + readOnlyModeAdapter + ", throwIfMissingReadOnlyModeDetected=" + throwIfMissingReadOnlyModeDetected + ")";
   }
 
 }

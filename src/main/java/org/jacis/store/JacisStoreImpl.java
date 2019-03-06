@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2017. Jan Wiemer
  */
+
 package org.jacis.store;
 
 import java.util.ArrayList;
@@ -338,11 +339,11 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   public void executeGlobalAtomic(Runnable atomicOperation) { // Execute an global atomic operation. No prepare / commit / rollback  of any other TX and no other global atomic action for any store will interleave.
-  	executeAtomic(()->container.executeGlobalAtomic(atomicOperation));
+    executeAtomic(() -> container.executeGlobalAtomic(atomicOperation));
   }
 
   public <R> R computeGlobalAtomic(Supplier<R> atomicOperation) { // Execute an global atomic operation for the current store. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
-  	return computeAtomic(()->container.computeGlobalAtomic(atomicOperation));
+    return computeAtomic(() -> container.computeGlobalAtomic(atomicOperation));
   }
 
   @Override

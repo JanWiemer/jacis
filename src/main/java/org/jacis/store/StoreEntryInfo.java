@@ -11,7 +11,7 @@ package org.jacis.store;
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @author Jan Wiemer
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({ "unused", "WeakerAccess" })
 public class StoreEntryInfo<K, TV> {
 
   /** the key of the entry */

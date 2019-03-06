@@ -33,12 +33,11 @@ import java.util.stream.Stream;
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @author Jan Wiemer
  */
-@SuppressWarnings({"unused"})
+@SuppressWarnings({ "unused" })
 public interface JacisStore<K, TV> {
 
   /** @return the reference to the JACIS container this store belongs to */
   JacisContainer getContainer();
-
 
   /** @return the store identifier uniquely identifying this store inside the container */
   JacisContainer.StoreIdentifier getStoreIdentifier();
@@ -376,7 +375,7 @@ public interface JacisStore<K, TV> {
    * @return The return value of the operation
    */
   <R> R computeGlobalAtomic(Supplier<R> atomicOperation);
-  
+
   /**
    * Accumulate a value from all objects with the passed accumulator function.
    * The accumulation starts with the initial value passed to the 'target' parameter.

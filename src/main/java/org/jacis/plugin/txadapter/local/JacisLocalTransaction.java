@@ -48,7 +48,6 @@ public class JacisLocalTransaction {
     return jacisTransactionHandle == null ? null : jacisTransactionHandle.getTxDescription();
   }
 
-
   /**
    * Prepare the local transaction.
    * This method is calling the {@link JacisContainer#internalPrepare(JacisTransactionHandle)} method on the container

@@ -1,3 +1,4 @@
+
 package org.jacis.store;
 
 /**
@@ -8,16 +9,16 @@ package org.jacis.store;
  *
  * @author Jan Wiemer
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({ "unused", "WeakerAccess" })
 public interface JacisReadOnlyTransactionContext {
 
-    /**
-     * @return The id of the transaction this transactional context was retrieved from.
-     */
-    String getTxId();
+  /**
+   * @return The id of the transaction this transactional context was retrieved from.
+   */
+  String getTxId();
 
-    /**
-     * @return The id of the transaction this transactional context should be used in read only mode.
-     */
-    String getReadOnlyTxId();
+  /**
+   * @return The id of the transaction this transactional context should be used in read only mode.
+   */
+  String getReadOnlyTxId();
 }

@@ -18,7 +18,7 @@ import java.util.List;
  *
  * @author Jan Wiemer
  */
-@SuppressWarnings({"WeakerAccess", "CodeBlock2Expr"})
+@SuppressWarnings({ "WeakerAccess", "CodeBlock2Expr" })
 public class JacisExample3 {
 
   // Note that we use the same account object introduced for the first example

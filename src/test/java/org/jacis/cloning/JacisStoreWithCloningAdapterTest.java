@@ -183,7 +183,7 @@ public class JacisStoreWithCloningAdapterTest {
       TestObject obj = store.getReadOnly(testObject.getName());
       assertEquals(2, obj.getValue());
       obj.setValue(3); // exception expected here!
-      });
+    });
   }
 
   @Test
@@ -243,7 +243,7 @@ public class JacisStoreWithCloningAdapterTest {
     store.getContainer().withLocalTx(() -> {
       TestObject testObject2 = store.get(testObjectName);
       testObject2.setValue(2); // do not explicitly call update
-      });
+    });
     // check if committed
     store.getContainer().withLocalTx(() -> {
       TestObject testObject3 = store.get(testObjectName);

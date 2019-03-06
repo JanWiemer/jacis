@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  *
  * @author Jan Wiemer
  */
-@SuppressWarnings({"WeakerAccess", "CodeBlock2Expr"})
+@SuppressWarnings({ "WeakerAccess", "CodeBlock2Expr" })
 public class JacisExample2 {
 
   // Note that we use the same account object introduced for the first example

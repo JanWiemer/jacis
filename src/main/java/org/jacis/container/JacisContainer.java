@@ -135,7 +135,7 @@ public class JacisContainer {
    * @return A List of all stores (type {@link JacisStore}) matching the passed filter.
    */
   public Collection<JacisStore<?, ?>> getAllStores(Predicate<JacisStore<?, ?>> filter) {
-    if(filter!=null) {
+    if (filter != null) {
       return storeMap.values().stream().filter(filter).collect(Collectors.toList());
     } else {
       return storeMap.values();
@@ -148,7 +148,7 @@ public class JacisContainer {
    * @return A List of all stores (type {@link JacisStore}).
    */
   public Collection<JacisStore<?, ?>> getAllStores() {
-      return getAllStores(null);
+    return getAllStores(null);
   }
 
   /**
@@ -174,7 +174,8 @@ public class JacisContainer {
    * All ending transactions are invalidated, that means any attempt to prepare or internalCommit them is ignored (without an exception).
    */
   public void clearAllStores() {
-    transactionDemarcationLock.writeLock().lock();;
+    transactionDemarcationLock.writeLock().lock();
+    ;
     try {
       storeMap.values().forEach(JacisStore::clear);
     } finally {
@@ -203,8 +204,8 @@ public class JacisContainer {
    */
   public JacisLocalTransaction beginLocalTransaction() throws IllegalStateException {
     String description = Stream.of(new Exception("-").getStackTrace()) // go through the stack trace elements
-            .filter(se -> !getClass().getName().equals(se.getClassName())) // ignore all stack trace elements for this class
-            .map(StackTraceElement::toString).findFirst().orElse("-"); // use the first from outside (the calling method) as description
+        .filter(se -> !getClass().getName().equals(se.getClassName())) // ignore all stack trace elements for this class
+        .map(StackTraceElement::toString).findFirst().orElse("-"); // use the first from outside (the calling method) as description
     return beginLocalTransaction(description);
   }
 
@@ -388,8 +389,8 @@ public class JacisContainer {
    */
   public void internalPrepare(JacisTransactionHandle transaction) {
     boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries  we need to synchronize
-            || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
-            || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
+        || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
+        || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSyncronized) {
       transactionDemarcationLock.writeLock().lock();
     }
@@ -406,24 +407,23 @@ public class JacisContainer {
     }
   }
 
-  
   //======================================================================================
   // synchronized execution
   //======================================================================================
 
   private Supplier<Object> runnableWrapper(Runnable r) {
-	    return () -> {
-	      r.run();
-	      return null;
-	    };
-	  }
+    return () -> {
+      r.run();
+      return null;
+    };
+  }
 
   private <R> R withReadLock(Supplier<R> task) {
-	  transactionDemarcationLock.readLock().lock(); // <======= **READ** LOCK =====
+    transactionDemarcationLock.readLock().lock(); // <======= **READ** LOCK =====
     try {
       return task.get();
     } finally {
-    	transactionDemarcationLock.readLock().unlock(); // <======= **READ** UNLOCK =====
+      transactionDemarcationLock.readLock().unlock(); // <======= **READ** UNLOCK =====
     }
   }
 
@@ -462,8 +462,8 @@ public class JacisContainer {
    */
   public void internalCommit(JacisTransactionHandle transaction) {
     boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries  we need to synchronize
-            || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
-            || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
+        || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
+        || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSyncronized) {
       transactionDemarcationLock.writeLock().lock();
     }
@@ -499,7 +499,7 @@ public class JacisContainer {
    */
   public void internalRollback(JacisTransactionHandle transaction) {
     boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries  we need to synchronize (dirty check can be ignored here)
-            || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
+        || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSyncronized) {
       transactionDemarcationLock.writeLock().lock();
     }
