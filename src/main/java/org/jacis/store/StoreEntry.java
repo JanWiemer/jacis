@@ -32,6 +32,12 @@ class StoreEntry<K, TV, CV> {
     this.key = key;
   }
 
+  StoreEntry(JacisStoreAdminInterface<K, TV, CV> store, K key, TV value) { // only for the initial value
+    this.store = store;
+    this.key = key;
+    this.value = store.getObjectAdapter().cloneTxView2Committed(value);
+  }
+
   @SuppressWarnings("ObjectEquality")
   synchronized public void update(StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> byTx) {
     TV txVal = entryTxView.getValue();

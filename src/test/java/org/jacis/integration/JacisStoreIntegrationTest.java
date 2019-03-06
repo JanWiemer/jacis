@@ -4,11 +4,10 @@
 
 package org.jacis.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
@@ -189,6 +188,22 @@ public class JacisStoreIntegrationTest {
     assertEquals(1, info.getStoreTxInfos().get(0).getNumberOfUpdatedTxViewEntries());
     assertEquals(false, info.getStoreTxInfos().get(0).isCommitPending());
     log.info("TX2-last-after-commit:  {}", info);
+  }
+
+  @Test
+  public void testNonTransactionInit() {
+    int n = 10000;
+    List<TestObject> objects = new ArrayList<>(n);
+    for (int i = 1; i <= n; i++) {
+      objects.add(new TestObject("obj-" + i));
+    }
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    store.initStoreNonTransactional(objects, o -> o.getName(), 5);
+    JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
+    assertTrue(store.containsKey("obj-1"));
+    assertEquals(n, store.size());
+    readingTx.commit();
   }
 
   protected void sleep(long duration) {

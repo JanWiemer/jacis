@@ -4,6 +4,7 @@
 
 package org.jacis.store;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -323,6 +324,57 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return get(key);
   }
 
+  public <ST> void initStoreNonTransactional(List<ST> entries, Function<ST, K> keyExtractor, Function<ST, TV> valueExtractor, int nThreads) {
+    withWriteLock(() -> {
+      if (!store.isEmpty()) {
+        throw new IllegalStateException("Store must be empty before initialization!");
+      }
+      if (nThreads <= 1 || entries.size() <= 1000) {
+        for (ST entry : entries) {
+          K key = keyExtractor.apply(entry);
+          TV val = valueExtractor.apply(entry);
+          store.put(key, new StoreEntry<K, TV, CV>(this, key, val));
+        }
+      } else {
+        int usedThreads = Math.min(nThreads, entries.size() / 100);
+        List<Thread> threads = new ArrayList<Thread>(usedThreads);
+        int perThread = (entries.size() - 1) / usedThreads + 1;
+        for (int threadNr = 0; threadNr < usedThreads; threadNr++) {
+          int from = threadNr * perThread;
+          int to = Math.min(entries.size(), (threadNr + 1) * perThread);
+          threads.add(new Thread("initStoreThread" + threadNr + "[" + from + "-" + to + " for " + JacisStoreImpl.this + "]") {
+            @Override
+            public void run() {
+              for (int idx = from; idx < to; idx++) {
+                ST entry = entries.get(idx);
+                K key = keyExtractor.apply(entry);
+                TV val = valueExtractor.apply(entry);
+                store.put(key, new StoreEntry<K, TV, CV>(JacisStoreImpl.this, key, val));
+              }
+            }
+          });
+        }
+        threads.forEach(t -> t.start());
+        try {
+          for (Thread thread : threads) {
+            thread.join();
+          }
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        }
+      }
+      return null;
+    });
+  }
+
+  public void initStoreNonTransactional(List<TV> values, Function<TV, K> keyExtractor, int nThreads) {
+    initStoreNonTransactional(values, keyExtractor, v -> v, nThreads);
+  }
+
+  public void initStoreNonTransactional(List<KeyValuePair<K, TV>> entries, int nThreads) {
+    initStoreNonTransactional(entries, e -> e.getKey(), e -> e.getVal(), nThreads);
+  }
+
   @Override
   public int size() { // heuristic (due to concurrent access)
     return store.size();
@@ -552,13 +604,68 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return getClass().getSimpleName() + "-(" + spec + ": #" + store.size() + " entries)";
   }
 
-  private static class KeyValuePair<PK, PV> {
-    PK key;
-    PV val;
+  public static class KeyValuePair<K, TV> implements Serializable {
 
-    KeyValuePair(PK key, PV val) {
-      this.key = key;
-      this.val = val;
+    private static final long serialVersionUID = 1L;
+
+    private final K key;
+    private final TV val;
+
+    public KeyValuePair(K first, TV second) {
+      this.key = first;
+      this.val = second;
+    }
+
+    public K getKey() {
+      return key;
+    }
+
+    public TV getVal() {
+      return val;
+    }
+
+    @Override
+    public String toString() {
+      return "(" + key + ", " + val + ")";
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((key == null) ? 0 : key.hashCode());
+      result = prime * result + ((val == null) ? 0 : val.hashCode());
+      return result;
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      KeyValuePair other = (KeyValuePair) obj;
+      if (key == null) {
+        if (other.key != null) {
+          return false;
+        }
+      } else if (!key.equals(other.key)) {
+        return false;
+      }
+      if (val == null) {
+        if (other.val != null) {
+          return false;
+        }
+      } else if (!val.equals(other.val)) {
+        return false;
+      }
+      return true;
     }
 
   }
