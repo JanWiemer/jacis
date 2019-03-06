@@ -142,7 +142,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
 
   boolean removeTxViewEntry(K key, boolean forceIfUpdated) {
     StoreEntryTxView<K, TV, CV> entry = storeTxView.get(key);
-    if (entry.isUpdated()) {
+    if (entry != null && entry.isUpdated()) {
       if (!forceIfUpdated) {
         return false;
       }
