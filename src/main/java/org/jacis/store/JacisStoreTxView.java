@@ -55,6 +55,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   }
 
   JacisStoreTxView(String readOnlyTxId, JacisStoreTxView<K, TV, CV> orig) { // only to create a read only snapshot
+    this.store = orig.store;
     this.tx = orig.tx;
     this.readOnlyTxId = readOnlyTxId;
     this.creationTimestamp = orig.creationTimestamp;
