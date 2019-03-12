@@ -4,15 +4,21 @@
 
 package org.jacis.store;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
+import org.jacis.exception.JacisTrackedViewModificationException;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.JacisTransactionListener;
 import org.jacis.plugin.JacisTransactionListenerAdapter;
 import org.jacis.trackedviews.TrackedView;
 import org.jacis.trackedviews.TrackedViewClustered;
-
-import java.util.*;
 
 /**
  * Registry where tracked views can be registered for an object store.
@@ -68,8 +74,21 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
 
   @Override
   public void onModification(K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
+    JacisTrackedViewModificationException toThrow = null;
     for (TrackedView<TV> view : viewMap.values()) {
-      view.trackModification(oldValue, newValue);
+      try {
+        view.trackModification(oldValue, newValue);
+      } catch (Exception e) {
+        JacisTrackedViewModificationException trackModificationException = new JacisTrackedViewModificationException(store, view, tx, key, oldValue, newValue, e);
+        if (toThrow == null) {
+          toThrow = trackModificationException;
+        } else {
+          toThrow.addSuppressed(trackModificationException);
+        }
+      }
+    }
+    if (toThrow != null) {
+      throw toThrow;
     }
   }
 

@@ -5,6 +5,8 @@
 package org.jacis.store;
 
 import org.jacis.container.JacisTransactionHandle;
+import org.jacis.exception.JacisModificationListenerException;
+import org.jacis.exception.JacisTrackedViewModificationException;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.dirtycheck.JacisDirtyCheck;
 import org.slf4j.Logger;
@@ -84,6 +86,7 @@ class StoreTxDemarcationExecutor {
     if (trace) {
       logger.trace("internalCommit {} on {} by Thread {}", txView, store, Thread.currentThread().getName());
     }
+    RuntimeException toThrow = null;
     try {
       for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
         K key = entryTxView.getKey();
@@ -92,7 +95,15 @@ class StoreTxDemarcationExecutor {
           if (trace) {
             logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
           }
-          trackModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
+          try {
+            trackModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
+          } catch (JacisTrackedViewModificationException e) {
+            if (toThrow == null) {
+              toThrow = e;
+            } else {
+              toThrow.addSuppressed(e);
+            }
+          }
           entryCommitted.update(entryTxView, txView);
         }
         entryCommitted.releaseLockedFor(txView);
@@ -100,6 +111,9 @@ class StoreTxDemarcationExecutor {
       }
     } finally { // even if exceptions occur TX view has to be destroyed! See https://github.com/JanWiemer/jacis/issues/8
       txView.afterCommit();
+    }
+    if (toThrow != null) {
+      throw toThrow;
     }
   }
 
@@ -139,8 +153,26 @@ class StoreTxDemarcationExecutor {
 
   private <K, TV, CV> void trackModification(JacisStoreImpl<K, TV, CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
     assert store.getObjectTypeSpec().isTrackOriginalValueEnabled() : "Tracking modification is only possible if original value is tracked";
+    RuntimeException toThrow = null;
     for (JacisModificationListener<K, TV> listener : store.getModificationListeners()) {
-      listener.onModification(key, oldValue, newValue, tx);
+      RuntimeException modificationException = null;
+      try {
+        listener.onModification(key, oldValue, newValue, tx);
+      } catch (JacisTrackedViewModificationException e) {
+        modificationException = e;
+      } catch (Exception e) {
+        modificationException = new JacisModificationListenerException(store, listener, tx, key, oldValue, newValue, e);
+      }
+      if (modificationException != null) {
+        if (toThrow == null) {
+          toThrow = modificationException;
+        } else {
+          toThrow.addSuppressed(modificationException);
+        }
+      }
+    }
+    if (toThrow != null) {
+      throw toThrow;
     }
   }
 
