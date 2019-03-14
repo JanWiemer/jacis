@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
@@ -104,12 +105,13 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
   }
 
   public <VT extends TrackedView<TV>> VT getView(Class<VT> viewType) {
-    VT view = store.computeAtomic(() -> getAndCloneView(viewType));
-    JacisStoreTxView<K, TV, ?> txView = store.getTxView();
-    if (txView != null) {
-      for (StoreEntryTxView<K, TV, ?> entryTxView : txView.getAllEntryTxViews()) {
-        view.trackModification(entryTxView.getOrigValue(), entryTxView.getValue());
-      }
+    JacisStoreTxView<K, TV, ?> internelTxView = store.getTxView();
+    VT view;
+    if (internelTxView != null) {
+      Supplier<VT> viewSupplier = () -> store.computeAtomic(() -> getAndCloneView(viewType));
+      view = internelTxView.getTrackedView(viewType, viewSupplier);
+    } else { // view is created outside a transaction -> we can not and do not need to track any modification in any transaction
+      view = store.computeAtomic(() -> getAndCloneView(viewType));
     }
     return view;
   }
