@@ -189,11 +189,13 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
 
   @Override
   public void checkStale(K key) throws JacisStaleObjectException {
-    JacisStoreTxView<K, TV, CV> txView = getTxView();
-    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
-    if (entryTxView != null) {
-      entryTxView.assertNotStale(txView);
-    }
+    withWriteLock(runnableWrapper(() -> { // preventing concurrent modification of core store
+      JacisStoreTxView<K, TV, CV> txView = getTxView();
+      StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
+      if (entryTxView != null) {
+        entryTxView.assertNotStale(txView);
+      }
+    }));
   }
 
   @Override

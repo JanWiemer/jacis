@@ -86,23 +86,25 @@ class StoreEntryTxView<K, TV, CV> {
   }
 
   boolean isStale(JacisStoreTxView<K, TV, CV> txView) {
-    return origVersion < committedEntry.getVersion() || committedEntry.isLockedForOtherThan(txView);
+    StoreEntry<K, TV, CV> theCommittedEntry = committedEntry;
+    return theCommittedEntry == null || origVersion < theCommittedEntry.getVersion() || theCommittedEntry.isLockedForOtherThan(txView);
   }
 
   void assertNotStale(JacisStoreTxView<K, TV, CV> txView) throws JacisStaleObjectException {
-    if (committedEntry.isLockedForOtherThan(txView)) {
-      throwStale(txView);
+    StoreEntry<K, TV, CV> theCommittedEntry = committedEntry;
+    if (theCommittedEntry.isLockedForOtherThan(txView)) {
+      throwStale(theCommittedEntry, txView);
     } else if (origVersion < committedEntry.getVersion()) {
-      throwStale(txView);
+      throwStale(theCommittedEntry, txView);
     }
   }
 
-  private void throwStale(JacisStoreTxView<K, TV, CV> txView) throws JacisStaleObjectException {
-    JacisStoreAdminInterface<K, TV, CV> store = committedEntry.getStore();
+  private void throwStale(StoreEntry<K, TV, CV> theCommittedEntry, JacisStoreTxView<K, TV, CV> txView) throws JacisStaleObjectException {
+    JacisStoreAdminInterface<K, TV, CV> store = theCommittedEntry.getStore();
     StringBuilder msg = new StringBuilder();
     msg.append("Object ").append(getKey());
     msg.append(" updated by current TX ").append(txView.getTxId()).append(" (from v. ").append(getOrigVersion()).append(")");
-    JacisStoreTxView<K, TV, CV> lockedFor = committedEntry.getLockedFor();
+    JacisStoreTxView<K, TV, CV> lockedFor = theCommittedEntry.getLockedFor();
     String otherTxId = lockedFor != null ? lockedFor.getTxId() : committedEntry.getUpdatedByTxId();
     if (lockedFor != null && !lockedFor.equals(txView)) {
       msg.append(" was already updated by prepared other TX ");
@@ -117,12 +119,12 @@ class StoreEntryTxView<K, TV, CV> {
     if (store.getObjectTypeSpec().isTrackOriginalValueEnabled()) {
       details.append(" - original value          : ").append(getOrigValue()).append(" (v. ").append(getOrigVersion()).append(")").append("\n");
     }
-    details.append(" - committed value         : ").append(committedEntry.getValue()).append(" (v. ").append(committedEntry.getVersion()).append(")").append("\n");
+    details.append(" - committed value         : ").append(theCommittedEntry.getValue()).append(" (v. ").append(theCommittedEntry.getVersion()).append(")").append("\n");
     details.append(" - current TX: ").append(txView).append("\n");
     if (lockedFor != null) {
       details.append(" - other TX: ").append(lockedFor).append("\n");
     } else {
-      details.append(" - other TX: ").append(committedEntry.getUpdatedByTxId()).append("\n");
+      details.append(" - other TX: ").append(theCommittedEntry.getUpdatedByTxId()).append("\n");
     }
     details.append(" - store: ").append(store);
     throw new JacisStaleObjectException(msg.toString()).setDetails(details.toString());
