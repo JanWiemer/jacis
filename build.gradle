@@ -7,7 +7,7 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 group = 'org.jacis'
-version = '1.45'
+version = '1.46'
 version = Boolean.getBoolean("releasebuild") ? "$version" : "$version-SNAPSHOT"
 //version = "$version" 
 
@@ -137,9 +137,9 @@ repositories {
 }
 
 dependencies {
-    runtime group: 'org.slf4j', name: 'slf4j-api', version: '1.7.7'
-    runtime group: 'org.slf4j', name: 'slf4j-ext', version: '1.7.7'
-    runtime group: 'org.slf4j', name: 'slf4j-api', version: '1.7.7'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.7'
+    compile group: 'org.slf4j', name: 'slf4j-ext', version: '1.7.7'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.7'
     compile group: 'ch.qos.logback', name: 'logback-core', version: '1.1.2'
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.2'
     compile group: 'javax.transaction', name: 'jta', version: '1.1'

@@ -48,7 +48,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   /** the number of updated entries of this TX view */
   private int numberOfUpdatedEntries = 0;
   /** tracked views by this transaction view. The tracked views in this map are kept up-to-date during the current TX */
-  private final Map<Class<? extends TrackedView<TV>>, TrackedViewTransactionLocal<K, TV>> trackedViews;
+  private final Map<String, TrackedViewTransactionLocal<K, TV>> trackedViews;
 
   JacisStoreTxView(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
     this.store = store;
@@ -204,17 +204,17 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   }
 
   @SuppressWarnings("unchecked")
-  <VT extends TrackedView<TV>> VT getTrackedView(Class<VT> viewType, Supplier<VT> initialViewSupplier) {
-    if (!this.trackedViews.containsKey(viewType)) {
+  <VT extends TrackedView<TV>> VT getTrackedView(String viewName, Supplier<VT> initialViewSupplier) {
+    if (!this.trackedViews.containsKey(viewName)) {
       VT view = initialViewSupplier.get();
       TrackedViewTransactionLocal<K, TV> local = new TrackedViewTransactionLocal<>(view);
 
       for (StoreEntryTxView<K, TV, ?> entryTxView : getAllEntryTxViews()) {
         local.trackModification(entryTxView.getOrigValue(), entryTxView.getValue(), entryTxView);
       }
-      this.trackedViews.put(viewType, local);
+      this.trackedViews.put(viewName, local);
     }
-    return (VT) this.trackedViews.get(viewType).getTrackedView();
+    return (VT) this.trackedViews.get(viewName).getTrackedView();
   }
 
   @Override
