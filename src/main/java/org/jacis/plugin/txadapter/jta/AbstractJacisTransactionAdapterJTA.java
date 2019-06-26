@@ -152,7 +152,8 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
       String txId = computeJacisTxId(tx, txNr);
       String txDescription = computeJacisTxDescription(tx, txId);
       JacisTransactionHandle txHandle = new JacisTransactionHandle(txId, txDescription, tx);
-      tx.registerSynchronization(new JacisSync(container, txHandle));
+      Synchronization jacisSyncronization = new JacisSync(container, txHandle);
+      registerJacisSynchronization(tx, jacisSyncronization);
       transactionMap.put(tx, txHandle);
       if (log.isTraceEnabled()) {
         log.trace("{} created new handle [{}] for JTA-Tx=[{}]. Thread: {}", this, txHandle, tx, Thread.currentThread().getName());
@@ -161,6 +162,10 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
     } catch (SystemException | RollbackException e) {
       throw new JacisTransactionException(e);
     }
+  }
+
+  protected void registerJacisSynchronization(Transaction tx, Synchronization jacisSyncronization) throws RollbackException, SystemException {
+    tx.registerSynchronization(jacisSyncronization);
   }
 
   @Override
