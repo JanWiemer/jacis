@@ -200,19 +200,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
 
   @Override
   public TV get(K key) {
-    return getOrCreateEntryTxView(getOrCreateTxView(), key).getValue();
+    return get(key, getOrCreateTxView());
   }
 
   @Override
   public TV getReadOnly(K key) {
-    JacisStoreTxView<K, TV, CV> txView = getTxView();
-    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
-    if (entryTxView != null) {
-      return entryTxView.getValue();
-    } else {
-      StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
-      return committedEntry == null ? null : objectAdapter.cloneCommitted2ReadOnlyTxView(committedEntry.getValue());
-    }
+    return getReadOnly(key, getTxView());
   }
 
   @Override
@@ -227,18 +220,22 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
 
   @Override
   public Stream<TV> stream() { // Note this method will clone all objects into the TX view!
-    return keyStream().map(this::get).filter(Objects::nonNull);
+    JacisStoreTxView<K, TV, CV> txView = getOrCreateTxView();
+    return keyStream().map(k -> get(k, txView)).filter(Objects::nonNull);
   }
 
   @Override
   public Stream<TV> streamReadOnly() {
-    return keyStream().map(this::getReadOnly).filter(Objects::nonNull);
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    return keyStream().map(k -> getReadOnly(k, txView)).filter(Objects::nonNull);
   }
 
   @Override
   public Stream<TV> stream(Predicate<TV> filter) {
     if (filter != null) {
-      return keyStream().map(k -> pair(k, getReadOnly(k))).filter(e -> e.val != null && filter.test(e.val)).map(e -> get(e.key));
+      JacisStoreTxView<K, TV, CV> txView = getTxView();
+      JacisStoreTxView<K, TV, CV> txViewNew = getOrCreateTxView();
+      return keyStream().map(k -> pair(k, getReadOnly(k, txView))).filter(e -> e.val != null && filter.test(e.val)).map(e -> get(e.key, txViewNew));
     } else {
       return stream();
     }
@@ -247,7 +244,8 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   @Override
   public Stream<TV> streamReadOnly(Predicate<TV> filter) {
     if (filter != null) {
-      return keyStream().map(this::getReadOnly).filter(v -> v != null && filter.test(v));
+      JacisStoreTxView<K, TV, CV> txView = getTxView();
+      return keyStream().map(k -> getReadOnly(k, txView)).filter(v -> v != null && filter.test(v));
     } else {
       return streamReadOnly();
     }
@@ -474,6 +472,24 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   @Override
   protected void internalDestroy(JacisTransactionHandle transaction) {
     withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeDestroy(this, transaction)));
+  }
+
+  //======================================================================================
+  // helper methods to access entries
+  //======================================================================================
+
+  private TV getReadOnly(K key, JacisStoreTxView<K, TV, CV> txView) {
+    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
+    if (entryTxView != null) {
+      return entryTxView.getValue();
+    } else {
+      StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
+      return committedEntry == null ? null : objectAdapter.cloneCommitted2ReadOnlyTxView(committedEntry.getValue());
+    }
+  }
+
+  public TV get(K key, JacisStoreTxView<K, TV, CV> txView) {
+    return getOrCreateEntryTxView(txView, key).getValue();
   }
 
   //======================================================================================

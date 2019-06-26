@@ -50,7 +50,7 @@ public interface JacisObjectAdapter<TV, CV> {
 
   /**
    * Clone a committed version of the object into a read only transactional view.
-   * Modifications ob the read only view must not be possible (lead to an exception).
+   * Modifications of the read only view must not be possible (lead to an exception).
    * As an optimization it is allowed to skip a real cloning here since the returned object is guaranteed to be read only.
    * Note that a difference using read only views where cloning is skipped is that a repeated read of the same object
    * may return different versions of the object if another transaction committed a newer version between both reads.
