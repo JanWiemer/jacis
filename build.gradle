@@ -7,7 +7,7 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 group = 'org.jacis'
-version = '1.47'
+version = '1.48'
 version = Boolean.getBoolean("releasebuild") ? "$version" : "$version-SNAPSHOT"
 //version = "$version" 
 
