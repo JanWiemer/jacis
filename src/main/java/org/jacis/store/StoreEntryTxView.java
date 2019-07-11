@@ -29,8 +29,8 @@ class StoreEntryTxView<K, TV, CV> {
   private boolean updated = false;
 
   StoreEntryTxView(StoreEntry<K, TV, CV> committedEntry, boolean trackOriginal) {
-    JacisObjectAdapter<TV, CV> ca = committedEntry.getStore().getObjectAdapter();
     this.committedEntry = committedEntry;
+    JacisObjectAdapter<TV, CV> ca = committedEntry.getStore().getObjectAdapter();
     this.txValue = ca.cloneCommitted2WritableTxView(committedEntry.getValue());
     this.origVersion = committedEntry.getVersion();
     if (trackOriginal) {
@@ -51,6 +51,18 @@ class StoreEntryTxView<K, TV, CV> {
   void updateValue(TV newValue) {
     this.txValue = newValue;
     this.updated = true;
+  }
+
+  void refreshFromCommitted() {
+    JacisObjectAdapter<TV, CV> ca = committedEntry.getStore().getObjectAdapter();
+    this.txValue = ca.cloneCommitted2WritableTxView(committedEntry.getValue());
+    this.origVersion = committedEntry.getVersion();
+    if (origValue != null) {
+      origValue = ca.cloneCommitted2WritableTxView(committedEntry.getValue());
+    } else {
+      origValue = null;
+    }
+    this.updated = false;
   }
 
   StoreEntry<K, TV, CV> getCommittedEntry() {

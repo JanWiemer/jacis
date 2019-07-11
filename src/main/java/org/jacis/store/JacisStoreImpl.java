@@ -310,7 +310,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   public TV refresh(K key) { // refresh with committed version -> discard all changes made by the current TX
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     if (txView != null) {
-      txView.removeTxViewEntry(key, true);
+      txView.refreshTxViewEntryFromCommitted(key, true);
     }
     return get(key);
   }
@@ -319,7 +319,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   public TV refreshIfNotUpdated(K key) { // if not updated: refresh with committed version -> discard all changes made by the current TX
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     if (txView != null) {
-      txView.removeTxViewEntry(key, false);
+      txView.refreshTxViewEntryFromCommitted(key, false);
     }
     return get(key);
   }

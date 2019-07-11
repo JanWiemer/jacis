@@ -61,7 +61,7 @@ public interface JacisObjectAdapter<TV, CV> {
 
   /**
    * Convert a transactional view of an object into a read only representation of this object.
-   * Modifications ob the read only view must not be possible (lead to an exception).
+   * Modifications of the read only view must not be possible (lead to an exception).
    * @param value A transactional view for the passed object.
    * @return A read only transactional view for the passed object.
    */

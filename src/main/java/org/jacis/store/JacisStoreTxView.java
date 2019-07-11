@@ -147,16 +147,22 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
     return entry;
   }
 
-  boolean removeTxViewEntry(K key, boolean forceIfUpdated) {
-    StoreEntryTxView<K, TV, CV> entry = storeTxView.get(key);
-    if (entry != null && entry.isUpdated()) {
-      if (!forceIfUpdated) {
-        return false;
+  boolean refreshTxViewEntryFromCommitted(K key, boolean forceIfUpdated) {
+    StoreEntryTxView<K, TV, CV> entryTxView = storeTxView.get(key);
+    if (entryTxView != null) {
+      if (entryTxView.isUpdated()) {
+        if (!forceIfUpdated) {
+          return false;
+        }
+        numberOfUpdatedEntries--; // removed an updated element
       }
-      numberOfUpdatedEntries--; // removed an updated element
+      TV oldOrigValue = entryTxView.getOrigValue();
+      entryTxView.refreshFromCommitted();
+      TV newValue = entryTxView.getValue();
+      for (TrackedViewTransactionLocal<K, TV> trackedView : trackedViews.values()) {
+        trackedView.trackModification(oldOrigValue, newValue, entryTxView);
+      }
     }
-    storeTxView.remove(key);
-    numberOfEntries = storeTxView.size();
     return true;
   }
 

@@ -19,7 +19,7 @@ public class StoreEntryInfo<K, TV> {
   /** version of the committed entry in the core store */
   private final long committedVersion;
   /** transaction ID of the transaction that committed the committed entry */
-  private final String committedVersionLastCommitter;
+  private final String committedVersionLastCommitterTx;
   /** transaction ID of the transaction currently locking the committed entry (for commit) */
   private final String committedVersionLockedForTx;
   /** original version of the transactional view of the entry (the version from the committet entry at the time it was cloned to the TX view) */
@@ -34,18 +34,20 @@ public class StoreEntryInfo<K, TV> {
   private final String txViewValueString;
   /** String representation of the original value of the transactional view of the entry (az the time it was cloned to the TX view) */
   private final String originalTxViewValueString;
+  /** transaction ID of the transaction currently holding the TX view */
+  private final String currentViewingTx;
 
   <CV> StoreEntryInfo(K key, StoreEntry<K, TV, CV> committedEntry, StoreEntryTxView<K, TV, CV> entryTxView, JacisStoreTxView<K, TV, CV> txView) {
     this.key = key;
     if (committedEntry != null) {
       committedVersion = committedEntry.getVersion();
-      committedVersionLastCommitter = committedEntry.getUpdatedByTxId();
+      committedVersionLastCommitterTx = committedEntry.getUpdatedByTxId();
       committedValueString = String.valueOf(committedEntry.getValue());
       JacisStoreTxView<K, TV, ?> lf = committedEntry.getLockedFor();
       committedVersionLockedForTx = lf == null ? null : lf.getTxId();
     } else {
       committedVersion = -1;
-      committedVersionLastCommitter = null;
+      committedVersionLastCommitterTx = null;
       committedValueString = null;
       committedVersionLockedForTx = null;
     }
@@ -55,12 +57,14 @@ public class StoreEntryInfo<K, TV> {
       txViewOrigVersion = entryTxView.getOrigVersion();
       txViewUpdated = entryTxView.isUpdated();
       txViewStale = entryTxView.isStale(txView);
+      currentViewingTx = txView.getTxId();
     } else {
       txViewValueString = null;
       originalTxViewValueString = null;
       txViewOrigVersion = committedVersion;
       txViewUpdated = false;
       txViewStale = false;
+      currentViewingTx = null;
     }
   }
 
@@ -77,7 +81,7 @@ public class StoreEntryInfo<K, TV> {
   }
 
   public String getCommittedVersionLastCommitter() {
-    return committedVersionLastCommitter;
+    return committedVersionLastCommitterTx;
   }
 
   public String getCommittedVersionLockedForTx() {
@@ -86,6 +90,10 @@ public class StoreEntryInfo<K, TV> {
 
   public long getTxViewOrigVersion() {
     return txViewOrigVersion;
+  }
+
+  public String getCurrentViewingTx() {
+    return currentViewingTx;
   }
 
   public boolean hasTxView() {
@@ -116,14 +124,15 @@ public class StoreEntryInfo<K, TV> {
     StringBuilder b = new StringBuilder();
     b.append("key=").append(key);
     if (hasTxView()) {
-      b.append(" TxView(v. ").append(txViewOrigVersion).append(txViewUpdated ? "+" : "").append(")");
+      b.append(" TxView(v. ").append(txViewOrigVersion).append(txViewUpdated ? "+" : "").append(", tx=").append(currentViewingTx).append(")");
     } else {
       b.append(" Np-TxView");
     }
     if (txViewStale) {
       b.append("[STALE]");
     }
-    b.append(" Committed(v. ").append(committedVersion).append(committedVersionLockedForTx != null ? "-locked" : "").append(")");
+    b.append(" Committed(v. ").append(committedVersion).append(committedVersionLockedForTx != null ? "-lockedByTx=" + committedVersionLockedForTx : "");
+    b.append(", lastTx=").append(committedVersionLastCommitterTx).append(")");
     return b.toString();
   }
 
@@ -133,12 +142,13 @@ public class StoreEntryInfo<K, TV> {
     b.append("key=").append(key);
     b.append(", txVal=").append(txViewValueString == null ? "-" : txViewValueString);
     b.append(", txOrigVal=").append(originalTxViewValueString == null ? "-" : originalTxViewValueString);
-    b.append(" (v. ").append(txViewOrigVersion).append(txViewUpdated ? "+" : "").append(")");
+    b.append(" (v. ").append(txViewOrigVersion).append(txViewUpdated ? "+" : "").append(", tx=").append(currentViewingTx).append(")");
     if (txViewStale) {
       b.append("[STALE]");
     }
     b.append(", committedVal=").append(committedValueString);
-    b.append(" (v. ").append(committedVersion).append(committedVersionLockedForTx != null ? "-locked" : "").append(")");
+    b.append(" (v. ").append(committedVersion).append(committedVersionLockedForTx != null ? "-lockedByTx=" + committedVersionLockedForTx : "");
+    b.append(", lastTx=").append(committedVersionLastCommitterTx).append(")");
     return b.toString();
   }
 }
