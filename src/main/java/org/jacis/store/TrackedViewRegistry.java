@@ -81,8 +81,8 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
     return (VT) view.clone();
   }
 
-  public <VT extends TrackedView<TV>> void reinitializeView(Class<VT> viewType) {
-    store.executeAtomic(() -> initTrackedView(getView(viewType)));
+  public <VT extends TrackedView<TV>> void reinitializeView(String viewName) {
+    store.executeAtomic(() -> initTrackedView(getView(viewName)));
   }
 
   private void initTrackedView(TrackedView<TV> view) {
@@ -211,6 +211,10 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
 
   public <VT extends TrackedView<TV>, VK> VT getSubView(Class<? extends TrackedViewClustered<TV, VK, VT>> viewType, VK subviewKey) {
     return getSubView(getDefaultNameForViewClass(viewType), subviewKey);
+  }
+
+  public <VT extends TrackedView<TV>> void reinitializeView(Class<VT> viewType) {
+    store.executeAtomic(() -> initTrackedView(getView(viewType)));
   }
 
 }
