@@ -210,17 +210,33 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   }
 
   @SuppressWarnings("unchecked")
-  <VT extends TrackedView<TV>> VT getTrackedView(String viewName, Supplier<VT> initialViewSupplier) {
-    if (!this.trackedViews.containsKey(viewName)) {
+  private <VT extends TrackedView<TV>> VT internalGetTrackedView(String internalViewKey, Supplier<VT> initialViewSupplier) {
+    if (!this.trackedViews.containsKey(internalViewKey)) {
       VT view = initialViewSupplier.get();
       TrackedViewTransactionLocal<K, TV> local = new TrackedViewTransactionLocal<>(view);
 
       for (StoreEntryTxView<K, TV, ?> entryTxView : getAllEntryTxViews()) {
         local.trackModification(entryTxView.getOrigValue(), entryTxView.getValue(), entryTxView);
       }
-      this.trackedViews.put(viewName, local);
+      this.trackedViews.put(internalViewKey, local);
     }
-    return (VT) this.trackedViews.get(viewName).getTrackedView();
+    return (VT) this.trackedViews.get(internalViewKey).getTrackedView();
+  }
+
+  <VT extends TrackedView<TV>> VT getTrackedView(String viewName, Supplier<VT> initialViewSupplier) {
+    return internalGetTrackedView("V:" + viewName, initialViewSupplier);
+  }
+
+  <VT extends TrackedView<TV>> VT getTrackedSubView(String viewName, Object subViewKey, Supplier<VT> initialViewSupplier) {
+    return internalGetTrackedView("SV:" + viewName + "-" + subViewKey, initialViewSupplier);
+  }
+
+  boolean containsTrackedView(String viewName) {
+    return this.trackedViews.containsKey(viewName);
+  }
+
+  boolean containsTrackedSubView(String viewName, Object subViewKey) {
+    return this.trackedViews.containsKey("SV:" + viewName + "-" + subViewKey);
   }
 
   @Override

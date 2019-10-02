@@ -72,15 +72,6 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private <VT extends TrackedView<TV>> VT getAndCloneView(String viewName) {
-    VT view = (VT) viewMap.get(viewName);
-    if (view == null) {
-      throw new IllegalArgumentException("No tracked view with name " + viewName + " registered! All registered views: " + viewMap.keySet());
-    }
-    return (VT) view.clone();
-  }
-
   public <VT extends TrackedView<TV>> void reinitializeView(String viewName) {
     store.executeAtomic(() -> initTrackedView(getView(viewName)));
   }
@@ -125,14 +116,20 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
 
   public <VT extends TrackedView<TV>> VT getView(String viewName) {
     JacisStoreTxView<K, TV, ?> internelTxView = store.getTxView();
-    VT view;
-    if (internelTxView != null) {
-      Supplier<VT> viewSupplier = () -> store.computeAtomic(() -> getAndCloneView(viewName));
-      view = internelTxView.getTrackedView(viewName, viewSupplier);
-    } else { // view is created outside a transaction -> we can not and do not need to track any modification in any transaction
-      view = store.computeAtomic(() -> getAndCloneView(viewName));
+    if (internelTxView == null) { // view is created outside a transaction -> we can not and do not need to track any modification in any transaction
+      return store.computeAtomic(() -> getAndCloneView(viewName));
     }
-    return view;
+    Supplier<VT> viewSupplier = () -> store.computeAtomic(() -> getAndCloneView(viewName));
+    return internelTxView.getTrackedView(viewName, viewSupplier);
+  }
+
+  @SuppressWarnings("unchecked")
+  private <VT extends TrackedView<TV>> VT getAndCloneView(String viewName) {
+    VT view = (VT) viewMap.get(viewName);
+    if (view == null) {
+      throw new IllegalArgumentException("No tracked view with name " + viewName + " registered! All registered views: " + viewMap.keySet());
+    }
+    return (VT) view.clone();
   }
 
   @SuppressWarnings("unchecked")
@@ -156,24 +153,34 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
 
   @SuppressWarnings("unchecked")
   public <VT extends TrackedView<TV>, VK> VT getSubView(String viewName, VK subviewKey) {
-    VT subViewClone = store.computeAtomic(() -> {
-      TrackedView<TV> view = viewMap.get(viewName);
-      if (view == null) {
-        throw new IllegalArgumentException("No tracked view with name " + viewName + " registered! All registered views: " + viewMap.keySet());
-      } else if (!TrackedViewClustered.class.isInstance(view)) {
+    JacisStoreTxView<K, TV, ?> internalTxView = store.getTxView();
+    if (internalTxView == null) { // sub-view is created outside a transaction -> we can not and do not need to track any modification in any transaction
+      return store.computeAtomic(() -> getAndCloneSubView(viewName, subviewKey));
+    }
+    if (internalTxView.containsTrackedView(viewName)) { // whole view already tracked at the TX view -> we do not need to clone the sub-view again
+      TrackedView<TV> view = internalTxView.getTrackedView(viewName, null);
+      if (!TrackedViewClustered.class.isInstance(view)) {
         throw new IllegalArgumentException("The view registered for the name " + viewName + " is no instance of " + TrackedViewClustered.class + "! view: " + view);
       }
       TrackedViewClustered<TV, VK, TrackedView<TV>> clusteredView = (TrackedViewClustered<TV, VK, TrackedView<TV>>) view;
       TrackedView<TV> subView = Objects.requireNonNull(clusteredView.getSubView(subviewKey), "No sub-view found for key " + subviewKey);
-      return (VT) subView.clone();
-    });
-    JacisStoreTxView<K, TV, ?> txView = store.getTxView();
-    if (txView != null) {
-      for (StoreEntryTxView<K, TV, ?> entryTxView : txView.getAllEntryTxViews()) {
-        subViewClone.trackModification(entryTxView.getOrigValue(), entryTxView.getValue());
-      }
+      return (VT) subView;
     }
-    return subViewClone;
+    Supplier<VT> subViewSupplier = () -> store.computeAtomic(() -> getAndCloneSubView(viewName, subviewKey));
+    return internalTxView.getTrackedSubView(viewName, subviewKey, subViewSupplier);
+  }
+
+  @SuppressWarnings("unchecked")
+  private <VT extends TrackedView<TV>, VK> VT getAndCloneSubView(String viewName, VK subviewKey) {
+    TrackedView<TV> view = viewMap.get(viewName);
+    if (view == null) {
+      throw new IllegalArgumentException("No tracked view with name " + viewName + " registered! All registered views: " + viewMap.keySet());
+    } else if (!TrackedViewClustered.class.isInstance(view)) {
+      throw new IllegalArgumentException("The view registered for the name " + viewName + " is no instance of " + TrackedViewClustered.class + "! view: " + view);
+    }
+    TrackedViewClustered<TV, VK, TrackedView<TV>> clusteredView = (TrackedViewClustered<TV, VK, TrackedView<TV>>) view;
+    TrackedView<TV> subView = Objects.requireNonNull(clusteredView.getSubView(subviewKey), "No sub-view found for key " + subviewKey);
+    return (VT) subView.clone();
   }
 
   // deprecated view management methods:
