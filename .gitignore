@@ -19,3 +19,4 @@ junit*.properties
 log
 test-output
 ivysettings-local.xml
+/bin/
