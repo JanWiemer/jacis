@@ -61,7 +61,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   /** A Map assigning each active transaction handle the transactional view on this store */
   private final Map<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>> txViewMap = Collections.synchronizedMap(new WeakHashMap<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>>());
   /** Mutex / Lock to synchronize changes on the committed entries of the store (specially during internalCommit) */
-  private final ReadWriteLock storeAccessLock = new ReentrantReadWriteLock(true);
+  private final ReadWriteLock storeAccessLock;
   /** The object adapter defining how to copy objects from the committed view to a transactional view and back */
   private final JacisObjectAdapter<TV, CV> objectAdapter;
   /** The registry of tracked views for this store that are kept up to date on each commit automatically */
@@ -75,6 +75,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     this.spec = spec;
     this.objectAdapter = spec.getObjectAdapter();
     this.trackedViewRegistry = new TrackedViewRegistry<>(this, spec.isCheckViewsOnCommit());
+    this.storeAccessLock = spec.isSyncStoreOnContainerTransaction() ? container.getTransactionDemarcationLock() : new ReentrantReadWriteLock(true); // by default the store accesses are synced on the whole container TX
     registerModificationListener(trackedViewRegistry);
   }
 

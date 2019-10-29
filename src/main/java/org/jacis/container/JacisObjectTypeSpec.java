@@ -48,6 +48,8 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   private boolean trackOriginalValue = false;
   /** Defines if all registered tracked views are checked for consistency on each internalCommit (default: 'false'). */
   private boolean checkViewsOnCommit = false;
+  /** Defines if the read and write locks of the store sync on the global lock of the container synchronizing the whole prepare and commit phases for the container transaction. */
+  private boolean syncStoreOnContainerTransaction = true;
 
   public JacisObjectTypeSpec(Class<K> keyClass, Class<TV> valueClass, JacisObjectAdapter<TV, CV> objectAdapter) {
     this.keyClass = keyClass;
@@ -55,6 +57,7 @@ public class JacisObjectTypeSpec<K, TV, CV> {
     this.objectAdapter = objectAdapter;
     trackOriginalValue = true;
     checkViewsOnCommit = false;
+    syncStoreOnContainerTransaction = true;
   }
 
   /** @return The type of the keys in the store */
@@ -109,6 +112,11 @@ public class JacisObjectTypeSpec<K, TV, CV> {
     return checkViewsOnCommit;
   }
 
+  /** @return if the read and write locks of the store sync on the global lock of the container synchronizing the whole prepare and commit phases for the container transaction. (default: 'true'). */
+  public boolean isSyncStoreOnContainerTransaction() {
+    return syncStoreOnContainerTransaction;
+  }
+
   /**
    * Sets if all registered tracked views are checked for consistency on each internalCommit (default: 'false').
    * Note that the value should only be set before the corresponding store is used, otherwise the behavior is undefined.
@@ -142,6 +150,17 @@ public class JacisObjectTypeSpec<K, TV, CV> {
    */
   public JacisObjectTypeSpec<K, TV, CV> setTrackOriginalValue(boolean trackOriginalValue) {
     this.trackOriginalValue = trackOriginalValue;
+    return this;
+  }
+
+  /**
+   * Sets if the read and write locks of the store sync on the global lock of the container synchronizing the whole prepare and commit phases for the container transaction. (default: 'true').
+   * 
+   * @param syncStoreOnContainerTransaction Defining if the read and write locks of the store sync on the global lock of the container synchronizing the whole prepare and commit phases for the container transaction.
+   * @return The object type specification itself for method chaining.
+   */
+  public JacisObjectTypeSpec<K, TV, CV> setSyncStoreOnContainerTransaction(boolean syncStoreOnContainerTransaction) {
+    this.syncStoreOnContainerTransaction = syncStoreOnContainerTransaction;
     return this;
   }
 

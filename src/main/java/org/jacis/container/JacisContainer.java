@@ -451,6 +451,10 @@ public class JacisContainer {
     };
   }
 
+  public ReadWriteLock getTransactionDemarcationLock() {
+    return transactionDemarcationLock;
+  }
+
   private <R> R withReadLock(Supplier<R> task) {
     transactionDemarcationLock.readLock().lock(); // <======= **READ** LOCK =====
     try {
