@@ -37,4 +37,10 @@ public interface JacisModificationListener<K, V> {
    */
   void onModification(K key, V oldValue, V newValue, JacisTransactionHandle tx);
 
+  /**
+   * @return if the implementation of the modification listener is thread safe. Default is <code>false</code>. Overwrite this method to declare a view to be thread safe.
+   */
+  default boolean isThreadSafe() {
+    return false;
+  }
 }

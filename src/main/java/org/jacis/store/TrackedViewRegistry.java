@@ -53,6 +53,11 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
   }
 
   @Override
+  public boolean isThreadSafe() {
+    return viewMap.values().stream().allMatch(v -> v.isThreadSafe()); // the tracked view registry is thread safe when all views are thread safe.
+  }
+
+  @Override
   public void onModification(K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
     JacisTrackedViewModificationException toThrow = null;
     for (TrackedView<TV> view : viewMap.values()) {

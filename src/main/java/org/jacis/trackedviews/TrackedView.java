@@ -55,4 +55,11 @@ public interface TrackedView<V> extends JacisCloneable<TrackedView<V>> {
    */
   void clear();
 
+  /**
+   * @return if the implementation of the view is thread safe. Default is <code>false</code>. Overwrite this method to declare a view to be thread safe.
+   */
+  default boolean isThreadSafe() {
+    return false;
+  }
+
 }

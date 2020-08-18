@@ -356,8 +356,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
                 TV val = valueExtractor.apply(entry);
                 store.put(key, new StoreEntry<K, TV, CV>(JacisStoreImpl.this, key, val));
                 for (JacisModificationListener<K, TV> listener : modListeners) {
-                  synchronized (listener) {
-                    listener.onModification(key, null, val, null);
+                  if (listener.isThreadSafe()) {
+                    listener.onModification(key, null, val, null); // for performance reasons we skip synchronization if listener is thread safe
+                  } else {
+                    synchronized (listener) { // if listener is *not* thread safe we need to synchronize access on the listener (note: we are initializing the store with multiple threads)
+                      listener.onModification(key, null, val, null);
+                    }
                   }
                 }
               }
