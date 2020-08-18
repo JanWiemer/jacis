@@ -52,9 +52,19 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
     }
   }
 
+  /** cached value if all views are thread safe */
+  private Boolean threadSafe;
+
   @Override
   public boolean isThreadSafe() {
-    return viewMap.values().stream().allMatch(v -> v.isThreadSafe()); // the tracked view registry is thread safe when all views are thread safe.
+    if (threadSafe == null) {
+      threadSafe = viewMap.values().stream().allMatch(v -> v.isThreadSafe());
+    }
+    return threadSafe.booleanValue(); // the tracked view registry is thread safe when all views are thread safe.
+  }
+
+  private void clearThreadSafeCache() {
+    threadSafe = null;
   }
 
   @Override
@@ -97,6 +107,7 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
 
   void clearViews() {
     viewMap.values().forEach(TrackedView::clear);
+    clearThreadSafeCache();
   }
 
   public Collection<TrackedView<TV>> getAllViews() {
@@ -113,6 +124,7 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
     }
     store.executeAtomic(() -> initTrackedView(view));
     viewMap.put(viewName, view);
+    clearThreadSafeCache();
   }
 
   public boolean containsView(String viewName) {

@@ -341,6 +341,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
           }
         }
       } else {
+        boolean allModificationListenersThreadSafe = modListeners.stream().allMatch(l -> l.isThreadSafe());
         int usedThreads = Math.min(nThreads, entries.size() / 100);
         List<Thread> threads = new ArrayList<Thread>(usedThreads);
         int perThread = (entries.size() - 1) / usedThreads + 1;
@@ -350,22 +351,34 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
           threads.add(new Thread("initStoreThread" + threadNr + "[" + from + "-" + to + " for " + JacisStoreImpl.this + "]") {
             @Override
             public void run() {
-              for (int idx = from; idx < to; idx++) {
-                ST entry = entries.get(idx);
-                K key = keyExtractor.apply(entry);
-                TV val = valueExtractor.apply(entry);
-                store.put(key, new StoreEntry<K, TV, CV>(JacisStoreImpl.this, key, val));
-                for (JacisModificationListener<K, TV> listener : modListeners) {
-                  if (listener.isThreadSafe()) {
+              if (allModificationListenersThreadSafe) { // THREADSAFE
+                for (int idx = from; idx < to; idx++) {
+                  ST entry = entries.get(idx);
+                  K key = keyExtractor.apply(entry);
+                  TV val = valueExtractor.apply(entry);
+                  store.put(key, new StoreEntry<K, TV, CV>(JacisStoreImpl.this, key, val));
+                  for (JacisModificationListener<K, TV> listener : modListeners) {
                     listener.onModification(key, null, val, null); // for performance reasons we skip synchronization if listener is thread safe
-                  } else {
-                    synchronized (listener) { // if listener is *not* thread safe we need to synchronize access on the listener (note: we are initializing the store with multiple threads)
-                      listener.onModification(key, null, val, null);
+                  }
+                } // end of for loop 
+              } else { // NOT THREADSAFE
+                for (int idx = from; idx < to; idx++) {
+                  ST entry = entries.get(idx);
+                  K key = keyExtractor.apply(entry);
+                  TV val = valueExtractor.apply(entry);
+                  store.put(key, new StoreEntry<K, TV, CV>(JacisStoreImpl.this, key, val));
+                  for (JacisModificationListener<K, TV> listener : modListeners) {
+                    if (listener.isThreadSafe()) {
+                      listener.onModification(key, null, val, null); // for performance reasons we skip synchronization if listener is thread safe
+                    } else {
+                      synchronized (listener) { // if listener is *not* thread safe we need to synchronize access on the listener (note: we are initializing the store with multiple threads)
+                        listener.onModification(key, null, val, null);
+                      }
                     }
                   }
-                }
-              }
-            }
+                } // end of for loop 
+              } // end of THREADSAFE if ... else ... block
+            } // end of run() method
           });
         }
         threads.forEach(t -> t.start());
