@@ -12,7 +12,7 @@ import org.jacis.store.JacisStoreImpl;
 /**
  * A tracked view can be registered at a JACIS store to automatically keep a view (typically some accumulated values) up to date.
  * The store keeps the registered instance and tracks all committed changes at this instance.
- * Accessing a tracked view always causes the JACIS store to create a snapshot (a cloned instance) of the view maintained in the store (only reflecting committed modifications) 
+ * Accessing a tracked view always causes the JACIS store to create a snapshot (a cloned instance) of the view maintained in the store (only reflecting committed modifications)
  * On access the modifications pending in the current TX are tracked on the snapshot.
  * Modifications done in afterwards in the same transaction as getting the tracked view are tracked as well on the snapshot.
  * 
@@ -44,6 +44,7 @@ public interface TrackedView<V> extends JacisCloneable<TrackedView<V>> {
    * Usually the implementation goes through all these values and calculates the expected values of
    * the tracked view on these values. If these values differ from the actually tracked values the
    * method should throw an exception.
+   * 
    * @param values all committed values stored in the store (after the just finished commit)
    */
   void checkView(List<V> values);

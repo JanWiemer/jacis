@@ -38,7 +38,7 @@ public class JacisTrackedViewModificationException extends RuntimeException {
   }
 
   private static String computeMessage(JacisStoreImpl<?, ?, ?> store, TrackedView<?> view, JacisTransactionHandle transaction, Object key, Object oldValue, Object newValue, Exception e) {
-    return "Tracking modification for TX " + transaction.getTxId() + " on view " + view + " of store " + store.getStoreIdentifier() + " causes exception: >" + e.toString() + "<!" +//
+    return "Tracking modification for TX " + transaction.getTxId() + " on view " + view + " of store " + store.getStoreIdentifier() + " causes exception: >" + e.toString() + "<!" + //
         "(modifying object with key >" + key + "< from >" + oldValue + "< to >" + newValue + "<)";
   }
 

@@ -49,6 +49,7 @@ public abstract class JacisSerializationObjectAdapter<TV extends Serializable> i
 
   /**
    * De-serialize an object from the passed byte array.
+   * 
    * @param bytes The bytes from which to de-serialize the object.
    * @return The de-serialized object.
    */

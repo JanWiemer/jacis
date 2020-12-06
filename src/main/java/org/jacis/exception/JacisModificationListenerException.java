@@ -38,7 +38,7 @@ public class JacisModificationListenerException extends RuntimeException {
   }
 
   private static String computeMessage(JacisStoreImpl<?, ?, ?> store, JacisModificationListener<?, ?> listener, JacisTransactionHandle transaction, Object key, Object oldValue, Object newValue, Exception e) {
-    return "Tracking modification for TX " + transaction.getTxId() + " on listener " + listener + " of store " + store.getStoreIdentifier() + " causes exception: >" + e.toString() + "<!" +//
+    return "Tracking modification for TX " + transaction.getTxId() + " on listener " + listener + " of store " + store.getStoreIdentifier() + " causes exception: >" + e.toString() + "<!" + //
         "(modifying object with key >" + key + "< from >" + oldValue + "< to >" + newValue + "<)";
   }
 

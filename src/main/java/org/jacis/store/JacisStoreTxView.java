@@ -18,7 +18,7 @@ import org.jacis.trackedviews.TrackedView;
  * An entry is cloned to this view if a transaction reads it from the store unless it reads it in read only mode.
  * Modifications are always done only on the entries in the transactional view until the transaction is committed.
  *
- * @param <K> Key type of the store entry
+ * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer

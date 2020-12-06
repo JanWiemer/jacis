@@ -328,39 +328,39 @@ public interface JacisStore<K, TV> {
   TV refreshIfNotUpdated(K key);
 
   /**
-   * Initialize the store with the passed entries. 
+   * Initialize the store with the passed entries.
    * The actual key and value inserted into the store is computed by the passed extractor functions.
-   * Note that the method initializes the store in a non transactional manner. 
+   * Note that the method initializes the store in a non transactional manner.
    * The store has to be empty before. During initialization all commits are blocked.
-   * By passing the number of threads that shall insert the passed values 
+   * By passing the number of threads that shall insert the passed values
    * 
-   * @param entries The entries from which the store is initialized.
-   * @param keyExtractor Method to extract the key from an entry.
+   * @param entries        The entries from which the store is initialized.
+   * @param keyExtractor   Method to extract the key from an entry.
    * @param valueExtractor Method to extract the value from an entry.
-   * @param nThreads Number of threads to use for multythreaded inserts.
+   * @param nThreads       Number of threads to use for multythreaded inserts.
    */
   public <ST> void initStoreNonTransactional(List<ST> entries, Function<ST, K> keyExtractor, Function<ST, TV> valueExtractor, int nThreads);
 
   /**
-   * Initialize the store with the passed values. 
+   * Initialize the store with the passed values.
    * The key is computed by the passed extractor function.
-   * Note that the method initializes the store in a non transactional manner. 
+   * Note that the method initializes the store in a non transactional manner.
    * The store has to be empty before. During initialization all commits are blocked.
-   * By passing the number of threads that shall insert the passed values 
+   * By passing the number of threads that shall insert the passed values
    * 
-   * @param values The values the store is initialized with.
+   * @param values       The values the store is initialized with.
    * @param keyExtractor Method to extract the key from a value.
-   * @param nThreads Number of threads to use for multythreaded inserts.
+   * @param nThreads     Number of threads to use for multythreaded inserts.
    */
   public void initStoreNonTransactional(List<TV> values, Function<TV, K> keyExtractor, int nThreads);
 
   /**
-   * Initialize the store with the passed key-value pairs. 
-   * Note that the method initializes the store in a non transactional manner. 
+   * Initialize the store with the passed key-value pairs.
+   * Note that the method initializes the store in a non transactional manner.
    * The store has to be empty before. During initialization all commits are blocked.
-   * By passing the number of threads that shall insert the passed values 
+   * By passing the number of threads that shall insert the passed values
    * 
-   * @param entries The entries (key value pairs) from which the store is initialized.
+   * @param entries  The entries (key value pairs) from which the store is initialized.
    * @param nThreads Number of threads to use for multythreaded inserts.
    */
   public void initStoreNonTransactional(List<KeyValuePair<K, TV>> entries, int nThreads);

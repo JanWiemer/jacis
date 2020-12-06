@@ -23,7 +23,7 @@ public class JacisLocalTransaction {
    * Unique id for the transaction (set with the constructor)
    */
   private final String txId;
-  /** Reference to the container this local transaction belongs to (needed to commit / rollback a transaction)*/
+  /** Reference to the container this local transaction belongs to (needed to commit / rollback a transaction) */
   private JacisContainer jacisContainer;
   /** The transaction handle for this local transaction. Transaction handles are used inside the store to represent local or external transactions. */
   private JacisTransactionHandle jacisTransactionHandle;
@@ -52,6 +52,7 @@ public class JacisLocalTransaction {
    * Prepare the local transaction.
    * This method is calling the {@link JacisContainer#internalPrepare(JacisTransactionHandle)} method on the container
    * with the transaction handle associated with this local transaction.
+   * 
    * @throws JacisNoTransactionException Thrown if this local transaction is no longer active.
    */
   public void prepare() throws JacisNoTransactionException {
@@ -63,6 +64,7 @@ public class JacisLocalTransaction {
    * Commit the local transaction.
    * This method is calling the {@link JacisContainer#internalCommit(JacisTransactionHandle)} method on the container
    * with the transaction handle associated with this local transaction.
+   * 
    * @throws JacisNoTransactionException Thrown if this local transaction is no longer active.
    */
   public void commit() throws JacisNoTransactionException {
@@ -75,6 +77,7 @@ public class JacisLocalTransaction {
    * Rollback the local transaction.
    * This method is calling the {@link JacisContainer#internalRollback(JacisTransactionHandle)} method on the container
    * with the transaction handle associated with this local transaction.
+   * 
    * @throws JacisNoTransactionException Thrown if this local transaction is no longer active.
    */
   public void rollback() throws JacisNoTransactionException {

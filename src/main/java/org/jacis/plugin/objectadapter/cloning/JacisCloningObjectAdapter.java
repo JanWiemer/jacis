@@ -40,11 +40,12 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
    * Read only mode adapter used to switch objects from writable to read only mode if required and supported
    */
   private final JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapter;
-  /** Flag indicating if the object adapter should throw an exception if a read only mode is required, but not supported.*/
+  /** Flag indicating if the object adapter should throw an exception if a read only mode is required, but not supported. */
   private boolean throwIfMissingReadOnlyModeDetected = false;
 
   /**
    * Create a cloning object adapter with the passed read only mode adapter.
+   * 
    * @param readOnlyModeAdapters Adapter to switch an object between read-only and read-write mode (if supported).
    */
   @SuppressWarnings("WeakerAccess")
@@ -61,7 +62,8 @@ public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
 
   /**
    * Set the flag indicating if the object adapter should throw an exception if a read only mode is required, but not supported.
-   * @param throwIfMissingReadOnlyModeDetected  flag indicating if the object adapter should throw an exception if a read only mode is required, but not supported.
+   * 
+   * @param throwIfMissingReadOnlyModeDetected flag indicating if the object adapter should throw an exception if a read only mode is required, but not supported.
    * @return The current instance for method chaining
    */
   public JacisCloningObjectAdapter<V> setThrowIfMissingReadOnlyModeDetected(boolean throwIfMissingReadOnlyModeDetected) {

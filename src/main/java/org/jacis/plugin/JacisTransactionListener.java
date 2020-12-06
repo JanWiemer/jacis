@@ -41,36 +41,41 @@ public interface JacisTransactionListener {
 
   /**
    * Callback method called after the prepare phase of a transaction is executed for the stores of the container.
+   * 
    * @param container Reference to the corresponding container instance.
-   * @param tx Handle for the transaction for which the callback method is invoked.
+   * @param tx        Handle for the transaction for which the callback method is invoked.
    */
   void afterPrepare(JacisContainer container, JacisTransactionHandle tx);
 
   /**
    * Callback method called before the commit phase of a transaction is executed for the stores of the container.
+   * 
    * @param container Reference to the corresponding container instance.
-   * @param tx Handle for the transaction for which the callback method is invoked.
+   * @param tx        Handle for the transaction for which the callback method is invoked.
    */
   void beforeCommit(JacisContainer container, JacisTransactionHandle tx);
 
   /**
    * Callback method called after the commit phase of a transaction is executed for the stores of the container.
+   * 
    * @param container Reference to the corresponding container instance.
-   * @param tx Handle for the transaction for which the callback method is invoked.
+   * @param tx        Handle for the transaction for which the callback method is invoked.
    */
   void afterCommit(JacisContainer container, JacisTransactionHandle tx);
 
   /**
    * Callback method called before a rollback for a transaction is executed for the stores of the container.
+   * 
    * @param container Reference to the corresponding container instance.
-   * @param tx Handle for the transaction for which the callback method is invoked.
+   * @param tx        Handle for the transaction for which the callback method is invoked.
    */
   void beforeRollback(JacisContainer container, JacisTransactionHandle tx);
 
   /**
    * Callback method called after a rollback for a transaction is executed for the stores of the container.
+   * 
    * @param container Reference to the corresponding container instance.
-   * @param tx Handle for the transaction for which the callback method is invoked.
+   * @param tx        Handle for the transaction for which the callback method is invoked.
    */
   void afterRollback(JacisContainer container, JacisTransactionHandle tx);
 

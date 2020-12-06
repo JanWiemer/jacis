@@ -25,7 +25,7 @@ import org.jacis.trackedviews.TrackedViewClustered;
 /**
  * Registry where tracked views can be registered for an object store.
  *
- * @param <K> Key type of the store entry
+ * @param <K>  Key type of the store entry
  * @param <TV> Value type of the store entry
  * @author Jan Wiemer
  */

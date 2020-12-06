@@ -43,7 +43,7 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  * Note that if an object is deleted in a transaction an entry with the value 'null' remains in the transactional view.
  * Therefore also deletions are properly handled with respect to isolation.
  *
- * @param <K> Key type of the store entry
+ * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
@@ -54,7 +54,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   private final JacisContainer container;
   /** The store identifier uniquely identifying this store inside the container */
   private final StoreIdentifier storeIdentifier;
-  /** The object type specification for the objects stored in this store*/
+  /** The object type specification for the objects stored in this store */
   private final JacisObjectTypeSpec<K, TV, CV> spec;
   /** The map containing the committed values of the objects (the core store) */
   private final ConcurrentHashMap<K, StoreEntry<K, TV, CV>> store = new ConcurrentHashMap<>();
@@ -214,7 +214,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return projection.apply(getReadOnly(key));
   }
 
-  /** @return a stream of all keys currently stored in the store. Note that the keys added by any pending transactions are contained (with null values if not jet committed).  */
+  /** @return a stream of all keys currently stored in the store. Note that the keys added by any pending transactions are contained (with null values if not jet committed). */
   private Stream<K> keyStream() {
     return store.keySet().stream(); // store contains also new entries (with null value)! Therefore iterating the keys is usually enough
   }
@@ -360,7 +360,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
                   for (JacisModificationListener<K, TV> listener : modListeners) {
                     listener.onModification(key, null, val, null); // for performance reasons we skip synchronization if listener is thread safe
                   }
-                } // end of for loop 
+                } // end of for loop
               } else { // NOT THREADSAFE
                 for (int idx = from; idx < to; idx++) {
                   ST entry = entries.get(idx);
@@ -376,7 +376,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
                       }
                     }
                   }
-                } // end of for loop 
+                } // end of for loop
               } // end of THREADSAFE if ... else ... block
             } // end of run() method
           });
@@ -417,7 +417,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return withReadLock(atomicOperation);
   }
 
-  public void executeGlobalAtomic(Runnable atomicOperation) { // Execute an global atomic operation. No prepare / commit / rollback  of any other TX and no other global atomic action for any store will interleave.
+  public void executeGlobalAtomic(Runnable atomicOperation) { // Execute an global atomic operation. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
     executeAtomic(() -> container.executeGlobalAtomic(atomicOperation));
   }
 
@@ -468,9 +468,9 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     }
   }
 
-  //======================================================================================
+  // ======================================================================================
   // transaction demarcation methods
-  //======================================================================================
+  // ======================================================================================
 
   @Override
   protected void internalPrepare(JacisTransactionHandle transaction) {
@@ -492,9 +492,9 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeDestroy(this, transaction)));
   }
 
-  //======================================================================================
+  // ======================================================================================
   // helper methods to access entries
-  //======================================================================================
+  // ======================================================================================
 
   private TV getReadOnly(K key, JacisStoreTxView<K, TV, CV> txView) {
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
@@ -510,9 +510,9 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return getOrCreateEntryTxView(txView, key).getValue();
   }
 
-  //======================================================================================
+  // ======================================================================================
   // helper methods to deal with transaction views of entries
-  //======================================================================================
+  // ======================================================================================
 
   private StoreEntryTxView<K, TV, CV> getOrCreateEntryTxView(JacisStoreTxView<K, TV, CV> txView, K key) {
     StoreEntryTxView<K, TV, CV> entryTxView = txView.getEntryTxView(key);
@@ -522,9 +522,9 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return entryTxView;
   }
 
-  //======================================================================================
+  // ======================================================================================
   // helper methods to deal with committed entries
-  //======================================================================================
+  // ======================================================================================
 
   private StoreEntry<K, TV, CV> createCommittedEntry(K key) {
     StoreEntry<K, TV, CV> newCommittedEntry = new StoreEntry<>(this, key);
@@ -566,9 +566,9 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     store.remove(key);
   }
 
-  //======================================================================================
+  // ======================================================================================
   // synchronized execution
-  //======================================================================================
+  // ======================================================================================
 
   private <R> R withWriteLock(Supplier<R> task) {
     storeAccessLock.writeLock().lock(); // <======= **WRITE** LOCK =====
@@ -595,9 +595,9 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     };
   }
 
-  //======================================================================================
+  // ======================================================================================
   // private methods to maintain the TX view
-  //======================================================================================
+  // ======================================================================================
 
   JacisStoreTxView<K, TV, CV> getTxView() {
     return getTxView(false);
@@ -630,9 +630,9 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     txViewMap.remove(txView.getTransaction());
   }
 
-  //======================================================================================
+  // ======================================================================================
   // other private helper methods
-  //======================================================================================
+  // ======================================================================================
 
   private void assertTrackOriginalValue() {
     if (!spec.isTrackOriginalValueEnabled()) {

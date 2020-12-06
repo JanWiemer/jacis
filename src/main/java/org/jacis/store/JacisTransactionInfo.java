@@ -30,9 +30,9 @@ public class JacisTransactionInfo implements Serializable {
   private final Object externalTransaction;
   /** For each store participating in the transaction some monitoring data */
   private final List<StoreTxInfo> storeTxInfos;
-  /** Creation timestamp of the transaction in milliseconds (System.currentTimeMillis())*/
+  /** Creation timestamp of the transaction in milliseconds (System.currentTimeMillis()) */
   private final long creationTimestampMs;
-  /** Snapshot timestamp of the transaction in milliseconds (System.currentTimeMillis())*/
+  /** Snapshot timestamp of the transaction in milliseconds (System.currentTimeMillis()) */
   private final long snapshotTimestampMs;
 
   public JacisTransactionInfo(JacisTransactionHandle txHandle, JacisContainer container, Collection<JacisStore<?, ?>> stores, long snapshotTimestampMs) {
@@ -52,7 +52,7 @@ public class JacisTransactionInfo implements Serializable {
     this.snapshotTimestampMs = snapshotTimestampMs;
   }
 
-  /** @return The id of the transaction*/
+  /** @return The id of the transaction */
   public String getTxId() {
     return txId;
   }
@@ -192,6 +192,6 @@ public class JacisTransactionInfo implements Serializable {
       b.append(")");
       return b.toString();
     }
-  } // end of public static class StoreTxInfo 
+  } // end of public static class StoreTxInfo
 
 }

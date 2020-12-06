@@ -23,7 +23,7 @@ package org.jacis.plugin.objectadapter.cloning;
  * * collections of other JACIS cloneable objects that are deeply cloned with the original object (the collection itself has to be cloned as well)
  * <p>
  * It is also possible to simply overwrite the {@link Object#clone()} method without implementing this interface.
- * However in this case the  {@link JacisCloningObjectAdapter} has to call the clone method by reflection.
+ * However in this case the {@link JacisCloningObjectAdapter} has to call the clone method by reflection.
  *
  * @param <OT> The type of the object implementing this interface.
  * @author Jan Wiemer

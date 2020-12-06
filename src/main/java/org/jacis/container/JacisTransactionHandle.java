@@ -19,7 +19,7 @@ public class JacisTransactionHandle {
   private final String txDescription;
   /** A reference to the external (global) transaction (e.g. a JTA transaction) */
   private final Object externalTransaction;
-  /** Creation timestamp in milliseconds (System.currentTimeMillis())*/
+  /** Creation timestamp in milliseconds (System.currentTimeMillis()) */
   private final long creationTimestampMs;
 
   /**
@@ -36,7 +36,7 @@ public class JacisTransactionHandle {
     this.creationTimestampMs = System.currentTimeMillis();
   }
 
-  /** @return The id of the transaction*/
+  /** @return The id of the transaction */
   public String getTxId() {
     return txId;
   }

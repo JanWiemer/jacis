@@ -20,9 +20,9 @@ package org.jacis.plugin.objectadapter;
  *
  * There are two generic default implementations for an object that can be used:
  * * One default implementation copies the objects by cloning them using the Java 'clone' method
- *   (see {@link org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter}).
- * * The other  default implementation copies the objects by Java serialization
- *   (see {@link org.jacis.plugin.objectadapter.serialization.JacisJavaSerializationObjectAdapter}).
+ * (see {@link org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter}).
+ * * The other default implementation copies the objects by Java serialization
+ * (see {@link org.jacis.plugin.objectadapter.serialization.JacisJavaSerializationObjectAdapter}).
  *
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
@@ -54,6 +54,7 @@ public interface JacisObjectAdapter<TV, CV> {
    * As an optimization it is allowed to skip a real cloning here since the returned object is guaranteed to be read only.
    * Note that a difference using read only views where cloning is skipped is that a repeated read of the same object
    * may return different versions of the object if another transaction committed a newer version between both reads.
+   * 
    * @param value Committed version of the object.
    * @return A read only transactional view for the passed object.
    */
@@ -62,6 +63,7 @@ public interface JacisObjectAdapter<TV, CV> {
   /**
    * Convert a transactional view of an object into a read only representation of this object.
    * Modifications of the read only view must not be possible (lead to an exception).
+   * 
    * @param value A transactional view for the passed object.
    * @return A read only transactional view for the passed object.
    */

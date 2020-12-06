@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
 	<name>jacis</name>
-	<comment>Java-Aci-Store</comment>
+	<comment></comment>
 	<projects>
 	</projects>
 	<buildSpec>
@@ -15,15 +15,9 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
-		<buildCommand>
-			<name>org.eclipse.wst.validation.validationbuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
 	</buildSpec>
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
-		<nature>org.apache.ivyde.eclipse.ivynature</nature>
 		<nature>org.eclipse.buildship.core.gradleprojectnature</nature>
 	</natures>
 </projectDescription>

@@ -14,7 +14,7 @@ import org.jacis.trackedviews.TrackedView;
  * Therefore if you need the view multiple times inside a transaction (with some modifications between the accesses), you do not need to clone the view again.
  * Note that each update will track the modification from the previous update to this update.
  * 
- * @param <K> Key type of the store entry
+ * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  */
 class TrackedViewTransactionLocal<K, TV> {

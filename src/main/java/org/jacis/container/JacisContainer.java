@@ -106,7 +106,7 @@ public class JacisContainer {
    *
    * @param objectTypeSpec object type specification describing the objects to be stored.
    * @return A reference to the created store (type {@link JacisStoreImpl})
-   * @param <K> Key type of the store entry
+   * @param <K>  Key type of the store entry
    * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
    * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    */
@@ -120,10 +120,10 @@ public class JacisContainer {
   /**
    * Get the store (type {@link JacisStore}) for the passed key and value type.
    *
-   * @param keyClass Class of the keys that should be stored in the searched store
+   * @param keyClass   Class of the keys that should be stored in the searched store
    * @param valueClass Class of the values that should be stored in the searched store
    * @return A reference to the found store (type {@link JacisStore}) (null if not found)
-   * @param <K> Key type of the store entry
+   * @param <K>  Key type of the store entry
    * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
    * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    */
@@ -159,10 +159,10 @@ public class JacisContainer {
   /**
    * Get the store (type {@link JacisStoreAdminInterface}) for the passed key and value type.
    *
-   * @param keyClass Class of the keys that should be stored in the searched store
+   * @param keyClass   Class of the keys that should be stored in the searched store
    * @param valueClass Class of the values that should be stored in the searched store
    * @return A reference to the found store (type {@link JacisStoreAdminInterface}) (null if not found)
-   * @param <K> Key type of the store entry
+   * @param <K>  Key type of the store entry
    * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
    * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    */
@@ -264,7 +264,7 @@ public class JacisContainer {
         } catch (Throwable rollbackException) {
           RuntimeException exceptionToThrow = new RuntimeException("Rollback failed after " + txException, txException);
           exceptionToThrow.addSuppressed(rollbackException);
-          //noinspection ThrowFromFinallyBlock
+          // noinspection ThrowFromFinallyBlock
           throw exceptionToThrow;
         }
       }
@@ -278,7 +278,7 @@ public class JacisContainer {
    * If the {@link JacisStaleObjectException} is thrown repeatedly for all these attempts the exception is propagated to the caller.
    * In case of any other exception the transaction is rolled back and the exception is propagated to the caller immediately.
    *
-   * @param task The task to execute inside a locally managed transaction
+   * @param task    The task to execute inside a locally managed transaction
    * @param retries Number of retries if transaction failed with {@link JacisStaleObjectException}
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
    */
@@ -315,7 +315,7 @@ public class JacisContainer {
       } else { // no JTA active -> can not create and join
         throw new JacisNoTransactionException("No active transaction!");
       }
-    } else { //  createIfAbsent == false // only return TX if already
+    } else { // createIfAbsent == false // only return TX if already
       if (txAdapter.isTransactionActive()) {
         handle = txAdapter.joinCurrentTransaction(this);
       }
@@ -421,7 +421,7 @@ public class JacisContainer {
    * @param transaction The transaction handle representing the transaction to prepare.
    */
   public void internalPrepare(JacisTransactionHandle transaction) {
-    boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries  we need to synchronize
+    boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize
         || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
         || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSyncronized) {
@@ -440,9 +440,9 @@ public class JacisContainer {
     }
   }
 
-  //======================================================================================
+  // ======================================================================================
   // synchronized execution
-  //======================================================================================
+  // ======================================================================================
 
   private Supplier<Object> runnableWrapper(Runnable r) {
     return () -> {
@@ -471,7 +471,7 @@ public class JacisContainer {
    *
    * @param atomicOperation The operation to execute atomically
    */
-  public void executeGlobalAtomic(Runnable atomicOperation) { // Execute an global atomic operation. No prepare / commit / rollback  of any other TX and no other global atomic action for any store will interleave.
+  public void executeGlobalAtomic(Runnable atomicOperation) { // Execute an global atomic operation. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
     withReadLock(runnableWrapper(atomicOperation));
   }
 
@@ -498,7 +498,7 @@ public class JacisContainer {
    * @param transaction The transaction handle representing the transaction to internalCommit.
    */
   public void internalCommit(JacisTransactionHandle transaction) {
-    boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries  we need to synchronize
+    boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize
         || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
         || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSyncronized) {
@@ -549,7 +549,7 @@ public class JacisContainer {
    * @param transaction The transaction handle representing the transaction to rollback.
    */
   public void internalRollback(JacisTransactionHandle transaction) {
-    boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries  we need to synchronize (dirty check can be ignored here)
+    boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize (dirty check can be ignored here)
         || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSyncronized) {
       transactionDemarcationLock.writeLock().lock();
@@ -619,7 +619,7 @@ public class JacisContainer {
     /**
      * Create a store identifier with the passed types for the keys and values.
      *
-     * @param keyClass Type of the keys in the store
+     * @param keyClass   Type of the keys in the store
      * @param valueClass Type of the values in the store
      */
     StoreIdentifier(Class<?> keyClass, Class<?> valueClass) {
@@ -673,7 +673,7 @@ public class JacisContainer {
       return false;
     }
 
-  } // END OF:  public static class StoreIdentifier {
+  } // END OF: public static class StoreIdentifier {
 
   public static abstract class JacisStoreTransactionAdapter {
 
@@ -685,6 +685,6 @@ public class JacisContainer {
 
     protected abstract void internalDestroy(JacisTransactionHandle transaction);
 
-  } // END OF:  public static abstract class JacisStoreTransactionAdapter {
+  } // END OF: public static abstract class JacisStoreTransactionAdapter {
 
 }

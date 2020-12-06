@@ -28,7 +28,7 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  * (e.g. by cloning or by serialization and de-serialization).
  * The object specification stores an {@link #objectAdapter} (type {@link JacisObjectAdapter}) implementing this mechanism.
  *
- * @param <K> Key type of the store entry
+ * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
@@ -120,6 +120,7 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   /**
    * Sets if all registered tracked views are checked for consistency on each internalCommit (default: 'false').
    * Note that the value should only be set before the corresponding store is used, otherwise the behavior is undefined.
+   * 
    * @param checkViewsOnCommit Defining if all registered tracked views are checked for consistency on each internalCommit.
    * @return The object type specification itself for method chaining.
    */
@@ -145,6 +146,7 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   /**
    * Sets if the store should keep track of the original value of an object at the time it was copied to the transactional view (default: 'false').
    * Note that the value should only be set before the corresponding store is used, otherwise the behavior is undefined.
+   * 
    * @param trackOriginalValue Defining if the store keeps track of the original value of an object at the time it was copied to the transactional view.
    * @return The object type specification itself for method chaining.
    */

@@ -37,7 +37,7 @@ public class JacisStoreWithCloningTxTest {
     testHelper.suspendTx();
     // WRITABLE
     testHelper.resumeTx(writingTxHandle);
-    store.update(testObjectName, testObject); //<--------------------
+    store.update(testObjectName, testObject); // <--------------------
     assertTrue(store.containsKey(testObjectName));
     testHelper.suspendTx();
     // READABLE
@@ -46,7 +46,7 @@ public class JacisStoreWithCloningTxTest {
     testHelper.suspendTx();
     // WRITABLE
     testHelper.resumeTx(writingTxHandle);
-    writingTx.prepare(); //<--------------------
+    writingTx.prepare(); // <--------------------
     assertTrue(store.containsKey(testObjectName));
     testHelper.suspendTx();
     // READABLE
@@ -55,7 +55,7 @@ public class JacisStoreWithCloningTxTest {
     testHelper.suspendTx();
     // WRITABLE
     testHelper.resumeTx(writingTxHandle);
-    writingTx.commit(); //<--------------------
+    writingTx.commit(); // <--------------------
     // READABLE
     testHelper.resumeTx(readingTxHandle);
     assertTrue(store.containsKey(testObjectName));
@@ -82,7 +82,7 @@ public class JacisStoreWithCloningTxTest {
     testHelper.suspendTx();
     // WRITABLE
     testHelper.resumeTx(writingTxHandle);
-    store.update(testObjectName, store.get(testObjectName).setValue(2)); //<--------------------
+    store.update(testObjectName, store.get(testObjectName).setValue(2)); // <--------------------
     assertEquals(2, store.get(testObjectName).getValue());
     testHelper.suspendTx();
     // READABLE
@@ -92,7 +92,7 @@ public class JacisStoreWithCloningTxTest {
     testHelper.suspendTx();
     // WRITABLE
     testHelper.resumeTx(writingTxHandle);
-    writingTx.prepare(); //<--------------------
+    writingTx.prepare(); // <--------------------
     assertEquals(2, store.get(testObjectName).getValue());
     testHelper.suspendTx();
     // READABLE
@@ -102,7 +102,7 @@ public class JacisStoreWithCloningTxTest {
     testHelper.suspendTx();
     // WRITABLE
     testHelper.resumeTx(writingTxHandle);
-    writingTx.commit(); //<--------------------
+    writingTx.commit(); // <--------------------
     // READABLE
     testHelper.resumeTx(readingTxHandle);
     assertEquals(1, store.get(testObjectName).getValue()); // consistency! Value already seen by readable TX
@@ -122,9 +122,9 @@ public class JacisStoreWithCloningTxTest {
     JacisTransactionHandle readingTxHandle = testHelper.suspendTx();
     // WRITABLE
     testHelper.resumeTx(writingTxHandle);
-    store.update(testObjectName, testObject); //<--------------------
+    store.update(testObjectName, testObject); // <--------------------
     assertTrue(store.containsKey(testObjectName));
-    writingTx.rollback(); //<--------------------
+    writingTx.rollback(); // <--------------------
     // READABLE
     testHelper.resumeTx(readingTxHandle);
     assertFalse(store.containsKey(testObjectName));
@@ -146,9 +146,9 @@ public class JacisStoreWithCloningTxTest {
     JacisTransactionHandle readingTxHandle = testHelper.suspendTx();
     // WRITABLE
     testHelper.resumeTx(writingTxHandle);
-    store.update(testObjectName, store.get(testObjectName).setValue(2)); //<--------------------
+    store.update(testObjectName, store.get(testObjectName).setValue(2)); // <--------------------
     assertEquals(2, store.get(testObjectName).getValue());
-    writingTx.rollback(); //<--------------------
+    writingTx.rollback(); // <--------------------
     // READABLE
     testHelper.resumeTx(readingTxHandle);
     assertEquals(1, store.get(testObjectName).getValue()); // consistency! Value already seen by readable TX
@@ -171,21 +171,21 @@ public class JacisStoreWithCloningTxTest {
     JacisTransactionHandle writingTx2Handle = testHelper.suspendTx();
     // TX 1
     testHelper.resumeTx(writingTx1Handle);
-    store.update(testObjectName, store.get(testObjectName).setValue(2)); //<--------------------
+    store.update(testObjectName, store.get(testObjectName).setValue(2)); // <--------------------
     testHelper.suspendTx();
     // TX 2
     testHelper.resumeTx(writingTx2Handle);
-    store.update(testObjectName, store.get(testObjectName).setValue(3)); //<--------------------
+    store.update(testObjectName, store.get(testObjectName).setValue(3)); // <--------------------
     testHelper.suspendTx();
     // TX 1
     testHelper.resumeTx(writingTx1Handle);
-    writingTx1.prepare(); //<--------------------
-    writingTx1.commit(); //<--------------------
+    writingTx1.prepare(); // <--------------------
+    writingTx1.commit(); // <--------------------
     // TX 1
     testHelper.resumeTx(writingTx2Handle);
     try {
       assertTrue(store.isStale(testObjectName));
-      writingTx2.prepare(); //<--------------------
+      writingTx2.prepare(); // <--------------------
     } catch (JacisStaleObjectException e) {
       log.info("Caught expected exception {}", "" + e);
       throw e;
@@ -207,21 +207,21 @@ public class JacisStoreWithCloningTxTest {
     JacisTransactionHandle writingTx2Handle = testHelper.suspendTx();
     // TX 1
     testHelper.resumeTx(writingTx1Handle);
-    store.update(testObjectName, store.get(testObjectName).setValue(2)); //<--------------------
+    store.update(testObjectName, store.get(testObjectName).setValue(2)); // <--------------------
     testHelper.suspendTx();
     // TX 2
     testHelper.resumeTx(writingTx2Handle);
-    store.update(testObjectName, store.get(testObjectName).setValue(3)); //<--------------------
+    store.update(testObjectName, store.get(testObjectName).setValue(3)); // <--------------------
     testHelper.suspendTx();
     // TX 1
     testHelper.resumeTx(writingTx1Handle);
-    writingTx1.prepare(); //<--------------------
+    writingTx1.prepare(); // <--------------------
     testHelper.suspendTx();
     // TX 1
     testHelper.resumeTx(writingTx2Handle);
     try {
       assertTrue(store.isStale(testObjectName));
-      writingTx2.prepare(); //<--------------------
+      writingTx2.prepare(); // <--------------------
     } catch (JacisStaleObjectException e) {
       log.info("Caught expected exception {}", "" + e);
       throw e;

@@ -10,7 +10,7 @@ import java.util.Collection;
  * A clustered tracked view provides access to sub views by a key.
  * The advantage is that only the desired sub view is cloned when accessing it.
  *
- * @param <V> The type of the original values / objects from the store
+ * @param <V>   The type of the original values / objects from the store
  * @param <SVK> The key type for the sub views
  * @param <SVT> The type of the sub views
  * @author Jan Wiemer

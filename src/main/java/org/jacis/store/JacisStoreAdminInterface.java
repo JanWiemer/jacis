@@ -13,7 +13,7 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  *
  * This interface provides methods to add or remove transaction listeners or maintain the registered tracked views.
  *
- * @param <K> Key type of the store entry
+ * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer

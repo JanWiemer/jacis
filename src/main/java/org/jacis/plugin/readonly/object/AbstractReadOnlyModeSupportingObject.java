@@ -28,7 +28,6 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
     threadWithWriteAccess = Thread.currentThread(); // when creating the object its writable
   }
 
-  @SuppressWarnings("CloneDoesntDeclareCloneNotSupportedException")
   @Override
   protected Object clone() {
     try {
@@ -61,6 +60,7 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
   /**
    * This method should be called prior to all modifying accesses to the object (e.g. in al setter-methods).
    * The method will check if the current thread has write access to the object and will throw a {@link ReadOnlyException} otherwise.
+   * 
    * @throws ReadOnlyException thrown if the current thread has no write access to the object.
    */
   protected void checkWritable() throws ReadOnlyException {

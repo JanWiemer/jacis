@@ -43,14 +43,14 @@ public class JacisStoreIntegrationTest {
     JacisTransactionHandle updatingTxHandle = testHelper.suspendTx();
     // READ
     JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
-    assertEquals(1, store.get(testObjectName).getValue()); //===== READ => committed value ====
+    assertEquals(1, store.get(testObjectName).getValue()); // ===== READ => committed value ====
     readingTx.commit();
     // COMMIT
     testHelper.resumeTx(updatingTxHandle);
     updatingTx.commit();
     // READ COMMITTED
     JacisLocalTransaction checkingTx = store.getContainer().beginLocalTransaction();
-    assertEquals(2, store.get(testObjectName).getValue()); //===== READ => committed value ====
+    assertEquals(2, store.get(testObjectName).getValue()); // ===== READ => committed value ====
     checkingTx.commit();
   }
 
@@ -66,7 +66,7 @@ public class JacisStoreIntegrationTest {
     initTx.commit();
     // READ 1
     JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
-    assertEquals(1, store.get(testObjectName).getValue()); //===== READ => committed value ====
+    assertEquals(1, store.get(testObjectName).getValue()); // ===== READ => committed value ====
     JacisTransactionHandle readingTxHandle = testHelper.suspendTx();
     // UPDATE (with commit)
     JacisLocalTransaction updatingTx = store.getContainer().beginLocalTransaction();
@@ -76,11 +76,11 @@ public class JacisStoreIntegrationTest {
     updatingTx.commit();
     // REPEATED READ
     testHelper.resumeTx(readingTxHandle);
-    assertEquals(1, store.get(testObjectName).getValue()); //===== READ => same value as first read ====
+    assertEquals(1, store.get(testObjectName).getValue()); // ===== READ => same value as first read ====
     readingTx.commit();
     // READ COMMITTED IN NEW TX
     JacisLocalTransaction checkingTx = store.getContainer().beginLocalTransaction();
-    assertEquals(2, store.get(testObjectName).getValue()); //===== READ => committed value ====
+    assertEquals(2, store.get(testObjectName).getValue()); // ===== READ => committed value ====
     checkingTx.commit();
   }
 
@@ -100,7 +100,7 @@ public class JacisStoreIntegrationTest {
     testHelper.suspendTx();
     // WRITABLE insert
     testHelper.resumeTx(writingTxHandle);
-    store.update(testObjectName, testObject); //<--------------------
+    store.update(testObjectName, testObject); // <--------------------
     assertTrue(store.containsKey(testObjectName));
     testHelper.suspendTx();
     // READABLE -> object not contained
@@ -109,8 +109,8 @@ public class JacisStoreIntegrationTest {
     testHelper.suspendTx();
     // WRITABLE commit
     testHelper.resumeTx(writingTxHandle);
-    writingTx.prepare(); //<--------------------
-    writingTx.commit(); //<--------------------
+    writingTx.prepare(); // <--------------------
+    writingTx.commit(); // <--------------------
     // READABLE -> object found
     testHelper.resumeTx(readingTxHandle);
     assertTrue(store.containsKey(testObjectName));
@@ -138,7 +138,7 @@ public class JacisStoreIntegrationTest {
     assertEquals(false, info.getStoreTxInfos().get(0).isCommitPending());
     log.info("TX1-after-update:  {}", info);
     // --------------------
-    tx.prepare(); //<--------------------
+    tx.prepare(); // <--------------------
     info = container.getTransactionInfo(tx);
     assertEquals(1, info.getStoreTxInfos().size());
     assertEquals(1, info.getStoreTxInfos().get(0).getNumberOfTxViewEntries());
@@ -146,7 +146,7 @@ public class JacisStoreIntegrationTest {
     assertEquals(true, info.getStoreTxInfos().get(0).isCommitPending());
     log.info("TX1-after-prepare: {}", info);
     // --------------------
-    tx.commit(); //<--------------------
+    tx.commit(); // <--------------------
     info = container.getTransactionInfo(tx);
     assertNull(info);
     log.info("TX1-after-commit:  {}", info);
@@ -177,7 +177,7 @@ public class JacisStoreIntegrationTest {
     log.info("TX2-after-update:  {}", info);
     // --------------------
     sleep(10);
-    tx.commit(); //<--------------------    
+    tx.commit(); // <--------------------
     info = container.getTransactionInfo(tx);
     assertNull(info);
     log.info("TX2-after-commit:  {}", info);
