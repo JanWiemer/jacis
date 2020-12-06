@@ -337,6 +337,7 @@ public interface JacisStore<K, TV> {
    * @param entries        The entries from which the store is initialized.
    * @param keyExtractor   Method to extract the key from an entry.
    * @param valueExtractor Method to extract the value from an entry.
+   * @param <ST>           The type of the entries
    * @param nThreads       Number of threads to use for multythreaded inserts.
    */
   public <ST> void initStoreNonTransactional(List<ST> entries, Function<ST, K> keyExtractor, Function<ST, TV> valueExtractor, int nThreads);

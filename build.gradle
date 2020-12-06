@@ -1,20 +1,21 @@
 /*
  * Copyright (c) 2017. Jan Wiemer
  */
-
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'maven-publish'
+ 
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
 
 group = 'org.jacis'
 version = '1.54'
 version = Boolean.getBoolean("releasebuild") ? "$version" : "$version-SNAPSHOT"
-//version = "$version" 
+
 
 ext {
     vendor                 = 'Jan Wiemer'
     projectName            = 'jacis'
-    projectDescriotion     = 'Java ACS Store - Transient and transactional store for Java objects,'
+    projectDescription     = 'Java ACS Store - Transient and transactional store for Java objects,'
     projectURL             = 'https://github.com/JanWiemer/jacis'
     isReleaseVersion       = !version.endsWith("SNAPSHOT")
     deploy_user            = System.properties.get("deploy_user")
@@ -26,7 +27,7 @@ ext {
 print '---------- JACIS BUILD -------- '
 println new Date()
 println "- projectName = $projectName"
-println "- descriotion = $projectDescriotion"
+println "- description = $projectDescription"
 println "- URL         = $projectURL"
 println "- group       = $group"
 println "- version     = $version"
@@ -35,8 +36,24 @@ println "- deploy_repo_release  = $deploy_repo_release"
 println "- deploy_repo_snapshot = $deploy_repo_snapshot"
 println '------------------------------- '
 
-configurations {
-    asciidoclet
+dependencies {
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
+    implementation group: 'org.slf4j', name: 'slf4j-ext', version: '1.7.30'
+    implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+    implementation group: 'javax.transaction', name: 'jta', version: '1.1'
+    testImplementation group: 'junit', name: 'junit', version: '4.13'
+    testImplementation group: 'org.hamcrest', name: 'hamcrest-library', version: '2.2'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 jar {
@@ -46,113 +63,47 @@ jar {
 jar.doFirst {
     manifest {
         attributes 'Implementation-Title'     : projectName,
-                   'Implementation-Version'   : version,
+                   'Implementation-Version'   : archiveVersion,
                    'Specification-Title'      : new Date(),
                    'Implementation-Vendor'    : vendor
     }
 }
 
-task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
-}
-
-task javadocJar(type: Jar) {
-    from javadoc.destinationDir
-}
-
-
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId "$group"
-            artifactId "$projectName"
-            version "$version"
-            from components.java
-            artifact sourceJar {
-                classifier "sources"
-            }
-            artifact javadocJar {
-                classifier "javadoc"
-            }
-            pom.withXml {
-                asNode().children().last() + {
-                    resolveStrategy = Closure.DELEGATE_FIRST
-                    name "$projectName"
-                    description  "$projectDescriotion"
-                    licenses {
-                        license {
-                            name 'GNU LESSER GENERAL PUBLIC LICENSE, Version 3'
-                            url 'https://github.com/JanWiemer/jacis/blob/master/LICENSE'
-                        }
-                    }
-                    developers {
-                        developer {
-                            id 'JanWiemer'
-                            name 'Jan Wiemer'
-                            email 'jan.wiemer@online.de'
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            credentials {
-                username deploy_user
-                password deploy_pw
-            }
-            if (isReleaseVersion) {
-                url deploy_repo_release
-            } else {
-                url deploy_repo_snapshot
-            }
-        }
-    }
-}
-
-artifacts {
-    archives sourceJar
-    archives javadocJar
-}
-
-uploadArchives {
-    repositories.mavenDeployer {
-        repository(url: "file:///"+getProject().getBuildDir()+"/../dist/jacisreleases/maven-repository/")
-        pom.project {
-          licenses {
-            license {
-                name 'GNU GENERAL PUBLIC LICENSE, Version 2'
-                url 'https://github.com/JanWiemer/jacis/blob/master/LICENSE'
-            }
+  publications {
+    jacisPublication(MavenPublication) {
+      from components.java
+      pom {
+        name = "$projectName"
+        description = "$projectDescription"
+        url = "$projectURL"
+        licenses {
+          license {
+            name = "GNU LESSER GENERAL PUBLIC LICENSE, Version 3"
+            url = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
           }
         }
+        developers {
+          developer {
+            id = "JanWiemer"
+            name = "Jan Wiemer"
+            email = "jan.wiemer@online.de"
+          }
+        }
+      }
     }
-}
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
-
-dependencies {
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
-    compile group: 'org.slf4j', name: 'slf4j-ext', version: '1.7.30'
-    compile group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
-    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-    compile group: 'javax.transaction', name: 'jta', version: '1.1'
-    testCompile group: 'junit', name: 'junit', version: '4.13'
-    testCompile group: 'org.hamcrest', name: 'hamcrest-library', version: '2.2'
-    asciidoclet 'org.asciidoctor:asciidoclet:1.+'
-}
-
-javadoc {
-    options.docletpath = configurations.asciidoclet.files.asType(List)
-    options.doclet = 'org.asciidoctor.Asciidoclet'
-    options.overview = "src/main/java/overview.adoc"
-    options.addStringOption "-base-dir", "${projectDir}"
-    options.addStringOption "-attribute",
-            "name=${project.name}," +
-            "version=${project.version}"
+  }
+  repositories {
+    maven {
+      credentials {
+        username deploy_user
+        password deploy_pw
+      }
+      if (isReleaseVersion) {
+        url deploy_repo_release
+      } else {
+        url deploy_repo_snapshot
+      }
+    }
+  }  
 }

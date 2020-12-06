@@ -12,8 +12,6 @@ import org.jacis.store.JacisStore;
 /**
  * Representing a read only version of all the contexts of the stores within a transaction belonging to the container.
  * 
- * @See JacisReadOnlyTransactionContext
- *
  * @author Jan Wiemer
  */
 @SuppressWarnings({ "unused", "WeakerAccess" })
