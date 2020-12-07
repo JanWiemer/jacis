@@ -90,6 +90,7 @@ publishing {
       from components.java
       artifact sourcesJar
       artifact javadocJar
+// -- only with newer gradle versions:
 //      pom { 
 //        name = "$projectName"
 //        description = "$projectDescription"
