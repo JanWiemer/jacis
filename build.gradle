@@ -91,7 +91,7 @@ publishing {
       artifact sourcesJar
       artifact javadocJar
       pom {
-        name = "$projectName"
+        // name = "$projectName"
         description = "$projectDescription"
         url = "$projectURL"
         licenses {
