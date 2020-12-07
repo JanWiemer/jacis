@@ -91,9 +91,9 @@ publishing {
       artifact sourcesJar
       artifact javadocJar
       pom {
-        // name = "$projectName"
+        //name = "$projectName"
         description = "$projectDescription"
-        url = "$projectURL"
+        //url = "$projectURL"
         licenses {
           license {
             name = "GNU LESSER GENERAL PUBLIC LICENSE, Version 3"
