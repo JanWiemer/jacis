@@ -4,7 +4,6 @@
  
 plugins {
     id 'java'
-    id 'maven'
     id 'maven-publish'
 }
 
@@ -92,15 +91,15 @@ publishing {
       artifact sourcesJar
       artifact javadocJar
       pom { 
-        name = "$projectName"
-        description = "$projectDescription"
-        url = "$projectURL"
-        licenses {
-          license {
-            name = "GNU LESSER GENERAL PUBLIC LICENSE, Version 3"
-            url = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
-          }
-        }
+//        name = "$projectName"
+//        description = "$projectDescription"
+//        url = "$projectURL"
+//        licenses {
+//          license {
+//            name = "GNU LESSER GENERAL PUBLIC LICENSE, Version 3"
+//            url = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
+//          }
+//        }
         developers {
           developer {
             id = "JanWiemer"
