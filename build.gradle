@@ -72,6 +72,9 @@ jar.doFirst {
 publishing {
   publications {
     jacisPublication(MavenPublication) {
+      groupId "$group"
+      artifactId "$projectName"
+      version "$version"
       from components.java
       pom { 
         name = "$projectName"
