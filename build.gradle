@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'org.jacis'
-version = '1.54'
+version = '1.55'
 version = Boolean.getBoolean("releasebuild") ? "$version" : "$version-SNAPSHOT"
 
 
@@ -51,24 +51,9 @@ repositories {
     mavenCentral()
 }
 
-//java {
-//    withJavadocJar()
-//    withSourcesJar()
-//}
-
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allJava
-    classifier "sources"
-}
-
-task javadocJar(type: Jar) {
-    from javadoc.destinationDir
-    classifier "javadoc"
-}
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 jar {
@@ -88,27 +73,24 @@ publishing {
   publications {
     jacisPublication(MavenPublication) {
       from components.java
-      artifact sourcesJar
-      artifact javadocJar
-// -- only with newer gradle versions:
-//      pom { 
-//        name = "$projectName"
-//        description = "$projectDescription"
-//        url = "$projectURL"
-//        licenses {
-//          license {
-//            name = "GNU LESSER GENERAL PUBLIC LICENSE, Version 3"
-//            url = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
-//          }
-//        }
-//        developers {
-//          developer {
-//            id = "JanWiemer"
-//            name = "Jan Wiemer"
-//            email = "jan.wiemer@online.de"
-//          }
-//        }
-//      } 
+      pom { 
+        name = "$projectName"
+        description = "$projectDescription"
+        url = "$projectURL"
+        licenses {
+          license {
+            name = "GNU LESSER GENERAL PUBLIC LICENSE, Version 3"
+            url = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
+          }
+        }
+        developers {
+          developer {
+            id = "JanWiemer"
+            name = "Jan Wiemer"
+            email = "jan.wiemer@online.de"
+          }
+        }
+      } 
     } 
   }
   repositories {
