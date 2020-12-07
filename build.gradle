@@ -63,7 +63,7 @@ jar {
 jar.doFirst {
     manifest {
         attributes 'Implementation-Title'     : projectName,
-                   'Implementation-Version'   : version, // deprecated for newer gradle use: archiveVersion
+                   'Implementation-Version'   : archiveVersion,
                    'Specification-Title'      : new Date(),
                    'Implementation-Vendor'    : vendor
     }
