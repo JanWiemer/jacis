@@ -4,6 +4,7 @@
  
 plugins {
     id 'java'
+    id 'maven'
     id 'maven-publish'
 }
 
@@ -90,10 +91,10 @@ publishing {
       from components.java
       artifact sourcesJar
       artifact javadocJar
-      pom {
-        //name = "$projectName"
+      pom { 
+        name = "$projectName"
         description = "$projectDescription"
-        //url = "$projectURL"
+        url = "$projectURL"
         licenses {
           license {
             name = "GNU LESSER GENERAL PUBLIC LICENSE, Version 3"
@@ -107,8 +108,8 @@ publishing {
             email = "jan.wiemer@online.de"
           }
         }
-      }
-    }
+      } 
+    } 
   }
   repositories {
     maven {
