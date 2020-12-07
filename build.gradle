@@ -51,9 +51,24 @@ repositories {
     mavenCentral()
 }
 
-java {
-    withJavadocJar()
-    withSourcesJar()
+//java {
+//    withJavadocJar()
+//    withSourcesJar()
+//}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    classifier "sources"
+}
+
+task javadocJar(type: Jar) {
+    from javadoc.destinationDir
+    classifier "javadoc"
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
 }
 
 jar {
@@ -73,6 +88,8 @@ publishing {
   publications {
     jacisPublication(MavenPublication) {
       from components.java
+      artifact sourcesJar
+      artifact javadocJar
       pom {
         name = "$projectName"
         description = "$projectDescription"
