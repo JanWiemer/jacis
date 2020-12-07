@@ -90,7 +90,7 @@ publishing {
       from components.java
       artifact sourcesJar
       artifact javadocJar
-      pom { 
+//      pom { 
 //        name = "$projectName"
 //        description = "$projectDescription"
 //        url = "$projectURL"
@@ -100,14 +100,14 @@ publishing {
 //            url = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
 //          }
 //        }
-        developers {
-          developer {
-            id = "JanWiemer"
-            name = "Jan Wiemer"
-            email = "jan.wiemer@online.de"
-          }
-        }
-      } 
+//        developers {
+//          developer {
+//            id = "JanWiemer"
+//            name = "Jan Wiemer"
+//            email = "jan.wiemer@online.de"
+//          }
+//        }
+//      } 
     } 
   }
   repositories {
