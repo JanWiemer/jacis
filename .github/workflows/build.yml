@@ -22,4 +22,4 @@ jobs:
         java-version: 11
     - uses: eskatos/gradle-command-action@v1
       with:
-        arguments: publish -deploy_repo_release=https://maven.pkg.github.com/JanWiemer/jacis -deploy_repo_snapshot=https://maven.pkg.github.com/JanWiemer/jacis
+        arguments: publish -Ddeploy_repo_release=https://maven.pkg.github.com/JanWiemer/jacis -Ddeploy_repo_snapshot=https://maven.pkg.github.com/JanWiemer/jacis
