@@ -41,6 +41,7 @@ println "- licenseName = $licenseName"
 println "- licenseURL  = $licenseURL"
 println "- isReleaseV. = $isReleaseVersion"
 println "- deploy_user = $deploy_user"
+println "- deploy_pw = $deploy_pw"
 println "- deploy_repo_release  = $deploy_repo_release"
 println "- deploy_repo_snapshot = $deploy_repo_snapshot"
 println '------------------------------- '
