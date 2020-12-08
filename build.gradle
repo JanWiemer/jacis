@@ -7,16 +7,20 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'org.jacis'
-version = '1.55'
+group = "org.jacis"
+version = "1.55"
 version = Boolean.getBoolean("releasebuild") ? "$version" : "$version-SNAPSHOT"
 
 
 ext {
-    vendor                 = 'Jan Wiemer'
-    projectName            = 'jacis'
-    projectDescription     = 'Java ACS Store - Transient and transactional store for Java objects,'
-    projectURL             = 'https://github.com/JanWiemer/jacis'
+    projectName            = "jacis"
+    projectDescription     = "Java ACS Store - Transient and transactional store for Java objects."
+    projectURL             = "https://github.com/JanWiemer/jacis"
+    author                 = "Jan Wiemer"
+    authorId               = "JanWiemer"
+    authorMail             = "jan.wiemer@online.de"
+    licenseName            = "GNU LESSER GENERAL PUBLIC LICENSE, Version 3"
+    licenseURL             = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
     isReleaseVersion       = !version.endsWith("SNAPSHOT")
     deploy_user            = System.properties.get("deploy_user")
     deploy_pw              = System.properties.get("deploy_pw")
@@ -31,7 +35,11 @@ println "- description = $projectDescription"
 println "- URL         = $projectURL"
 println "- group       = $group"
 println "- version     = $version"
-println "- vendor      = $vendor"
+println "- isReleaseV. = $isReleaseVersion"
+println "- author      = $author"
+println "- authorMail  = $authorMail"
+println "- licenseName = $licenseName"
+println "- licenseURL  = $licenseURL"
 println "- deploy_repo_release  = $deploy_repo_release"
 println "- deploy_repo_snapshot = $deploy_repo_snapshot"
 println '------------------------------- '
@@ -65,32 +73,29 @@ jar.doFirst {
         attributes 'Implementation-Title'     : projectName,
                    'Implementation-Version'   : archiveVersion,
                    'Specification-Title'      : new Date(),
-                   'Implementation-Vendor'    : vendor
+                   'Implementation-Vendor'    : author
     }
 }
 
 publishing {
   publications {
     jacisPublication(MavenPublication) {
-      groupId "$group"
-      artifactId "$projectName"
-      version "$version"
       from components.java
       pom { 
-        name = "$projectName"
-        description = "$projectDescription"
-        url = "$projectURL"
+        name = projectName
+        description = projectDescription
+        url = projectURL
         licenses {
           license {
-            name = "GNU LESSER GENERAL PUBLIC LICENSE, Version 3"
-            url = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
+            name = licenseName
+            url = licenseURL 
           }
         }
         developers {
           developer {
-            id = "JanWiemer"
-            name = "Jan Wiemer"
-            email = "jan.wiemer@online.de"
+            id = authorId
+            name = author
+            email = authorMail
           }
         }
       } 
