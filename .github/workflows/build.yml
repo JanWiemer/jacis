@@ -7,6 +7,11 @@ on:
   pull_request:
     branches: [ master ]
   workflow_dispatch:
+     inputs:
+      release:
+        description: 'Release Build'     
+        default: false
+
 
 jobs:
   gradle:
@@ -22,7 +27,7 @@ jobs:
         java-version: 11
     - uses: eskatos/gradle-command-action@v1
       with:
-        arguments: publish -Ddeploy_user=JanWiemer -Ddeploy_pw=${{secrets.GITHUB_TOKEN}} -Ddeploy_repo_release=https://maven.pkg.github.com/janwiemer/jacis -Ddeploy_repo_snapshot=https://maven.pkg.github.com/janwiemer/jacis
+        arguments: publish -Dreleasebuild=${{ github.event.inputs.release }} -Ddeploy_user=JanWiemer -Ddeploy_pw=${{secrets.GITHUB_TOKEN}} -Ddeploy_repo_release=https://maven.pkg.github.com/janwiemer/jacis -Ddeploy_repo_snapshot=https://maven.pkg.github.com/janwiemer/jacis
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
     
