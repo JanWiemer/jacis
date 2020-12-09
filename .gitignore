@@ -8,6 +8,7 @@
 .gradle
 .idea
 .metadata
+.settings
 /build
 /deploy
 /target

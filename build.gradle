@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "org.jacis"
-version = "1.55"
+version = "1.56"
 version = Boolean.getBoolean("releasebuild") ? "$version" : "$version-SNAPSHOT"
 
 
@@ -19,7 +19,7 @@ ext {
     author                 = "Jan Wiemer"
     authorId               = "JanWiemer"
     authorMail             = "jan.wiemer@online.de"
-    licenseName            = "GNU LESSER GENERAL PUBLIC LICENSE, Version 3"
+    licenseName            = "Apache-2.0 License"
     licenseURL             = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
     isReleaseVersion       = !version.endsWith("SNAPSHOT")
     deploy_user            = System.properties.get("deploy_user")
