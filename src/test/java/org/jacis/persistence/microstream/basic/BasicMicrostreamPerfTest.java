@@ -16,7 +16,6 @@ import java.util.Map;
 
 import org.jacis.testhelper.FileUtils;
 import org.junit.AfterClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +26,9 @@ import one.microstream.storage.types.EmbeddedStorageFoundation;
 import one.microstream.storage.types.EmbeddedStorageManager;
 
 public class BasicMicrostreamPerfTest {
+
+  private static final int MAX_TEST_SIZE = 1_000;
+//  private static final int MAX_TEST_SIZE = Integer.MAX_VALUE;
 
   private static final Logger log = LoggerFactory.getLogger(BasicMicrostreamPerfTest.class);
 
@@ -51,25 +53,34 @@ public class BasicMicrostreamPerfTest {
   }
 
   @Test
-  @Ignore
-  public void testPerformance() {
+  public void testBulkUpdatePerformance() {
     log.info("===== TEST BULK UPDATE PERFORMANCE =====");
-    Arrays.asList(1_000, 10_000, 100_000, 1_000_000, 2_000_000).forEach(size -> {
+    Arrays.asList(200, 500, 1_000, 10_000, 100_000, 1_000_000, 2_000_000).stream().filter(size -> size <= MAX_TEST_SIZE).forEach(size -> {
+
       doTestBulkUpdatePerfArray(size, 100);
       doTestBulkUpdatePerfArrayList(size, 100);
       doTestBulkUpdatePerfHashMap(size, 100);
       log.info("----------------------------------------");
     });
+  }
+
+  @Test
+  public void testUpdatePerformance() {
     log.info("===== TEST UPDATE PERFORMANCE =====");
-    Arrays.asList(1_000, 10_000, 100_000, 1_000_000, 2_000_000).forEach(size -> {
+    Arrays.asList(200, 500, 1_000, 10_000, 100_000, 1_000_000, 2_000_000).stream().filter(size -> size <= MAX_TEST_SIZE).forEach(size -> {
       doTestUpdatePerfArray(size, 100);
       doTestUpdatePerfArrayList(size, 100);
-      doTestUpdatePerfLinkedList(size,100);
+      doTestUpdatePerfLinkedList(size, 100);
+      doTestUpdatePerfCustomLinkedList(size, 100);
       doTestUpdatePerfHashMap(size, 100);
       log.info("----------------------------------------");
     });
+  }
+
+  @Test
+  public void testInsertPerformance() {
     log.info("===== TEST INSERT PERFORMANCE =====");
-    Arrays.asList(1_000, 10_000, 20_000, 30_000).forEach(n -> {
+    Arrays.asList(200, 500, 1_000, 10_000, 20_000, 30_000).stream().filter(size -> size <= MAX_TEST_SIZE).forEach(n -> {
       doTestInsertPerfArrayList(n);
       doTestInsertPerfLinkedList(n);
       doTestInsertPerfHashMap(n);
@@ -135,6 +146,30 @@ public class BasicMicrostreamPerfTest {
       storageManager.storeRoot();
     }
     log.info("updating {} / {} LinkedList entries took {}", n, size, stopTime(t1, n));
+    storageManager.shutdown();
+  }
+
+  protected void doTestUpdatePerfCustomLinkedList(int size, int n) {
+    Path storageDir = getStorageDir("doTestUpdatePerfCustomLinkedList-" + n);
+    EmbeddedStorageManager storageManager = createStorageManager(storageDir);
+    ListElement head = new ListElement("Element " + 0);
+    ListElement prv = head;
+    // long t0 = System.nanoTime();
+    for (int i = 1; i < size; i++) {
+      ListElement entry = new ListElement("Element " + i).setPrv(prv);
+      prv.setNxt(entry);
+      prv = entry;
+    }
+    storageManager.setRoot(head);
+    storageManager.storeRoot();
+    long t1 = System.nanoTime();
+    ListElement it = head;
+    for (int i = 0; i < n; i++) {
+      it = it.nxt;
+      storageManager.store(it.setValue("Element New " + i));
+      it = it.nxt;
+    }
+    log.info("updating {} / {} Custom LinkedList entries took {}", n, size, stopTime(t1, n));
     storageManager.shutdown();
   }
 
@@ -231,7 +266,7 @@ public class BasicMicrostreamPerfTest {
     log.info("storing {} ArrayList adds took {}", n, stopTime(t0, n));
     storageManager.shutdown();
   }
-  
+
   protected void doTestInsertPerfLinkedList(int n) {
     Path storageDir = getStorageDir("doTestInsertPerfLinkedList-" + n);
     EmbeddedStorageManager storageManager = createStorageManager(storageDir);
@@ -268,6 +303,32 @@ public class BasicMicrostreamPerfTest {
     } else {
       return String.format("%.2f ms (%.2f ms/operation)", millis, millis / operations);
     }
+  }
+
+}
+
+class ListElement {
+  String value;
+  ListElement nxt;
+  ListElement prv;
+
+  public ListElement(String value) {
+    this.value = value;
+  }
+
+  public ListElement setValue(String value) {
+    this.value = value;
+    return this;
+  }
+
+  public ListElement setNxt(ListElement nxt) {
+    this.nxt = nxt;
+    return this;
+  }
+
+  public ListElement setPrv(ListElement prv) {
+    this.prv = prv;
+    return this;
   }
 
 }

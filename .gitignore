@@ -9,6 +9,7 @@
 .idea
 .metadata
 .settings
+/storage/backup
 /build
 /deploy
 /target
