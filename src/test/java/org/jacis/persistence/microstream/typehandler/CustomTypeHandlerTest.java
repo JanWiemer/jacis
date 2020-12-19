@@ -7,6 +7,10 @@ import static org.junit.Assert.assertTrue;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.jacis.persistence.microstream.typehandler.arraylist.TestListObject;
+import org.jacis.persistence.microstream.typehandler.arraylist.TestListObjectHandler;
+import org.jacis.persistence.microstream.typehandler.simple.TestObject;
+import org.jacis.persistence.microstream.typehandler.simple.TestObjectHandler;
 import org.jacis.testhelper.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Test;

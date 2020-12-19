@@ -9,7 +9,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import org.jacis.testhelper.FileUtils;
@@ -62,12 +64,14 @@ public class BasicMicrostreamPerfTest {
     Arrays.asList(1_000, 10_000, 100_000, 1_000_000, 2_000_000).forEach(size -> {
       doTestUpdatePerfArray(size, 100);
       doTestUpdatePerfArrayList(size, 100);
+      doTestUpdatePerfLinkedList(size,100);
       doTestUpdatePerfHashMap(size, 100);
       log.info("----------------------------------------");
     });
     log.info("===== TEST INSERT PERFORMANCE =====");
     Arrays.asList(1_000, 10_000, 20_000, 30_000).forEach(n -> {
       doTestInsertPerfArrayList(n);
+      doTestInsertPerfLinkedList(n);
       doTestInsertPerfHashMap(n);
       log.info("----------------------------------------");
     });
@@ -110,6 +114,27 @@ public class BasicMicrostreamPerfTest {
       storageManager.storeRoot();
     }
     log.info("updating {} / {} ArrayList entries took {}", n, size, stopTime(t1, n));
+    storageManager.shutdown();
+  }
+
+  protected void doTestUpdatePerfLinkedList(int size, int n) {
+    Path storageDir = getStorageDir("doTestUpdatePerfLinkedList-" + n);
+    EmbeddedStorageManager storageManager = createStorageManager(storageDir);
+    LinkedList<String> data = new LinkedList<>();
+    storageManager.setRoot(data);
+    // long t0 = System.nanoTime();
+    for (int i = 0; i < size; i++) {
+      data.add("Element " + i);
+    }
+    storageManager.storeRoot();
+    long t1 = System.nanoTime();
+    ListIterator<String> it = data.listIterator();
+    for (int i = 0; i < n; i++) {
+      it.next();
+      it.set("Element New " + i);
+      storageManager.storeRoot();
+    }
+    log.info("updating {} / {} LinkedList entries took {}", n, size, stopTime(t1, n));
     storageManager.shutdown();
   }
 
@@ -204,6 +229,20 @@ public class BasicMicrostreamPerfTest {
       storageManager.storeRoot();
     }
     log.info("storing {} ArrayList adds took {}", n, stopTime(t0, n));
+    storageManager.shutdown();
+  }
+  
+  protected void doTestInsertPerfLinkedList(int n) {
+    Path storageDir = getStorageDir("doTestInsertPerfLinkedList-" + n);
+    EmbeddedStorageManager storageManager = createStorageManager(storageDir);
+    List<String> data = new LinkedList<>();
+    storageManager.setRoot(data);
+    long t0 = System.nanoTime();
+    for (int i = 0; i < n; i++) {
+      data.add("Element " + i);
+      storageManager.storeRoot();
+    }
+    log.info("storing {} LinkedList adds took {}", n, stopTime(t0, n));
     storageManager.shutdown();
   }
 

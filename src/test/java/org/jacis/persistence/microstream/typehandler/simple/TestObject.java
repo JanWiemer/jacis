@@ -1,4 +1,4 @@
-package org.jacis.persistence.microstream.typehandler;
+package org.jacis.persistence.microstream.typehandler.simple;
 
 public class TestObject {
 

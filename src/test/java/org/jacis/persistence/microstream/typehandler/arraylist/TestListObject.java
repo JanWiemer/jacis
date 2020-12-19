@@ -1,4 +1,4 @@
-package org.jacis.persistence.microstream.typehandler;
+package org.jacis.persistence.microstream.typehandler.arraylist;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -15,7 +15,7 @@ public class TestListObject {
     modified = new HashSet<>();
   }
 
-  List<String> getContent() {
+  public List<String> getContent() {
     return content;
   }
 

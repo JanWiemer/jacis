@@ -1,4 +1,4 @@
-package org.jacis.persistence.microstream.typehandler;
+package org.jacis.persistence.microstream.typehandler.simple;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
