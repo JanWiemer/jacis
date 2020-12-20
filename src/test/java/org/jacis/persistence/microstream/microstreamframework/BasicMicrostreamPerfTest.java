@@ -46,6 +46,8 @@ public class BasicMicrostreamPerfTest {
   protected EmbeddedStorageManager createStorageManager(Path storageDir) {
     EmbeddedStorageFoundation<?> foundation = Configuration.Default() //
         .setBaseDirectory(storageDir.toString()) //
+        .setBackupDirectory(storageDir.toString() + "/backup") //
+        .setDeletionDirectory(storageDir.toString() + "/deletion") //
         .createEmbeddedStorageFoundation();
     foundation.onConnectionFoundation(BinaryHandlersJDK8::registerJDK8TypeHandlers);
     EmbeddedStorageManager storageManager = foundation.createEmbeddedStorageManager().start();
