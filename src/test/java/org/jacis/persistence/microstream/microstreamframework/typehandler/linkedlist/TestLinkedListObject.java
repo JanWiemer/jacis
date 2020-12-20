@@ -1,4 +1,4 @@
-package org.jacis.persistence.microstream.typehandler.linkedlist;
+package org.jacis.persistence.microstream.microstreamframework.typehandler.linkedlist;
 
 import java.util.ArrayList;
 import java.util.HashSet;

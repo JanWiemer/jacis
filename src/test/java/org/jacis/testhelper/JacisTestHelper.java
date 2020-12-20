@@ -20,35 +20,37 @@ public class JacisTestHelper {
 
   private TestTxAdapter testTxAdapter;
 
-  public JacisStore<String, TestObject> createTestStoreWithCloning() {
+  public JacisContainer createTestContainer() {
     testTxAdapter = new TestTxAdapter();
-    JacisContainer container = new JacisContainer(testTxAdapter);
+    return new JacisContainer(testTxAdapter);
+  }
+
+  public JacisStore<String, TestObject> createTestStoreWithCloning() {
+    JacisContainer container = createTestContainer();
     return createTestStoreWithCloning(container);
   }
 
   public JacisStore<String, TestObject> createTestStoreWithCloning(JacisContainer container) {
-    JacisCloningObjectAdapter<TestObject> serializationAdapter = new JacisCloningObjectAdapter<>();
-    JacisObjectTypeSpec<String, TestObject, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class, serializationAdapter);
+    JacisCloningObjectAdapter<TestObject> cloningAdapter = new JacisCloningObjectAdapter<>();
+    JacisObjectTypeSpec<String, TestObject, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class, cloningAdapter);
     container.createStore(objectTypeSpec);
     return container.getStore(String.class, TestObject.class);
   }
 
   public JacisStore<String, TestObjectWithoutReadOnlyMode> createTestStoreWithCloningAndWithoutReadonlyMode() {
-    testTxAdapter = new TestTxAdapter();
-    JacisContainer container = new JacisContainer(testTxAdapter);
+    JacisContainer container = createTestContainer();
     return createTestStoreWithCloningAndWithoutReadonlyMode(container);
   }
 
   public JacisStore<String, TestObjectWithoutReadOnlyMode> createTestStoreWithCloningAndWithoutReadonlyMode(JacisContainer container) {
-    JacisCloningObjectAdapter<TestObjectWithoutReadOnlyMode> serializationAdapter = new JacisCloningObjectAdapter<>();
-    JacisObjectTypeSpec<String, TestObjectWithoutReadOnlyMode, TestObjectWithoutReadOnlyMode> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObjectWithoutReadOnlyMode.class, serializationAdapter);
+    JacisCloningObjectAdapter<TestObjectWithoutReadOnlyMode> cloningAdapter = new JacisCloningObjectAdapter<>();
+    JacisObjectTypeSpec<String, TestObjectWithoutReadOnlyMode, TestObjectWithoutReadOnlyMode> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObjectWithoutReadOnlyMode.class, cloningAdapter);
     container.createStore(objectTypeSpec);
     return container.getStore(String.class, TestObjectWithoutReadOnlyMode.class);
   }
 
   public JacisStore<String, TestObject> createTestStoreWithSerialization() {
-    testTxAdapter = new TestTxAdapter();
-    JacisContainer container = new JacisContainer(testTxAdapter);
+    JacisContainer container = createTestContainer();
     return createTestStoreWithSerialization(container);
   }
 

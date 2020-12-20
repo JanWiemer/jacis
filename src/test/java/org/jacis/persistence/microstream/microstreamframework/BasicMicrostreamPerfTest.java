@@ -2,7 +2,7 @@
  * Copyright (c) 2016. Jan Wiemer
  */
 
-package org.jacis.persistence.microstream.basic;
+package org.jacis.persistence.microstream.microstreamframework;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

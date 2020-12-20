@@ -9,6 +9,7 @@ import org.jacis.plugin.dirtycheck.JacisDirtyCheck;
 import org.jacis.plugin.dirtycheck.StoreEntryBasedDirtyCheck;
 import org.jacis.plugin.dirtycheck.object.JacisDirtyTrackingObject;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
+import org.jacis.plugin.persistence.JacisPersistenceAdapter;
 
 /**
  * = Specification of the Objects in a Store
@@ -44,6 +45,8 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   private JacisObjectAdapter<TV, CV> objectAdapter;
   /** The dirty check used to automatically set an transactional view to updated if it has changed */
   private JacisDirtyCheck<K, TV> dirtyCheck;
+  /** Optional adapter to a persistence framework to store the entries of the store persistently / durable */
+  private JacisPersistenceAdapter<K, TV> persistenceAdapter;
   /** Defining if the store keeps track of the original value of an object at the time it was copied to the transactional view (default: 'false') */
   private boolean trackOriginalValue = false;
   /** Defines if all registered tracked views are checked for consistency on each internalCommit (default: 'false'). */
@@ -99,6 +102,22 @@ public class JacisObjectTypeSpec<K, TV, CV> {
    */
   public JacisObjectTypeSpec<K, TV, CV> setDirtyCheck(JacisDirtyCheck<K, TV> dirtyCheck) {
     this.dirtyCheck = dirtyCheck;
+    return this;
+  }
+
+  /** @return Optional adapter to a persistence framework to store the entries of the store persistently / durable */
+  public JacisPersistenceAdapter<K, TV> getPersistenceAdapter() {
+    return persistenceAdapter;
+  }
+
+  /**
+   * Set the optional adapter to a persistence framework to store the entries of the store persistently / durable.
+   * 
+   * @param persistenceAdapter the persistence adapter
+   * @return The object type specification itself for method chaining.
+   */
+  public JacisObjectTypeSpec<K,TV,CV> setPersistenceAdapter(JacisPersistenceAdapter<K, TV> persistenceAdapter) {
+    this.persistenceAdapter = persistenceAdapter;
     return this;
   }
 

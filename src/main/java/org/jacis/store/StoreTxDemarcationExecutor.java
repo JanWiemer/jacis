@@ -9,6 +9,7 @@ import org.jacis.exception.JacisModificationListenerException;
 import org.jacis.exception.JacisTrackedViewModificationException;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.dirtycheck.JacisDirtyCheck;
+import org.jacis.plugin.persistence.JacisPersistenceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +68,10 @@ class StoreTxDemarcationExecutor {
         }
       }
     }
+    JacisPersistenceAdapter<K,TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
+    if(persistenceAdapter!=null) {
+      persistenceAdapter.prepareCommit();
+    }
   }
 
   <K, TV, CV> void executeCommit(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
@@ -111,6 +116,10 @@ class StoreTxDemarcationExecutor {
       }
     } finally { // even if exceptions occur TX view has to be destroyed! See https://github.com/JanWiemer/jacis/issues/8
       txView.afterCommit();
+      JacisPersistenceAdapter<K,TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
+      if(persistenceAdapter!=null) {
+        persistenceAdapter.commit();
+      }
     }
     if (toThrow != null) {
       throw toThrow;
@@ -142,6 +151,10 @@ class StoreTxDemarcationExecutor {
       }
     }
     txView.afterRollback();
+    JacisPersistenceAdapter<K,TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
+    if(persistenceAdapter!=null) {
+      persistenceAdapter.rollback();
+    }
   }
 
   <K, TV, CV> void executeDestroy(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {

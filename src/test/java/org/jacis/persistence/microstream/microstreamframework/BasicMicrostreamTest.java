@@ -2,7 +2,7 @@
  * Copyright (c) 2016. Jan Wiemer
  */
 
-package org.jacis.persistence.microstream.basic;
+package org.jacis.persistence.microstream.microstreamframework;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

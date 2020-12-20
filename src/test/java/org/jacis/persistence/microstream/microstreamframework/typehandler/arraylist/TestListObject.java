@@ -1,4 +1,4 @@
-package org.jacis.persistence.microstream.typehandler.arraylist;
+package org.jacis.persistence.microstream.microstreamframework.typehandler.arraylist;
 
 import java.util.ArrayList;
 import java.util.HashSet;

@@ -25,6 +25,7 @@ import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.exception.JacisTxCommitException;
 import org.jacis.exception.JacisTxRollbackException;
 import org.jacis.plugin.JacisTransactionListener;
+import org.jacis.plugin.persistence.JacisPersistenceAdapter;
 import org.jacis.plugin.txadapter.JacisTransactionAdapter;
 import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.plugin.txadapter.local.JacisTransactionAdapterLocal;
@@ -113,6 +114,11 @@ public class JacisContainer {
   public <K, TV, CV> JacisStoreAdminInterface<K, TV, CV> createStore(JacisObjectTypeSpec<K, TV, CV> objectTypeSpec) {
     StoreIdentifier storeIdentifier = new StoreIdentifier(objectTypeSpec.getKeyClass(), objectTypeSpec.getValueClass());
     JacisStoreImpl<K, TV, CV> store = new JacisStoreImpl<>(this, storeIdentifier, objectTypeSpec);
+    JacisPersistenceAdapter<K, TV> persistenceAdapter = objectTypeSpec.getPersistenceAdapter();
+    if(persistenceAdapter!=null) {
+      persistenceAdapter.initializeStore(store);
+      store.registerModificationListener(persistenceAdapter);
+    }
     storeMap.put(storeIdentifier, store);
     return store;
   }
@@ -180,7 +186,6 @@ public class JacisContainer {
    */
   public void clearAllStores() {
     transactionDemarcationLock.writeLock().lock();
-    ;
     try {
       storeMap.values().forEach(JacisStore::clear);
     } finally {
