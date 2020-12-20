@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2020. Jan Wiemer
+ */
 
 package org.jacis.store;
 
@@ -9,7 +12,7 @@ package org.jacis.store;
  *
  * @author Jan Wiemer
  */
-@SuppressWarnings({ "unused", "WeakerAccess" })
+@SuppressWarnings({ "WeakerAccess" })
 public interface JacisReadOnlyTransactionContext {
 
   /**

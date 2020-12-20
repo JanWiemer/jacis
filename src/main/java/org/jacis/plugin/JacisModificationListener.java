@@ -9,7 +9,7 @@ import org.jacis.container.JacisTransactionHandle;
 import org.jacis.store.JacisStoreImpl;
 
 /**
- * = Listener that gets notified on each modification during commit.
+ * Listener that gets notified on each modification during commit.
  *
  * A listener implementing this interface can be registered at a transactional store
  * by passing it to the method {@link JacisStoreImpl#registerModificationListener(JacisModificationListener)}.

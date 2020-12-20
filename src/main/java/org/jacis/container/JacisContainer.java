@@ -44,8 +44,9 @@ import org.slf4j.LoggerFactory;
 //
 
 /**
- * = The Jacis Container Holding the Stores for the Different Object Types
- * The 'JacisContainer' is the main class of the Java ACI Store.
+ * The Jacis container holding the stores for the different object types.
+ * 
+ * The <em>JacisContainer</em> is the main class of the Java ACI Store.
  * The container stores a number of individual stores for different object types.
  * Transactions are managed by the container and are valid for all stores in the container.
  * This class provides methods to create stores for different object types and provides access to those stores.
@@ -334,7 +335,6 @@ public class JacisContainer {
     return handle;
   }
 
-  @SuppressWarnings("unused")
   public List<JacisTransactionInfo> getTransactionInfos() {
     Collection<JacisTransactionHandle> handles = txAdapter.getAllTransactionHandles();
     List<JacisTransactionInfo> res = new ArrayList<>(handles.size());

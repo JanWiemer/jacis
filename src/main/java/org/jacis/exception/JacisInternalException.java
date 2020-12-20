@@ -5,7 +5,7 @@
 package org.jacis.exception;
 
 /**
- * Exception thrown if an internal Jacis Error happenes.
+ * Exception thrown if an internal Jacis Error happens.
  *
  * @author Jan Wiemer
  */

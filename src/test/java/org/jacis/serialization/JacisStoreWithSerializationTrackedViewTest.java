@@ -4,6 +4,8 @@
 
 package org.jacis.serialization;
 
+import static org.junit.Assert.assertEquals;
+
 import org.jacis.container.JacisContainer;
 import org.jacis.store.JacisStore;
 import org.jacis.testhelper.JacisTestHelper;
@@ -11,8 +13,6 @@ import org.jacis.testhelper.TestObject;
 import org.jacis.testhelper.TrackedTestView;
 import org.jacis.trackedviews.TrackedView;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class JacisStoreWithSerializationTrackedViewTest {
 

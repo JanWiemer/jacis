@@ -5,7 +5,7 @@
 package org.jacis.plugin.objectadapter;
 
 /**
- * = The object adapter defines how to copy the objects to a transactional view and back.
+ * The object adapter defines how to copy the objects to a transactional view and back.
  *
  * This interface for an object adapter provides the methods how to transfer objects
  * from the store of committed objects to the transaction view and back.
@@ -32,7 +32,7 @@ public interface JacisObjectAdapter<TV, CV> {
 
   /**
    * Clone a committed version of the object into the transactional view.
-   * Note that modifications ob the returned transactional view must not influence the committed version of the object.
+   * Note that modifications ib the returned transactional view must not influence the committed version of the object.
    *
    * @param value Committed version of the object.
    * @return A transactional view for the passed object.

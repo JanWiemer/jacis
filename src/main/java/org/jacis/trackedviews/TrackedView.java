@@ -16,7 +16,7 @@ import org.jacis.store.JacisStoreImpl;
  * On access the modifications pending in the current TX are tracked on the snapshot.
  * Modifications done in afterwards in the same transaction as getting the tracked view are tracked as well on the snapshot.
  * 
- * *Caution:* a tracked view must not modify the objects passed to the method tracking the modifications!
+ * <b>Caution:</b> a tracked view must not modify the objects passed to the method tracking the modifications!
  *
  * @param <V> The type of the original values (from the store)
  * @author Jan Wiemer
@@ -39,7 +39,7 @@ public interface TrackedView<V> extends JacisCloneable<TrackedView<V>> {
    * The implementation of this method should check the consistency of the tracked view.
    * The method is called after executing a commit is finished.
    * Note that the method is only called if this is specified in the specification of the store
-   * (see {@link org.jacis.container.JacisObjectTypeSpec#checkViewsOnCommit} (default is 'false')).
+   * (see {@link org.jacis.container.JacisObjectTypeSpec#checkViewsOnCommit} (default is <code>false</code>)).
    * The method gets all committed values as parameter.
    * Usually the implementation goes through all these values and calculates the expected values of
    * the tracked view on these values. If these values differ from the actually tracked values the

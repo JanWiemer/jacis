@@ -47,7 +47,6 @@ public interface JacisReadonlyModeSupport {
    *
    * @param readOnlyMode if 'true' switch to read-only mode, if 'false' switch to read-write mode
    */
-  @SuppressWarnings("unused")
   default void switchToReadOnlyMode(boolean readOnlyMode) {
     if (readOnlyMode) {
       switchToReadOnlyMode();

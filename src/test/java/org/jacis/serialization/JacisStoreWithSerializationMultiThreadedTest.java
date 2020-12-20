@@ -4,6 +4,10 @@
 
 package org.jacis.serialization;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.store.JacisStore;
 import org.jacis.testhelper.JacisTestHelper;
@@ -11,10 +15,6 @@ import org.jacis.testhelper.TestObject;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.junit.Assert.assertEquals;
 
 public class JacisStoreWithSerializationMultiThreadedTest {
 

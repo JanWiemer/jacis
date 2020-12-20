@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2020. Jan Wiemer
+ */
 package org.jacis.persistence.microstream.microstreamframework.typehandler.arraylist;
 
 import org.slf4j.Logger;

@@ -5,7 +5,7 @@
 package org.jacis.container;
 
 /**
- * = Jacis handle for an external transaction.
+ * Jacis handle for an external transaction.
  *
  * This class is used by the Jacis store to reference an external transaction the Jacis container is bound to.
  *
@@ -19,7 +19,7 @@ public class JacisTransactionHandle {
   private final String txDescription;
   /** A reference to the external (global) transaction (e.g. a JTA transaction) */
   private final Object externalTransaction;
-  /** Creation timestamp in milliseconds (System.currentTimeMillis()) */
+  /** Creation timestamp in milliseconds (<code>System.currentTimeMillis()</code>) */
   private final long creationTimestampMs;
 
   /**

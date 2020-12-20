@@ -4,9 +4,9 @@
 
 package org.jacis.plugin.objectadapter.serialization;
 
-import org.jacis.plugin.objectadapter.JacisObjectAdapter;
-
 import java.io.Serializable;
+
+import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
  * Abstract generic implementation of the {@link org.jacis.plugin.objectadapter.JacisObjectAdapter} copying the objects

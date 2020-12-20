@@ -22,19 +22,18 @@ import org.jacis.store.JacisStoreImpl.KeyValuePair;
 
 /**
  * Storing a single type of objects.
- * <p>
+ * 
  * All operations checking or returning entries of the store operate on the committed values merged with the
  * current transactional view (obtained with the currently active transaction handle from the map of transaction views).
  * This means that first the transactional view is checked if it contains an entry for the desired key.
  * If so this entry is returned, otherwise the committed value from the core store is returned.
- * Note that if an object is deleted in a transaction an entry with the value 'null' remains in the transactional view.
+ * Note that if an object is deleted in a transaction an entry with the value <code>null</code> remains in the transactional view.
  * Therefore also deletions are properly handled with respect to isolation.
- *
+ * 
  * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @author Jan Wiemer
  */
-@SuppressWarnings({ "unused" })
 public interface JacisStore<K, TV> {
 
   /** @return the reference to the JACIS container this store belongs to */
@@ -97,7 +96,7 @@ public interface JacisStore<K, TV> {
    * Note that an update has to be explicitly called for an object (by calling {@link #update(Object, Object)}).
    * The check returns true if there exists a transactional view
    * and the updated flag of this entry (see {@link StoreEntryTxView#updated}) is set (set by the 'update' method).
-   * Note that this method does not cause the referred object to be copied to thr transactional view.
+   * Note that this method does not cause the referred object to be copied to the transactional view.
    *
    * @param key The key of the entry to check.
    * @return if the object for the passed key has been updated in the current transaction.
@@ -108,7 +107,7 @@ public interface JacisStore<K, TV> {
    * Returns if the object for the passed key is stale.
    * An object is considered to be stale if after first reading it in the current transaction,
    * an updated version of the same object has been committed by another transaction.
-   * Note that this method does not cause the referred object to be copied to thr transactional view.
+   * Note that this method does not cause the referred object to be copied to the transactional view.
    *
    * @param key The key of the entry to check.
    * @return if the object for the passed key is stale.
@@ -119,7 +118,7 @@ public interface JacisStore<K, TV> {
    * Checks if the object for the passed key is stale and throws a {@link JacisStaleObjectException} if so.
    * An object is considered to be stale if after first reading it in the current transaction,
    * an updated version of the same object has been committed by another transaction.
-   * Note that this method does not cause the referred object to be copied to thr transactional view.
+   * Note that this method does not cause the referred object to be copied to the transactional view.
    *
    * @param key The key of the entry to check.
    * @throws JacisStaleObjectException thrown if the object for the passed key is stale.
@@ -139,7 +138,7 @@ public interface JacisStore<K, TV> {
   /**
    * Returns the value for the passed key.
    * If the object is already stored in the transactional view of the current transaction this value is returned.
-   * Otherwise the behaviour depends on the object type:
+   * Otherwise the behavior depends on the object type:
    * If the object adapter for the store supports a read only mode, then a read only view on the committed value is returned.
    * Otherwise the committed entry for the key it is copied to the transactional view now.
    *
@@ -161,97 +160,97 @@ public interface JacisStore<K, TV> {
   <P> P getProjectionReadOnly(K key, Function<TV, P> projection);
 
   /**
-   * Returns a stream of all objects (not 'null') currently stored in the store.
+   * Returns a stream of all objects (not <code>null</code>) currently stored in the store.
    * Note that the method operates on the committed values merged with the current transactional view (see class description).
    * If the transactional view did not already contain an entry it is copied to the transactional view now.
    *
-   * @return a stream of all objects (not 'null') currently stored in the store.
+   * @return a stream of all objects (not <code>null</code>) currently stored in the store.
    */
   Stream<TV> stream();
 
   /**
-   * Returns a stream of read only views for all objects (not 'null') currently stored in the store.
+   * Returns a stream of read only views for all objects (not <code>null</code>) currently stored in the store.
    * Note that the method operates on the committed values merged with the current transactional view (see class description).
    * Further note that the behavior of the method is equivalent to the behavior of the {@link #getReadOnly} method for a single object.
    *
-   * @return a stream of all objects (not 'null') currently stored in the store.
+   * @return a stream of all objects (not <code>null</code>) currently stored in the store.
    */
   Stream<TV> streamReadOnly();
 
   /**
-   * Returns a stream of all objects (not 'null') currently stored in the store filtered by the passed filter.
+   * Returns a stream of all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    * Note that the method operates on the committed values merged with the current transactional view (see class description).
    * If supported the filter predicate is checked on a read only view of the object (without cloning it).
    * Only the objects passing the filter are is copied to the transactional view (if they are not yet contained there).
    *
-   * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
-   * @return a stream of all objects (not 'null') currently stored in the store filtered by the passed filter.
+   * @param filter a filter predicate deciding if an object should be contained in the resulting stream (<code>null</code> means all objects should be contained)
+   * @return a stream of all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    */
   Stream<TV> stream(Predicate<TV> filter);
 
   /**
-   * Returns a stream of read only views for all objects (not 'null') currently stored in the store filtered by the passed filter.
+   * Returns a stream of read only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    * Note that the method operates on the committed values merged with the current transactional view (see class description).
    * If supported the filter predicate is checked on a read only view of the object (without cloning it).
    * Further note that the behavior of the method is equivalent to the behavior of the {@link #getReadOnly} method for a single object
    * (only the objects passing the filter may be copied to the transactional view if no read only view is supported (and they are not yet contained there)).
    *
-   * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
-   * @return a stream of all objects (not 'null') currently stored in the store filtered by the passed filter.
+   * @param filter a filter predicate deciding if an object should be contained in the resulting stream (<code>null</code> means all objects should be contained)
+   * @return a stream of all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    */
   Stream<TV> streamReadOnly(Predicate<TV> filter);
 
   /**
-   * Returns a list of all objects (not 'null') currently stored in the store.
+   * Returns a list of all objects (not <code>null</code>) currently stored in the store.
    *
-   * @return a list of all objects (not 'null') currently stored in the store.
+   * @return a list of all objects (not <code>null</code>) currently stored in the store.
    */
   List<TV> getAll();
 
   /**
-   * Returns a list of all objects (not 'null') currently stored in the store filtered by the passed filter.
+   * Returns a list of all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    * The method uses the {@link #stream(Predicate)} method and collects the results to a list.
    *
-   * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
-   * @return a list of all objects (not 'null') currently stored in the store filtered by the passed filter.
+   * @param filter a filter predicate deciding if an object should be contained in the resulting stream (<code>null</code> means all objects should be contained)
+   * @return a list of all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    */
   List<TV> getAll(Predicate<TV> filter);
 
   /**
-   * Returns a list of read-only views for all objects (not 'null') currently stored in the store.
+   * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store.
    *
-   * @return a list of read-only views for all objects (not 'null') currently stored in the store.
+   * @return a list of read-only views for all objects (not <code>null</code>) currently stored in the store.
    */
   List<TV> getAllReadOnly();
 
   /**
-   * Returns a list of read-only views for all objects (not 'null') currently stored in the store filtered by the passed filter.
+   * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    * The method uses the {@link #streamReadOnly(Predicate)} method and collects the results to a list.
    *
-   * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
-   * @return a list of read-only views for all objects (not 'null') currently stored in the store filtered by the passed filter.
+   * @param filter a filter predicate deciding if an object should be contained in the resulting stream (<code>null</code> means all objects should be contained)
+   * @return a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    */
   List<TV> getAllReadOnly(Predicate<TV> filter);
 
   /**
-   * Returns a list of all objects (not 'null') currently stored in the store filtered by the passed filter.
+   * Returns a list of all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    * The method executes the {@link #getAll(Predicate)} method as an atomic operations.
    * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
    * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
-   * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
-   * @return a list of all objects (not 'null') currently stored in the store filtered by the passed filter.
+   * @param filter a filter predicate deciding if an object should be contained in the resulting stream (<code>null</code> means all objects should be contained)
+   * @return a list of all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    */
   List<TV> getAllAtomic(Predicate<TV> filter);
 
   /**
-   * Returns a list of read-only views for all objects (not 'null') currently stored in the store filtered by the passed filter.
+   * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    * The method executes the {@link #getAllReadOnly(Predicate)} method as an atomic operations.
    * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
    * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
-   * @param filter a filter predicate deciding if an object should be contained in the resulting stream ('null' means all objects should be contained)
-   * @return a list of read-only views for all objects (not 'null') currently stored in the store filtered by the passed filter.
+   * @param filter a filter predicate deciding if an object should be contained in the resulting stream (<code>null</code> means all objects should be contained)
+   * @return a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    */
   List<TV> getAllReadOnlyAtomic(Predicate<TV> filter);
 
@@ -260,7 +259,7 @@ public interface JacisStore<K, TV> {
    * First the elements are filtered and sorted according to the passed predicate and comparator,
    * afterwards the desired page is extracted according to the passed offset and page size.
    *
-   * @param filter     a filter predicate deciding if an object should be contained in the paged date ('null' means all objects should be contained)
+   * @param filter     a filter predicate deciding if an object should be contained in the paged date (<code>null</code> means all objects should be contained)
    * @param comparator a comparator to sort the object.
    * @param offset     The offset of the desired page in the sorted and filtered list of objects.
    * @param pageSize   The size of the desired page.
@@ -276,7 +275,7 @@ public interface JacisStore<K, TV> {
    * afterwards the desired page is extracted according to the passed offset and page size.
    *
    * @param wrapper    a function used to wrap a (read only) object before filtering, sorting and returning them
-   * @param filter     a filter predicate deciding if an object should be contained in the paged date ('null' means all objects should be contained)
+   * @param filter     a filter predicate deciding if an object should be contained in the paged date (<code>null</code> means all objects should be contained)
    * @param comparator a comparator to sort the object.
    * @param offset     The offset of the desired page in the sorted and filtered list of objects.
    * @param pageSize   The size of the desired page.
@@ -300,7 +299,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Remove the object for the passed key from the store (first only in the transactional view of course).
-   * The method is equivalent to simply calling the {@link #update(Object, Object)} method with a 'null' value.
+   * The method is equivalent to simply calling the {@link #update(Object, Object)} method with a <code>null</code> value.
    *
    * @param key The key of the object to remove.
    */
@@ -422,13 +421,14 @@ public interface JacisStore<K, TV> {
    * For all objects the accumulator method is called with the current value of the target and the object.
    * Inside the accumulator method the target value is updated.
    * The objects are passed to the accumulator in read-only mode if supported.
-   * The objects are collected by calling the {@link #getAllReadOnly(Predicate)} with 'null' as predicate.
+   * The objects are collected by calling the {@link #getAllReadOnly(Predicate)} with <code>null</code> as predicate.
    * <p>
    * Example (simply counting the objects):
-   * <p>
-   * ----
-   * int objectCount = store.accumulate(new AtomicInteger(), (i,o)-&gt;i.incrementAndGet()).get();
-   * ----
+   * </p>
+   * 
+   * <pre>
+   * int objectCount = store.accumulate(new AtomicInteger(), (i, o) -&gt; i.incrementAndGet()).get();
+   * </pre>
    *
    * @param target      The initial value for the target
    * @param accumulator The accumulator method getting the current value of the accumulation target (type 'C') and an object (type 'TV').

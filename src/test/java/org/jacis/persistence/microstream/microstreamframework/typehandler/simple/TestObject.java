@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2020. Jan Wiemer
+ */
 package org.jacis.persistence.microstream.microstreamframework.typehandler.simple;
 
 public class TestObject {

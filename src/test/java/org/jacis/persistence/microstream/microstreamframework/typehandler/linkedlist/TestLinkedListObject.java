@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2020. Jan Wiemer
+ */
 package org.jacis.persistence.microstream.microstreamframework.typehandler.linkedlist;
 
 import java.util.ArrayList;
@@ -15,7 +18,7 @@ public class TestLinkedListObject<T> {
     content = new ArrayList<>();
     modified = new HashSet<>();
   }
-  
+
   public int getSize() {
     return content.size();
   }
@@ -26,26 +29,26 @@ public class TestLinkedListObject<T> {
 
   void restoreContent() {
     TestLinkedListEntry<T> e = head;
-    while (e!=null) {
+    while (e != null) {
       content.add(e);
       e = e.getSucc();
     }
   }
-  
+
   public TestLinkedListObject<T> add(T element) {
-    return add(getSize()-1, element); // add at the end
+    return add(getSize() - 1, element); // add at the end
   }
 
   public TestLinkedListObject<T> add(int idx, T element) {
     TestLinkedListEntry<T> oldEntry = content.get(idx);
     TestLinkedListEntry<T> predEntry = oldEntry.getPred();
     TestLinkedListEntry<T> newEntry = new TestLinkedListEntry<T>(element, predEntry, oldEntry);
-    if(predEntry!=null) {
+    if (predEntry != null) {
       predEntry.setSucc(newEntry);
     } else {
       head = newEntry;
     }
-    if(oldEntry!=null) {
+    if (oldEntry != null) {
       oldEntry.setPred(newEntry);
     }
     trackModified(predEntry);
@@ -66,17 +69,17 @@ public class TestLinkedListObject<T> {
     int size = getSize();
     TestLinkedListEntry<T> oldEntry = content.get(idx);
     TestLinkedListEntry<T> lastEntry = content.get(size);
-    if(idx < size) {
+    if (idx < size) {
       set(idx, lastEntry.getObject());
     }
     TestLinkedListEntry<T> predOfLast = lastEntry.getPred();
-    if(predOfLast!=null) {
+    if (predOfLast != null) {
       predOfLast.setSucc(null);
     } else {
       head = null;
     }
-    content.set(idx, content.get(content.size()-1));
-    content.remove(content.size()-1);
+    content.set(idx, content.get(content.size() - 1));
+    content.remove(content.size() - 1);
     trackModified(oldEntry);
     trackModified(lastEntry);
     trackModified(predOfLast);
@@ -84,22 +87,21 @@ public class TestLinkedListObject<T> {
   }
 
   protected void trackModified(TestLinkedListEntry<T> entry) {
-    if(entry!=null) {
-       modified.add(entry);
+    if (entry != null) {
+      modified.add(entry);
     }
   }
-  
+
   @Override
   public String toString() {
     return content.toString();
   }
 
-
 }
 
 class TestLinkedListEntry<T> {
 
-  private  T object;
+  private T object;
   private TestLinkedListEntry<T> pred;
   private TestLinkedListEntry<T> succ;
 

@@ -18,7 +18,6 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
-@SuppressWarnings({ "unused" })
 public interface JacisStoreAdminInterface<K, TV, CV> {
 
   /** @return the store */

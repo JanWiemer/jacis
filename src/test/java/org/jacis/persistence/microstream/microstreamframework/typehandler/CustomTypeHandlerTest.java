@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2020. Jan Wiemer
+ */
 package org.jacis.persistence.microstream.microstreamframework.typehandler;
 
 import static org.junit.Assert.assertEquals;
@@ -62,13 +65,13 @@ public class CustomTypeHandlerTest {
     list.add("One");
     list.add("Two");
     list.add("Three");
-    log.info("TEST list: {}",list);
+    log.info("TEST list: {}", list);
     storageManager.storeRoot();
-    list.getContent().forEach(e->storageManager.store(e));
+    list.getContent().forEach(e -> storageManager.store(e));
     storageManager.shutdown();
     EmbeddedStorageManager storageManager2 = createStorageManager(storageDir);
     TestListObject checkList1 = (TestListObject) storageManager2.root();
-    log.info("TEST check 1: {}",checkList1);
+    log.info("TEST check 1: {}", checkList1);
     assertEquals(3, checkList1.getContent().size());
     assertEquals("One", checkList1.getContent().get(0));
     assertEquals("Two", checkList1.getContent().get(1));
@@ -79,7 +82,7 @@ public class CustomTypeHandlerTest {
     storageManager2.shutdown();
     EmbeddedStorageManager storageManager3 = createStorageManager(storageDir);
     TestListObject checkList2 = (TestListObject) storageManager3.root();
-    log.info("TEST check 2: {}",checkList2);
+    log.info("TEST check 2: {}", checkList2);
     assertEquals(3, checkList2.getContent().size());
     assertEquals("One", checkList2.getContent().get(0));
     assertEquals("Two New", checkList2.getContent().get(1));
@@ -91,7 +94,7 @@ public class CustomTypeHandlerTest {
   @SuppressWarnings("unchecked")
   protected EmbeddedStorageManager createStorageManager(Path storageDir) {
     return EmbeddedStorage.Foundation(storageDir) //
-        .onConnectionFoundation(f -> f.registerCustomTypeHandlers(new TestObjectHandler(),new TestListObjectHandler())) //
+        .onConnectionFoundation(f -> f.registerCustomTypeHandlers(new TestObjectHandler(), new TestListObjectHandler())) //
         .start();
   }
 

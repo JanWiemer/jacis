@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2017. Jan Wiemer
+ */
 
 package org.jacis.container;
 
@@ -10,11 +13,12 @@ import org.jacis.store.JacisReadOnlyTransactionContext;
 import org.jacis.store.JacisStore;
 
 /**
- * Representing a read only version of all the contexts of the stores within a transaction belonging to the container.
+ * Representing a read only version of all the contexts of the stores
+ * within a transaction belonging to the container.
  * 
  * @author Jan Wiemer
  */
-@SuppressWarnings({ "unused", "WeakerAccess" })
+@SuppressWarnings({ "WeakerAccess" })
 public class JacisContainerReadOnlyTransactionContext {
 
   private final List<AbstractMap.SimpleImmutableEntry<JacisStore<?, ?>, JacisReadOnlyTransactionContext>> storeContextList = new ArrayList<>();

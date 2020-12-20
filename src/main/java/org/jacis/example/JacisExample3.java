@@ -4,14 +4,14 @@
 
 package org.jacis.example;
 
+import java.util.List;
+
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.example.JacisExample1.Account;
 import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.store.JacisStore;
 import org.jacis.trackedviews.TrackedView;
-
-import java.util.List;
 
 /**
  * Example 3: using a tracked view.

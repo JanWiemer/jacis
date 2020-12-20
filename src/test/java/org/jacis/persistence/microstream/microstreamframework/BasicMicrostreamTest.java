@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. Jan Wiemer
+ * Copyright (c) 2020. Jan Wiemer
  */
 
 package org.jacis.persistence.microstream.microstreamframework;

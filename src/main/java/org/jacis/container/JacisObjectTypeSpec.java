@@ -12,9 +12,9 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 import org.jacis.plugin.persistence.JacisPersistenceAdapter;
 
 /**
- * = Specification of the Objects in a Store
+ * Specification of the Objects in a Store
  *
- * Specification of an object type that shall be stored in a transational store.
+ * Specification of an object type that shall be stored in a transactional store.
  * The pain purpose of the specification is to define the types (classes) for the keys and the values.
  *
  * Furthermore some configuration is defined in this class how the object store should deal with objects of this type.
@@ -26,7 +26,7 @@ import org.jacis.plugin.persistence.JacisPersistenceAdapter;
  * by calling an update method (there is no automatic) dirty checking.
  *
  * The mechanism how the objects are copied from the internal representation and back can be customized
- * (e.g. by cloning or by serialization and de-serialization).
+ * (e.g. by cloning or by serialization and deserialization).
  * The object specification stores an {@link #objectAdapter} (type {@link JacisObjectAdapter}) implementing this mechanism.
  *
  * @param <K>  Key type of the store entry
@@ -34,7 +34,6 @@ import org.jacis.plugin.persistence.JacisPersistenceAdapter;
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
-@SuppressWarnings("unused")
 public class JacisObjectTypeSpec<K, TV, CV> {
 
   /** Type of the keys in the store */
@@ -116,7 +115,7 @@ public class JacisObjectTypeSpec<K, TV, CV> {
    * @param persistenceAdapter the persistence adapter
    * @return The object type specification itself for method chaining.
    */
-  public JacisObjectTypeSpec<K,TV,CV> setPersistenceAdapter(JacisPersistenceAdapter<K, TV> persistenceAdapter) {
+  public JacisObjectTypeSpec<K, TV, CV> setPersistenceAdapter(JacisPersistenceAdapter<K, TV> persistenceAdapter) {
     this.persistenceAdapter = persistenceAdapter;
     return this;
   }

@@ -4,10 +4,10 @@
 
 package org.jacis.testhelper;
 
+import java.io.Serializable;
+
 import org.jacis.plugin.dirtycheck.object.AbstractReadOnlyModeAndDirtyCheckSupportingObject;
 import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
-
-import java.io.Serializable;
 
 /**
  * A JACIS cloneable test object that also provides a read only mode.
@@ -41,7 +41,6 @@ public class TestObject extends AbstractReadOnlyModeAndDirtyCheckSupportingObjec
     return name;
   }
 
-  @SuppressWarnings("unused")
   public TestObject setName(String name) {
     checkWritable();
     this.name = name;

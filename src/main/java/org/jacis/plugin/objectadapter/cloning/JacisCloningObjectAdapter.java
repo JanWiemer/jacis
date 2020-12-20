@@ -4,13 +4,13 @@
 
 package org.jacis.plugin.objectadapter.cloning;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import org.jacis.exception.ReadOnlyModeNotSupportedException;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 import org.jacis.plugin.readonly.DefaultJacisStoreEntryReadOnlyModeAdapter;
 import org.jacis.plugin.readonly.JacisStoreEntryReadOnlyModeAdapter;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 /**
  * Generic implementation of the {@link org.jacis.plugin.objectadapter.JacisObjectAdapter} copying the objects

@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Jan Wiemer
  */
-@SuppressWarnings({ "unused", "WeakerAccess" })
+@SuppressWarnings({ "WeakerAccess" })
 public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransactionAdapter {
 
   private static final Logger log = LoggerFactory.getLogger(AbstractJacisTransactionAdapterJTA.class);

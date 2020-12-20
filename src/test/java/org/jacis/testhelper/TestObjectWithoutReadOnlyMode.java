@@ -4,16 +4,15 @@
 
 package org.jacis.testhelper;
 
-import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
-
 import java.io.Serializable;
+
+import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
 
 /**
  * A JACIS cloneable test object that does *not* provide a read only mode.
  *
  * @author Jan Wiemer
  */
-@SuppressWarnings("unused")
 public class TestObjectWithoutReadOnlyMode implements JacisCloneable<TestObjectWithoutReadOnlyMode>, Serializable {
 
   private static final long serialVersionUID = 1L;

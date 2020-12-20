@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2020. Jan Wiemer
+ */
 package org.jacis.persistence.microstream;
 
 import static org.junit.Assert.assertEquals;
@@ -221,6 +224,5 @@ public class JacisMicrostreamAdapterTest {
     assertEquals(5, store.get("obj-5").getValue());
     readingTx.commit();
   }
-
 
 }

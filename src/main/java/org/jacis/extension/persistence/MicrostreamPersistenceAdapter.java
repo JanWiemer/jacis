@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2020. Jan Wiemer
+ */
 package org.jacis.extension.persistence;
 
 import java.util.ArrayList;
@@ -16,16 +19,39 @@ import org.slf4j.LoggerFactory;
 import one.microstream.storage.types.StorageManager;
 
 /**
+ * Implementation of the JACIS persistence adapter based on Microstream serialization
+ * (see <a href="https://microstream.one/">https://microstream.one/</a>).
+ * 
+ * Changes objects are passed to the Microstream storage manager on commit.
+ * This way the data stored persistently is kept up to date.
+ * If there is already persisted data on startup the JACIS store is initialized with this data.
+ * 
+ * Implementation hint:
+ * For performance reasons the actual entities stored by Microstream are held
+ * in a custom implementation of a double-linked list.
+ * Each list entry represents a store entry and contains the key and the value of the object.
+ * We refer this objest as the Microstream entity object for the store entry.
+ * For each key a (transient) map stores a reference to the list entry object.
+ * This way modifying, adding and removing objects can be done in constant time independently of the store size.
+ * 
+ * @param <K> Key type of the store entry
+ * @param <V> Value type of the store entry
+ * 
  * @author Jan Wiemer
  */
 public class MicrostreamPersistenceAdapter<K, V> implements JacisPersistenceAdapter<K, V> {
 
   private static final Logger log = LoggerFactory.getLogger(MicrostreamPersistenceAdapter.class);
 
+  /** Flag that can be used to enable trace logging in the adapter implementation. */
   private boolean traceLogging;
+  /** The Microstream storage manager used to persist entities. */
   private StorageManager storageManager;
+  /** The root object stored by the Microstream storage manager. */
   private MicrostreamStoreRoot<K, V> storageRoot;
+  /** A map storing the Microstream entity objects stored by the Microstream storage manager for each key in the store. */
   private Map<K, MicrostreamStoreEntity<K, V>> key2entity;
+  /** Set of Microstream entity objects modified during the transaction. */
   private Set<Object> objectsToStore = null;
 
   @Override
@@ -63,7 +89,7 @@ public class MicrostreamPersistenceAdapter<K, V> implements JacisPersistenceAdap
     List<MicrostreamStoreEntity<K, V>> rootList = storageRoot.toList();
     store.initStoreNonTransactional(rootList, e -> e.getKey(), e -> e.getValue(), 4);
     log.debug("{} initialized after {} (storage root: {} (size: {}), initial size: {})", this, stopTime(t0), storageRoot, rootList.size(), store.size());
-    if(traceLogging) {
+    if (traceLogging) {
       log.trace("{} initialized -> persistent list: {}", this, storageRoot.toList());
     }
   }
@@ -85,7 +111,7 @@ public class MicrostreamPersistenceAdapter<K, V> implements JacisPersistenceAdap
     } else { // (entity == null && newValue == null)
       // nothing to do...
     }
-    if(traceLogging) {
+    if (traceLogging) {
       log.trace("{} track modification for {} ", this, key);
     }
   }
@@ -104,7 +130,7 @@ public class MicrostreamPersistenceAdapter<K, V> implements JacisPersistenceAdap
       storageManager.storeAll(objectsToStore);
     }
     log.debug("{} commit took {}", this, stopTime(t0));
-    if(traceLogging) {
+    if (traceLogging) {
       log.trace("{} commit -> persistent list: {}", this, storageRoot.toList());
     }
     objectsToStore = null;
@@ -124,15 +150,25 @@ public class MicrostreamPersistenceAdapter<K, V> implements JacisPersistenceAdap
 
 }
 
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//====================================================================================
+
 /**
+ * The root object stored by the Microstream storage manager.
+ * Basically it stores (the head of) the linked list of Microstream entity objects representing the store entries.
+ * 
  * @author Jan Wiemer
  *
- * @param <K>
- * @param <V>
+ * @param <K> Key type of the store entry
+ * @param <V> Value type of the store entry
  */
 class MicrostreamStoreRoot<K, V> {
 
+  /** The name of the JACIS store represented by this root object. */
   private final String storeName;
+  /** The first object of the linked list of Microstream entity objects representing the store entries. */
   private MicrostreamStoreEntity<K, V> firstElement;
 
   public MicrostreamStoreRoot(String storeName) {
@@ -196,17 +232,29 @@ class MicrostreamStoreRoot<K, V> {
 
 }
 
+//====================================================================================
+//====================================================================================
+//====================================================================================
+//====================================================================================
+
 /**
+ * The Microstream entity object representing the store entries.
+ * The entity objects build a linked list (see {@link #getPrev()} and {@link #getNext()}).
+ * 
  * @author Jan Wiemer
  *
- * @param <K>
- * @param <V>
+ * @param <K> Key type of the store entry
+ * @param <V> Value type of the store entry
  */
 class MicrostreamStoreEntity<K, V> {
 
+  /** The key of the store entry represented by this Microstream entity object. */
   private K key;
+  /** The value of the store entry represented by this Microstream entity object. */
   private V value;
+  /** The next element in the linked list. */
   private MicrostreamStoreEntity<K, V> next;
+  /** The previous element in the linked list. */
   private MicrostreamStoreEntity<K, V> prev;
 
   public MicrostreamStoreEntity(K key, V value) {

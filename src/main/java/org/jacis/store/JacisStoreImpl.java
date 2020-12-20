@@ -40,7 +40,7 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  * current transactional view (obtained with the currently active transaction handle from the map {@link #txViewMap}).
  * This means that first the transactional view is checked if it contains an entry for the desired key.
  * If so this entry is returned, otherwise the committed value from the core store (see {@link #store}) is returned.
- * Note that if an object is deleted in a transaction an entry with the value 'null' remains in the transactional view.
+ * Note that if an object is deleted in a transaction an entry with the value <code>null</code> remains in the transactional view.
  * Therefore also deletions are properly handled with respect to isolation.
  *
  * @param <K>  Key type of the store entry
@@ -325,6 +325,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return get(key);
   }
 
+  @Override
   public <ST> void initStoreNonTransactional(List<ST> entries, Function<ST, K> keyExtractor, Function<ST, TV> valueExtractor, int nThreads) {
     withWriteLock(() -> {
       if (!store.isEmpty()) {
@@ -394,10 +395,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     });
   }
 
+  @Override
   public void initStoreNonTransactional(List<TV> values, Function<TV, K> keyExtractor, int nThreads) {
     initStoreNonTransactional(values, keyExtractor, v -> v, nThreads);
   }
 
+  @Override
   public void initStoreNonTransactional(List<KeyValuePair<K, TV>> entries, int nThreads) {
     initStoreNonTransactional(entries, e -> e.getKey(), e -> e.getVal(), nThreads);
   }
@@ -417,10 +420,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return withReadLock(atomicOperation);
   }
 
+  @Override
   public void executeGlobalAtomic(Runnable atomicOperation) { // Execute an global atomic operation. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
     executeAtomic(() -> container.executeGlobalAtomic(atomicOperation));
   }
 
+  @Override
   public <R> R computeGlobalAtomic(Supplier<R> atomicOperation) { // Execute an global atomic operation for the current store. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
     return computeAtomic(() -> container.computeGlobalAtomic(atomicOperation));
   }

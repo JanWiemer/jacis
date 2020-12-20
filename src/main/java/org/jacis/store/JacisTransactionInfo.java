@@ -14,7 +14,7 @@ import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.container.JacisTransactionHandle;
 
 /**
- * = Object providing some monitoring information regarding a Jacis transaction.
+ * Object providing some monitoring information regarding a Jacis transaction.
  *
  * @author Jan Wiemer
  */

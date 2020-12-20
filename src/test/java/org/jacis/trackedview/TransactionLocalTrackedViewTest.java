@@ -1,7 +1,10 @@
+/*
+ * Copyright (c) 2020. Jan Wiemer
+ */
 
 package org.jacis.trackedview;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.store.JacisStore;

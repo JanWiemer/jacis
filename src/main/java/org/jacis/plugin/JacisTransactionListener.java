@@ -8,7 +8,7 @@ import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 
 /**
- * = Listener that is informed on the lifecycle events of a transaction.
+ * Listener that is informed on the lifecycle events of a transaction.
  *
  * Listeners implementing this interface can be registered at a JACIS container
  * by passing it to the method {@link JacisContainer#registerTransactionListener(JacisTransactionListener)}.

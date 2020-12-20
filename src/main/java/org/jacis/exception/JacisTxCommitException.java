@@ -5,7 +5,7 @@
 package org.jacis.exception;
 
 /**
- * Exception attached to an exception thrown during commit to hold some additional information regarding the committed JACIS transaction..
+ * Exception attached to an exception thrown during commit to hold some additional information regarding the committed JACIS transaction.
  *
  * @author Jan Wiemer
  */

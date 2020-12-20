@@ -29,7 +29,6 @@ import org.jacis.trackedviews.TrackedViewClustered;
  * @param <TV> Value type of the store entry
  * @author Jan Wiemer
  */
-@SuppressWarnings("unused")
 public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, TV> {
 
   /** Reference to the JACIS store the tracked view registry belongs to */

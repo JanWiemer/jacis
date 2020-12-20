@@ -32,7 +32,7 @@
     <appender-ref ref="FILE" />
   </root>
 
-  <logger name="org.jwiemer.jacis" level="info" additivity="false">
+  <logger name="org.jacis" level="info" additivity="false">
     <appender-ref ref="STDOUT" />
     <appender-ref ref="FILE" />
   </logger>
