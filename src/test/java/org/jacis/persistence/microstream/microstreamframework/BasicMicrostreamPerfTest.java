@@ -55,6 +55,7 @@ public class BasicMicrostreamPerfTest {
   }
 
   @Test
+  @Ignore
   public void testBulkUpdatePerformance() {
     log.info("===== TEST BULK UPDATE PERFORMANCE =====");
     Arrays.asList(200, 500, 1_000, 10_000, 100_000, 1_000_000, 2_000_000).stream().filter(size -> size <= MAX_TEST_SIZE).forEach(size -> {
