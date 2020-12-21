@@ -1,5 +1,5 @@
 # JACIS Continuous Integration GITHUB workflow
-name: CI-Build-Java-11
+name: CI-Java-11
 
 on:
   push:

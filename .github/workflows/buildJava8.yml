@@ -1,5 +1,5 @@
 # JACIS Continuous Integration GITHUB workflow
-name: CI-Build-Java-8
+name: CI-Java-8
 
 on:
   push:
@@ -7,19 +7,18 @@ on:
   pull_request:
     branches: [ master ]
   workflow_dispatch:
-env:
-  java-version: 8 
+
 jobs:
   build-and-test:
-    name: JACIS CI Java ${{ java-version }}
+    name: JACIS CI Java 8
     runs-on: windows-latest
     steps:
     - name: Checkout 
       uses: actions/checkout@v2
-    - name: Setup Java ${{ java-version }}
+    - name: Setup Java 8
       uses: actions/setup-java@v1
       with:
-        java-version: ${{ java-version }}
+        java-version: 8
     - name: Build
       uses: eskatos/gradle-command-action@v1
       with:

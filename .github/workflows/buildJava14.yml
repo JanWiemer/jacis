@@ -1,5 +1,5 @@
 # JACIS Continuous Integration GITHUB workflow
-name: CI-Build-Java-14
+name: CI-Java-14
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-test:
-    name: JACIS CI Java 14  
+    name: JACIS CI Java 14
     runs-on: windows-latest
     steps:
     - name: Checkout 
