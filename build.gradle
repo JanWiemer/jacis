@@ -92,6 +92,11 @@ jar.doFirst {
     }
 }
 
+test {
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+    }
+}
 publishing {
   publications {
     jacisPublication(MavenPublication) {
