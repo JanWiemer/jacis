@@ -30,20 +30,15 @@ ext {
 
 print '---------- JACIS BUILD -------- '
 println new Date()
-println "- projectName = $projectName"
-println "- description = $projectDescription"
-println "- URL         = $projectURL"
+println "- projectName = $projectName     ($projectDescription - URL = $projectURL)"
 println "- group       = $group"
-println "- version     = $version"
-println "- author      = $author"
-println "- authorMail  = $authorMail"
-println "- licenseName = $licenseName"
-println "- licenseURL  = $licenseURL"
-println "- isReleaseV. = $isReleaseVersion"
-println "- deploy_user = $deploy_user"
-println "- deploy_repo_release  = $deploy_repo_release"
-println "- deploy_repo_snapshot = $deploy_repo_snapshot"
-println "- root directory = ${rootDir}"
+println "- version     = $version     (isReleaseVersion = $isReleaseVersion)"
+println "- author      = $author     (mail = $authorMail)"
+println "- licenseName = $licenseName     (URL  = $licenseURL)"
+//println "- deploy_user = $deploy_user"
+//println "- deploy_repo_release  = $deploy_repo_release"
+//println "- deploy_repo_snapshot = $deploy_repo_snapshot"
+//println "- root directory = ${rootDir}"
 println '------------------------------- '
 
 dependencies {
@@ -93,10 +88,16 @@ jar.doFirst {
 }
 
 test {
-    testLogging {
-        events "passed", "skipped", "failed", "standardOut", "standardError"
+    afterSuite { desc, result ->
+      if (!desc.parent)
+        println("${result.resultType} " +
+            "(${result.testCount} tests, " +
+            "${result.successfulTestCount} successes, " +
+            "${result.failedTestCount} failures, " +
+            "${result.skippedTestCount} skipped)")
     }
 }
+
 publishing {
   publications {
     jacisPublication(MavenPublication) {
