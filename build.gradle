@@ -8,7 +8,6 @@ plugins {
 }
 
 group = "org.jacis"
-version = "1.58.0"
 version = Boolean.getBoolean("releasebuild") ? "$version" : "$version-SNAPSHOT"
 
 

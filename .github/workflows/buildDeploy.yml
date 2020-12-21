@@ -35,6 +35,7 @@ jobs:
       uses: eskatos/gradle-command-action@v1
       with:
         arguments: build -Dreleasebuild=${{ github.event.inputs.release }}
+
   deploy:
     name: Deploy JACIS
     needs: build-and-test
@@ -52,3 +53,22 @@ jobs:
         arguments: publish -Dreleasebuild=${{ github.event.inputs.release }} -Ddeploy_user=JanWiemer -Ddeploy_pw=${{secrets.GITHUB_TOKEN}} -Ddeploy_repo_release=https://maven.pkg.github.com/janwiemer/jacis -Ddeploy_repo_snapshot=https://maven.pkg.github.com/janwiemer/jacis
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+    - name: Determine versions
+      uses: HardNorth/github-version-generate@v1.0.2
+      with:
+        version-source: file
+        version-file: gradle.properties
+        version-file-extraction-pattern: '(?<=version=).+'
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: "v${{ env.RELEASE_VERSION }}"
+        release_name: Release ${{ env.RELEASE_VERSION }}
+        body: |
+            dependencies {
+                implementation group: 'org.jacis', name: 'jacis', version: '${{ env.RELEASE_VERSION }}'
+            }
+        draft: false
+        prerelease: false
