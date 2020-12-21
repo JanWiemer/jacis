@@ -36,7 +36,7 @@ jobs:
       with:
         arguments: build -Dreleasebuild=${{ github.event.inputs.release }}
   deploy:
-    name: Deploy JACIS (release build=${{ github.event.inputs.release }})
+    name: Deploy JACIS
     needs: build-and-test
     runs-on: windows-latest
     steps:
