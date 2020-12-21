@@ -54,14 +54,14 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
     - name: Determine versions
-      if: ${{ github.event.inputs.release }} = true
+      if: ${{ github.event.inputs.release }} ?= true
       uses: HardNorth/github-version-generate@v1.0.2
       with:
         version-source: file
         version-file: gradle.properties
-        version-file-extraction-pattern: '(?<=version=).+'
+        version-file-extraction-pattern: 'version = .+'
     - name: Create Release
-      if: ${{ github.event.inputs.release }} = true
+      if: ${{ github.event.inputs.release }} == true
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
