@@ -27,7 +27,7 @@ import one.microstream.storage.types.EmbeddedStorageManager;
 
 public class BasicMicrostreamPerfTest {
 
-  private static final int MAX_TEST_SIZE = 1_000;
+  private static final int MAX_TEST_SIZE = 500;
 //  private static final int MAX_TEST_SIZE = Integer.MAX_VALUE;
 
   private static final Logger log = LoggerFactory.getLogger(BasicMicrostreamPerfTest.class);
