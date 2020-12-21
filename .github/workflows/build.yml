@@ -15,7 +15,7 @@ on:
 
 jobs:
   build-and-test:
-    name: Build and Test JACIS (release build: ${{ github.event.inputs.release }})
+    name: Build and Test JACIS (release build ${{ github.event.inputs.release }})
     strategy:
       fail-fast: false
       matrix:
