@@ -7,18 +7,19 @@ on:
   pull_request:
     branches: [ master ]
   workflow_dispatch:
-
+env:
+  java-version: 8 
 jobs:
   build-and-test:
-    name: JACIS CI Java 8
+    name: JACIS CI Java ${{ env.java-version }}
     runs-on: windows-latest
     steps:
     - name: Checkout 
       uses: actions/checkout@v2
-    - name: Setup Java 8
+    - name: Setup Java ${{ env.java-version }}
       uses: actions/setup-java@v1
       with:
-        java-version: 8
+        java-version: ${{ env.java-version }}
     - name: Build
       uses: eskatos/gradle-command-action@v1
       with:

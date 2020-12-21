@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-test:
-    name: JACIS CI Java 14
+    name: JACIS CI Java 14  
     runs-on: windows-latest
     steps:
     - name: Checkout 
