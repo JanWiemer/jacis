@@ -1,3 +1,4 @@
+![](https://github.com/JanWiemer/jacis/workflows/CI-Build/badge.svg)
 # jacis
 Java ACI Store - Transient and transactional store for Java objects.
 
