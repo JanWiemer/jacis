@@ -26,7 +26,6 @@ import one.microstream.storage.configuration.Configuration;
 import one.microstream.storage.types.EmbeddedStorageFoundation;
 import one.microstream.storage.types.EmbeddedStorageManager;
 
-@Ignore
 public class BasicMicrostreamPerfTest {
 
   private static final int MAX_TEST_SIZE = 500;
