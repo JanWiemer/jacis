@@ -28,8 +28,8 @@ jobs:
       with:
         arguments: build -Dreleasebuild=${{ github.event.inputs.release }}
     - name: Test Report
-      uses: EnricoMi/publish-unit-test-result-action@v1.6
-      if: always()
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        files: build/test-results/**/*.xml
+      uses: mikepenz/action-junit-report@v1
+        with:
+          check_name: 'JACIS CI Java 8'
+          report_paths: '**/build/test-results/test/TEST-*.xml'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
