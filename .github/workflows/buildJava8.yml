@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-test:
-    name: Build and Test JACIS
+    name: Build and Test JACIS with Java 8
     runs-on: windows-latest
     steps:
     - name: Checkout 
