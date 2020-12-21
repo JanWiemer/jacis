@@ -8,3 +8,4 @@ deserialization
 timestamp
 microstream
 lifecycle
+atomicity

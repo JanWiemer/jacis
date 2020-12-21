@@ -1,5 +1,5 @@
 # JACIS Continuous Integration GITHUB workflow
-name: JACIS-Deploy
+name: JACIS-CI-Build
 
 on:
   push:
@@ -12,16 +12,15 @@ on:
         description: 'Release Build'     
         default: false
 
-
 jobs:
   build-and-test:
-    name: Build and Test JACIS (release build ${{ github.event.inputs.release }})
+    name: Build and Test JACIS
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        os: [windows-latest]
-#        os: [windows-latest, ubuntu-latest, macos-latest]
-        java: [8, 11]
+#        os: [windows-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        java: [8, 11, 14]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout 
@@ -40,13 +39,13 @@ jobs:
       with:
         access-token: ${{ secrets.GITHUB_TOKEN }}  
   deploy:
-    name: Deploy JACIS (release build ${{ github.event.inputs.release }})
+    name: Deploy JACIS (release build=${{ github.event.inputs.release }})
     needs: build-and-test
     runs-on: windows-latest
     steps:
     - name: Checkout 
       uses: actions/checkout@v2
-    - name: Setup Java ${{ matrix.java }}
+    - name: Setup Java 8
       uses: actions/setup-java@v1
       with:
         java-version: 8
