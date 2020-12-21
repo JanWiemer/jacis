@@ -16,6 +16,7 @@ on:
 jobs:
   build-and-test:
     name: Build and Test JACIS (release build ${{ github.event.inputs.release }})
+# continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -40,6 +41,7 @@ jobs:
         arguments: build -Dreleasebuild=${{ github.event.inputs.release }}
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v1
+      if: ${{ always() }}
       with:
         report_paths: '**/build/test-results/test/TEST-*.xml'
         github_token: ${{ secrets.GITHUB_TOKEN }}        
