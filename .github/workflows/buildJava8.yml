@@ -28,7 +28,8 @@ jobs:
       with:
         arguments: build -Dreleasebuild=${{ github.event.inputs.release }}
     - name: Test Report
-      uses: ashley-taylor/junit-report-annotations-action@1.3
+      uses: EnricoMi/publish-unit-test-result-action@v1.6
       if: always()
       with:
-        access-token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        files: build/test-results/**/*.xml
