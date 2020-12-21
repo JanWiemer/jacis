@@ -1,5 +1,5 @@
 # JACIS Continuous Integration GITHUB workflow
-name: CI-Build
+name: JACIS-Deploy
 
 on:
   push:
@@ -14,11 +14,10 @@ on:
 
 
 jobs:
-  build-and-test:
-    name: Build and Test JACIS (release build ${{ github.event.inputs.release }})
-# continue-on-error: true
+  build-and-deploy:
+    name: Build, Test and Deploy JACIS (release build ${{ github.event.inputs.release }})
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os: [windows-latest]
 #        os: [windows-latest, ubuntu-latest, macos-latest]
@@ -31,20 +30,10 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: ${{ matrix.java }}
-    - name: Build
-      uses: eskatos/gradle-command-action@v1
-      with:
-        arguments: assemble -Dreleasebuild=${{ github.event.inputs.release }} 
     - name: Test
       uses: eskatos/gradle-command-action@v1
       with:
         arguments: build -Dreleasebuild=${{ github.event.inputs.release }}
-    - name: Publish Test Report
-      uses: mikepenz/action-junit-report@v1
-      if: ${{ always() }}
-      with:
-        report_paths: '**/build/test-results/test/TEST-*.xml'
-        github_token: ${{ secrets.GITHUB_TOKEN }}        
     - name: Deploy ( to https://maven.pkg.github.com/janwiemer/jacis )
       uses: eskatos/gradle-command-action@v1
       with:
