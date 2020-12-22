@@ -2,15 +2,18 @@
 name: Experimental-Test-Build
 
 on:
-  push:
-    branches: [ master ]
   workflow_dispatch:
+      release:
+        description: 'Release Build'     
+        default: false
 
 jobs:
   test:
     name: Test Action JACIS
     runs-on: windows-latest
     steps:
+    - name: Checkout 
+      runs: echo "release=${{ github.event.inputs.release }}"
     - name: Checkout 
       uses: actions/checkout@v2
     - name: Determine versions
