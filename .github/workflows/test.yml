@@ -1,5 +1,5 @@
 # JACIS Continuous Integration GITHUB workflow
-name: JACIS-CI-Build
+name: Experimental-Test-Build
 
 on:
   push:
