@@ -19,4 +19,4 @@ jobs:
       with:
         version-source: file
         version-file: gradle.properties
-        version-file-extraction-pattern: '(version *= *):.+'
+        version-file-extraction-pattern: '(?<=version=).+'
