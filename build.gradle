@@ -41,23 +41,19 @@ println "- licenseName = $licenseName     (URL  = $licenseURL)"
 println '------------------------------- '
 
 dependencies {
-    // logging
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
-    implementation group: 'org.slf4j', name: 'slf4j-ext', version: '1.7.30'
-    runtimeOnly group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
-    runtimeOnly group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-    // transaction
-    implementation group: 'javax.transaction', name: 'jta', version: '1.1'
-    // microstream persistence
-    compileOnly group: 'one.microstream', name: 'storage.embedded', version: '04.00.00-MS-GA'
-    compileOnly group: 'one.microstream', name: 'storage.embedded.configuration', version: '04.00.00-MS-GA'
-    compileOnly group: 'one.microstream', name: 'persistence.binary.jdk8', version: '04.00.00-MS-GA'
-    // test
-    testImplementation group: 'one.microstream', name: 'storage.embedded', version: '04.00.00-MS-GA'
-    testImplementation group: 'one.microstream', name: 'storage.embedded.configuration', version: '04.00.00-MS-GA'
-    testImplementation group: 'one.microstream', name: 'persistence.binary.jdk8', version: '04.00.00-MS-GA'
-    testImplementation group: 'junit', name: 'junit', version: '4.13'
-    testImplementation group: 'org.hamcrest', name: 'hamcrest-library', version: '2.2'
+    // --- logging
+    implementation  group: 'org.slf4j',      name: 'slf4j-api', version: version_slf4j
+    runtimeOnly     group: 'ch.qos.logback', name: 'logback-core', version: version_logback
+    testRuntimeOnly group: 'ch.qos.logback', name: 'logback-classic', version: version_logback
+    // --- transaction
+    implementation  group: 'javax.transaction', name: 'jta', version: '1.1'
+    // --- EXTENSION microstream persistence
+    compileOnly     group: 'one.microstream', name: 'storage.embedded', version: version_microstream
+    testImplementation group: 'one.microstream', name: 'storage.embedded', version: version_microstream
+    testImplementation group: 'one.microstream', name: 'storage.embedded.configuration', version: version_microstream
+    testImplementation group: 'one.microstream', name: 'persistence.binary.jdk8', version: version_microstream
+    // --- junit
+    testImplementation group: 'junit', name: 'junit', version: version_junit
 }
 
 clean.doFirst {

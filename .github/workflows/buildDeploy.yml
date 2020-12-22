@@ -63,8 +63,12 @@ jobs:
         version-source: file
         version-file: gradle.properties
         version-file-extraction-pattern: '(?<=version=).+'
-    - name: Log Version
-      run: echo "version=${{ env.RELEASE_VERSION }}   ( release=${{ github.event.inputs.release }} )"
+    - name: Log Release Version 
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
+      run: echo "version=${{ env.RELEASE_VERSION }}"
+    - name: Log Snapshot Version 
+      if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.release != 'true' }}
+      run: echo "version=${{ env.RELEASE_VERSION }}-SNAPSHOT"
     - name: Create Release
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
       uses: actions/create-release@v1
