@@ -43,7 +43,7 @@ println '------------------------------- '
 dependencies {
     // --- logging
     implementation  group: 'org.slf4j',      name: 'slf4j-api', version: version_slf4j
-    runtimeOnly     group: 'ch.qos.logback', name: 'logback-core', version: version_logback
+    testRuntimeOnly group: 'ch.qos.logback', name: 'logback-core', version: version_logback
     testRuntimeOnly group: 'ch.qos.logback', name: 'logback-classic', version: version_logback
     // --- transaction
     implementation  group: 'javax.transaction', name: 'jta', version: '1.1'
