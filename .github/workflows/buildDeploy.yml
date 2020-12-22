@@ -20,7 +20,7 @@ jobs:
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
       run: echo "THIS IS A RELEASE BUILD!"
  
- build-and-test:
+  build-and-test:
     name: Build and Test JACIS
     needs: prepare
     strategy:
