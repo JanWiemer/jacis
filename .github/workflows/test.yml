@@ -13,8 +13,11 @@ jobs:
     name: Test Action JACIS
     runs-on: windows-latest
     steps:
-    - name: Checkout 
+    - name: Check Release
       run: echo "release=${{ github.event.inputs.release }}"
+    - name: Check Release
+      if: ${{ github.event.inputs.release }}" == true
+      run: echo "THIS IS A RELEASE BUILD!"
     - name: Checkout 
       uses: actions/checkout@v2
     - name: Determine versions
