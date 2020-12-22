@@ -13,7 +13,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Checkout 
-      runs: echo "release=${{ github.event.inputs.release }}"
+      run: echo "release=${{ github.event.inputs.release }}"
     - name: Checkout 
       uses: actions/checkout@v2
     - name: Determine versions
