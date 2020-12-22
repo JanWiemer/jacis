@@ -3,6 +3,7 @@ name: Experimental-Test-Build
 
 on:
   workflow_dispatch:
+    inputs:
       release:
         description: 'Release Build'     
         default: false
