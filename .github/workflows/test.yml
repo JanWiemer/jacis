@@ -13,7 +13,6 @@ jobs:
     steps:
     - name: Checkout 
       uses: actions/checkout@v2
-    - name: Fix Permissions
     - name: Determine versions
       if: ${{ github.event.inputs.release }} ?= true
       uses: HardNorth/github-version-generate@v1.0.2
