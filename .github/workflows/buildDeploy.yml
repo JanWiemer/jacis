@@ -13,8 +13,16 @@ on:
         default: false
 
 jobs:
-  build-and-test:
+  prepare:
+    name: Prepare Build
+    steps:
+    - name: This is a Release Build
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
+      run: echo "THIS IS A RELEASE BUILD!"
+ 
+ build-and-test:
     name: Build and Test JACIS
+    needs: prepare
     strategy:
       fail-fast: false
       matrix:
@@ -60,8 +68,10 @@ jobs:
         version-source: file
         version-file: gradle.properties
         version-file-extraction-pattern: '(?<=version=).+'
+    - name: Log Version
+      run: echo "version=${{ env.RELEASE_VERSION }}   ( release=${{ github.event.inputs.release }} )"
     - name: Create Release
-      if: ${{ github.event.inputs.release }} == true
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

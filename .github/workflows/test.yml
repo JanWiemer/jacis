@@ -15,7 +15,7 @@ jobs:
     steps:
     - name: Check Release
       run: echo "release=${{ github.event.inputs.release }}"
-    - name: Check Release
+    - name: This is a Release Build
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
       run: echo "THIS IS A RELEASE BUILD!"
     - name: Checkout 
