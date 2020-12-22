@@ -59,7 +59,7 @@ jobs:
       with:
         version-source: file
         version-file: gradle.properties
-        version-file-extraction-pattern: 'version = .+'
+        version-file-extraction-pattern: '(version *= *).+'
     - name: Create Release
       if: ${{ github.event.inputs.release }} == true
       uses: actions/create-release@v1
