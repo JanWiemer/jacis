@@ -78,8 +78,19 @@ jobs:
         tag_name: "v${{ env.RELEASE_VERSION }}"
         release_name: Release ${{ env.RELEASE_VERSION }}
         body: |
-            dependencies {
-                implementation group: 'org.jacis', name: 'jacis', version: '${{ env.RELEASE_VERSION }}'
-            }
+            To use this JACIS version add the following dependency to your project:
+
+                <dependency>
+                  <groupId>org.jacis</groupId>
+                  <artifactId>jacis</artifactId>
+                  <version>${{ env.RELEASE_VERSION }}</version>
+                </dependency>
+
+            For Gradle the dependency looks like:
+
+                dependencies {
+                  implementation group: 'org.jacis', name: 'jacis', version: '${{ env.RELEASE_VERSION }}'
+                }
+
         draft: false
         prerelease: false
