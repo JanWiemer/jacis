@@ -13,16 +13,8 @@ on:
         default: false
 
 jobs:
-  prepare:
-    name: Prepare Build
-    steps:
-    - name: This is a Release Build
-      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
-      run: echo "THIS IS A RELEASE BUILD!"
- 
   build-and-test:
     name: Build and Test JACIS
-    needs: prepare
     strategy:
       fail-fast: false
       matrix:
@@ -49,6 +41,9 @@ jobs:
     needs: build-and-test
     runs-on: windows-latest
     steps:
+    - name: This is a Release Build
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
+      run: echo "THIS IS A RELEASE BUILD!"
     - name: Checkout 
       uses: actions/checkout@v2
     - name: Setup Java 8
