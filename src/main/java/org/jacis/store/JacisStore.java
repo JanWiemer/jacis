@@ -302,8 +302,9 @@ public interface JacisStore<K, TV> {
    * The method is equivalent to simply calling the {@link #update(Object, Object)} method with a <code>null</code> value.
    *
    * @param key The key of the object to remove.
+   * @throws JacisTransactionAlreadyPreparedForCommitException if the current transaction has already been prepared for commit
    */
-  void remove(K key);
+  void remove(K key) throws JacisTransactionAlreadyPreparedForCommitException;
 
   /**
    * Refresh the object for the passed key from the committed values. Note that all earlier modifications in the current transaction are lost.

@@ -303,7 +303,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   @Override
-  public void remove(K key) {
+  public void remove(K key) throws JacisTransactionAlreadyPreparedForCommitException {
     update(key, null);
   }
 
