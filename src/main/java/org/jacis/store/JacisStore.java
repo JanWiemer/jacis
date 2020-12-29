@@ -460,11 +460,11 @@ public interface JacisStore<K, TV> {
   TV getTransactionStartValue(K key);
 
   /**
-   * Returns a info object /type {@link StoreEntryInfo}) containing information regarding the current state of the object
+   * Returns a info object (type {@link StoreEntryInfo}) containing information regarding the current state of the object
    * (regarding the committed values and the current transactional view).
    *
    * @param key The key of the desired object.
-   * @return a info object /type {@link StoreEntryInfo}) containing information regarding the current state of the object.
+   * @return a info object (type {@link StoreEntryInfo}) containing information regarding the current state of the object.
    */
   StoreEntryInfo<K, TV> getObjectInfo(K key);
 
