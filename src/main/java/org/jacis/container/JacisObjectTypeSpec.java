@@ -9,6 +9,7 @@ import org.jacis.plugin.dirtycheck.JacisDirtyCheck;
 import org.jacis.plugin.dirtycheck.StoreEntryBasedDirtyCheck;
 import org.jacis.plugin.dirtycheck.object.JacisDirtyTrackingObject;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
+import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.plugin.persistence.JacisPersistenceAdapter;
 
 /**
@@ -60,6 +61,11 @@ public class JacisObjectTypeSpec<K, TV, CV> {
     trackOriginalValue = true;
     checkViewsOnCommit = false;
     syncStoreOnContainerTransaction = true;
+  }
+
+  @SuppressWarnings("unchecked")
+  public JacisObjectTypeSpec(Class<K> keyClass, Class<TV> valueClass) {
+    this(keyClass, valueClass, (JacisObjectAdapter<TV, CV>) new JacisCloningObjectAdapter<TV>());
   }
 
   /** @return The type of the keys in the store */
