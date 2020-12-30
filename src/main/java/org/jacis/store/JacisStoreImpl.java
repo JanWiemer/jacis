@@ -4,7 +4,6 @@
 
 package org.jacis.store;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -236,7 +235,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     if (filter != null) {
       JacisStoreTxView<K, TV, CV> txView = getTxView();
       JacisStoreTxView<K, TV, CV> txViewNew = getOrCreateTxView();
-      return keyStream().map(k -> pair(k, getReadOnly(k, txView))).filter(e -> e.val != null && filter.test(e.val)).map(e -> get(e.key, txViewNew));
+      return keyStream().map(k -> pair(k, getReadOnly(k, txView))).filter(e -> e.getVal() != null && filter.test(e.getVal())).map(e -> get(e.getKey(), txViewNew));
     } else {
       return stream();
     }
@@ -652,72 +651,6 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   @Override
   public String toString() {
     return getClass().getSimpleName() + "-(" + spec + ": #" + store.size() + " entries)";
-  }
-
-  public static class KeyValuePair<K, TV> implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    private final K key;
-    private final TV val;
-
-    public KeyValuePair(K first, TV second) {
-      this.key = first;
-      this.val = second;
-    }
-
-    public K getKey() {
-      return key;
-    }
-
-    public TV getVal() {
-      return val;
-    }
-
-    @Override
-    public String toString() {
-      return "(" + key + ", " + val + ")";
-    }
-
-    @Override
-    public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + ((key == null) ? 0 : key.hashCode());
-      result = prime * result + ((val == null) ? 0 : val.hashCode());
-      return result;
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
-        return false;
-      }
-      KeyValuePair other = (KeyValuePair) obj;
-      if (key == null) {
-        if (other.key != null) {
-          return false;
-        }
-      } else if (!key.equals(other.key)) {
-        return false;
-      }
-      if (val == null) {
-        if (other.val != null) {
-          return false;
-        }
-      } else if (!val.equals(other.val)) {
-        return false;
-      }
-      return true;
-    }
-
   }
 
 }

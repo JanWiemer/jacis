@@ -16,6 +16,7 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
+import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisNoTransactionException;
@@ -30,7 +31,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Jan Wiemer
  */
-@SuppressWarnings({ "WeakerAccess" })
+@JacisApi // because it is intended to be extended
 public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransactionAdapter {
 
   private static final Logger log = LoggerFactory.getLogger(AbstractJacisTransactionAdapterJTA.class);

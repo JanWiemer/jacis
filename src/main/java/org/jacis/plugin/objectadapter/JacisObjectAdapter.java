@@ -4,6 +4,8 @@
 
 package org.jacis.plugin.objectadapter;
 
+import org.jacis.JacisApi;
+
 /**
  * The object adapter defines how to copy the objects to a transactional view and back.
  *
@@ -28,6 +30,7 @@ package org.jacis.plugin.objectadapter;
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
+@JacisApi
 public interface JacisObjectAdapter<TV, CV> {
 
   /**

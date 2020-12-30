@@ -4,9 +4,10 @@
 
 package org.jacis.exception;
 
+import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.container.JacisTransactionHandle;
-import org.jacis.store.JacisStoreImpl;
+import org.jacis.store.JacisStore;
 import org.jacis.trackedviews.TrackedView;
 
 /**
@@ -14,6 +15,7 @@ import org.jacis.trackedviews.TrackedView;
  *
  * @author Jan Wiemer
  */
+@JacisApi
 public class JacisTrackedViewModificationException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;
@@ -26,7 +28,7 @@ public class JacisTrackedViewModificationException extends RuntimeException {
   private final Object oldValue;
   private final Object newValue;
 
-  public JacisTrackedViewModificationException(JacisStoreImpl<?, ?, ?> store, TrackedView<?> view, JacisTransactionHandle transaction, Object key, Object oldValue, Object newValue, Exception e) {
+  public JacisTrackedViewModificationException(JacisStore<?, ?> store, TrackedView<?> view, JacisTransactionHandle transaction, Object key, Object oldValue, Object newValue, Exception e) {
     super(computeMessage(store, view, transaction, key, oldValue, newValue, e), e);
     this.view = view;
     this.key = key;
@@ -37,7 +39,7 @@ public class JacisTrackedViewModificationException extends RuntimeException {
     txDescription = transaction.getTxDescription();
   }
 
-  private static String computeMessage(JacisStoreImpl<?, ?, ?> store, TrackedView<?> view, JacisTransactionHandle transaction, Object key, Object oldValue, Object newValue, Exception e) {
+  private static String computeMessage(JacisStore<?, ?> store, TrackedView<?> view, JacisTransactionHandle transaction, Object key, Object oldValue, Object newValue, Exception e) {
     return "Tracking modification for TX " + transaction.getTxId() + " on view " + view + " of store " + store.getStoreIdentifier() + " causes exception: >" + e.toString() + "<!" + //
         "(modifying object with key >" + key + "< from >" + oldValue + "< to >" + newValue + "<)";
   }

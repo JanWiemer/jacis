@@ -4,6 +4,8 @@
 
 package org.jacis.store;
 
+import org.jacis.JacisApi;
+
 /**
  * Representing a read only version of the context of a store within a transaction.
  * The context contains all transactional views for objects in the store belonging to this transaction.
@@ -12,7 +14,7 @@ package org.jacis.store;
  *
  * @author Jan Wiemer
  */
-@SuppressWarnings({ "WeakerAccess" })
+@JacisApi
 public interface JacisReadOnlyTransactionContext {
 
   /**

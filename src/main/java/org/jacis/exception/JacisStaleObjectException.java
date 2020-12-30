@@ -4,6 +4,8 @@
 
 package org.jacis.exception;
 
+import org.jacis.JacisApi;
+
 /**
  * Exception thrown if an object modified in this transaction has meanwhile been modified by another transaction.
  * In order to detect such a situation the store maintains a version counter for each (committed) version of an object.
@@ -15,6 +17,7 @@ package org.jacis.exception;
  *
  * @author Jan Wiemer
  */
+@JacisApi
 public class JacisStaleObjectException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;

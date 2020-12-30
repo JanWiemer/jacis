@@ -9,6 +9,7 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jacis.JacisApi;
 import org.jacis.store.JacisReadOnlyTransactionContext;
 import org.jacis.store.JacisStore;
 
@@ -18,7 +19,7 @@ import org.jacis.store.JacisStore;
  * 
  * @author Jan Wiemer
  */
-@SuppressWarnings({ "WeakerAccess" })
+@JacisApi
 public class JacisContainerReadOnlyTransactionContext {
 
   private final List<AbstractMap.SimpleImmutableEntry<JacisStore<?, ?>, JacisReadOnlyTransactionContext>> storeContextList = new ArrayList<>();

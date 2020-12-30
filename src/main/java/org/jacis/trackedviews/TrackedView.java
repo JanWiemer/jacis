@@ -6,6 +6,7 @@ package org.jacis.trackedviews;
 
 import java.util.List;
 
+import org.jacis.JacisApi;
 import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
 import org.jacis.store.JacisStoreImpl;
 
@@ -21,6 +22,7 @@ import org.jacis.store.JacisStoreImpl;
  * @param <V> The type of the original values (from the store)
  * @author Jan Wiemer
  */
+@JacisApi
 public interface TrackedView<V> extends JacisCloneable<TrackedView<V>> {
 
   /**

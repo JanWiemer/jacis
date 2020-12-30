@@ -4,16 +4,18 @@
 
 package org.jacis.exception;
 
+import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.plugin.JacisModificationListener;
-import org.jacis.store.JacisStoreImpl;
+import org.jacis.store.JacisStore;
 
 /**
  * Exception thrown in case the modification of a tracked view during commit causes an exception.
  *
  * @author Jan Wiemer
  */
+@JacisApi
 public class JacisModificationListenerException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;
@@ -26,7 +28,7 @@ public class JacisModificationListenerException extends RuntimeException {
   private final Object oldValue;
   private final Object newValue;
 
-  public JacisModificationListenerException(JacisStoreImpl<?, ?, ?> store, JacisModificationListener<?, ?> listener, JacisTransactionHandle transaction, Object key, Object oldValue, Object newValue, Exception e) {
+  public JacisModificationListenerException(JacisStore<?, ?> store, JacisModificationListener<?, ?> listener, JacisTransactionHandle transaction, Object key, Object oldValue, Object newValue, Exception e) {
     super(computeMessage(store, listener, transaction, key, oldValue, newValue, e), e);
     this.listener = listener;
     this.key = key;
@@ -37,7 +39,7 @@ public class JacisModificationListenerException extends RuntimeException {
     txDescription = transaction.getTxDescription();
   }
 
-  private static String computeMessage(JacisStoreImpl<?, ?, ?> store, JacisModificationListener<?, ?> listener, JacisTransactionHandle transaction, Object key, Object oldValue, Object newValue, Exception e) {
+  private static String computeMessage(JacisStore<?, ?> store, JacisModificationListener<?, ?> listener, JacisTransactionHandle transaction, Object key, Object oldValue, Object newValue, Exception e) {
     return "Tracking modification for TX " + transaction.getTxId() + " on listener " + listener + " of store " + store.getStoreIdentifier() + " causes exception: >" + e.toString() + "<!" + //
         "(modifying object with key >" + key + "< from >" + oldValue + "< to >" + newValue + "<)";
   }

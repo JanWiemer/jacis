@@ -4,6 +4,7 @@
 
 package org.jacis.plugin.readonly.object;
 
+import org.jacis.JacisApi;
 import org.jacis.exception.ReadOnlyException;
 
 /**
@@ -19,6 +20,7 @@ import org.jacis.exception.ReadOnlyException;
  *
  * @author Jan Wiemer
  */
+@JacisApi
 public abstract class AbstractReadOnlyModeSupportingObject implements JacisReadonlyModeSupport {
 
   /** The thread currently permitted to modify the object (if any) */

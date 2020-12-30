@@ -12,7 +12,7 @@ import java.util.Set;
 
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.plugin.persistence.JacisPersistenceAdapter;
-import org.jacis.store.JacisStoreImpl;
+import org.jacis.store.JacisStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,12 +73,12 @@ public class MicrostreamPersistenceAdapter<K, V> implements JacisPersistenceAdap
 
   @SuppressWarnings("unchecked")
   @Override
-  public void initializeStore(JacisStoreImpl<K, V, ?> store) {
+  public void initializeStore(JacisStore<K, V> store) {
     log.debug("{} start initialization...", this);
     long t0 = System.nanoTime();
     storageManager.start();
     if (storageManager.root() == null) {
-      storageRoot = new MicrostreamStoreRoot<>(store.getStore().getStoreIdentifier().toShortString());
+      storageRoot = new MicrostreamStoreRoot<>(store.getStoreIdentifier().toShortString());
       storageManager.setRoot(storageRoot);
       storageManager.storeRoot();
       log.debug("{} initialization: created new root; {}", this, storageRoot);

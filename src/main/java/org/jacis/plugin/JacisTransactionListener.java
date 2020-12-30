@@ -4,6 +4,7 @@
 
 package org.jacis.plugin;
 
+import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 
@@ -21,7 +22,7 @@ import org.jacis.container.JacisTransactionHandle;
  *
  * @author Jan Wiemer
  */
-@SuppressWarnings("EmptyMethod")
+@JacisApi
 public interface JacisTransactionListener {
 
   /**

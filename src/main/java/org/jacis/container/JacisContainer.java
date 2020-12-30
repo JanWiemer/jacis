@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.jacis.JacisApi;
 import org.jacis.exception.JacisInternalException;
 import org.jacis.exception.JacisNoTransactionException;
 import org.jacis.exception.JacisStaleObjectException;
@@ -53,6 +54,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Jan Wiemer
  */
+@JacisApi
 public class JacisContainer {
 
   private static final Logger log = LoggerFactory.getLogger(JacisContainer.class);
@@ -116,7 +118,7 @@ public class JacisContainer {
     StoreIdentifier storeIdentifier = new StoreIdentifier(objectTypeSpec.getKeyClass(), objectTypeSpec.getValueClass());
     JacisStoreImpl<K, TV, CV> store = new JacisStoreImpl<>(this, storeIdentifier, objectTypeSpec);
     JacisPersistenceAdapter<K, TV> persistenceAdapter = objectTypeSpec.getPersistenceAdapter();
-    if(persistenceAdapter!=null) {
+    if (persistenceAdapter != null) {
       persistenceAdapter.initializeStore(store);
       store.registerModificationListener(persistenceAdapter);
     }
@@ -502,7 +504,7 @@ public class JacisContainer {
    *
    * @param transaction The transaction handle representing the transaction to internalCommit.
    */
-  public void internalCommit(JacisTransactionHandle transaction) {
+  public void internalCommit(JacisTransactionHandle transaction) { // NO-API
     boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize
         || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
         || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
@@ -553,7 +555,7 @@ public class JacisContainer {
    *
    * @param transaction The transaction handle representing the transaction to rollback.
    */
-  public void internalRollback(JacisTransactionHandle transaction) {
+  public void internalRollback(JacisTransactionHandle transaction) { // NO-API
     boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize (dirty check can be ignored here)
         || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSyncronized) {
@@ -614,6 +616,7 @@ public class JacisContainer {
    * Store identifier uniquely identifying a store inside a container.
    * The store is identified by the type of the keys and the type of the values in the store.
    */
+  @JacisApi
   public static class StoreIdentifier {
 
     /** Type of the keys in the store */
@@ -680,7 +683,7 @@ public class JacisContainer {
 
   } // END OF: public static class StoreIdentifier {
 
-  public static abstract class JacisStoreTransactionAdapter {
+  public static abstract class JacisStoreTransactionAdapter { // NO-API
 
     protected abstract void internalPrepare(JacisTransactionHandle transaction);
 

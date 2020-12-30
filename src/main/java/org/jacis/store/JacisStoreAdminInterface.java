@@ -4,6 +4,7 @@
 
 package org.jacis.store;
 
+import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
@@ -18,6 +19,7 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
+@JacisApi
 public interface JacisStoreAdminInterface<K, TV, CV> {
 
   /** @return the store */

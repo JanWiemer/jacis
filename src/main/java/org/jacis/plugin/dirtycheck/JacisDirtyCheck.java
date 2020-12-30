@@ -4,6 +4,7 @@
 
 package org.jacis.plugin.dirtycheck;
 
+import org.jacis.JacisApi;
 import org.jacis.plugin.readonly.object.AbstractReadOnlyModeSupportingObject;
 import org.jacis.store.JacisStoreImpl;
 
@@ -30,6 +31,7 @@ import org.jacis.store.JacisStoreImpl;
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @author Jan Wiemer
  */
+@JacisApi
 public interface JacisDirtyCheck<K, TV> {
 
   /**

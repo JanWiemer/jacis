@@ -6,6 +6,8 @@ package org.jacis.trackedviews;
 
 import java.util.Collection;
 
+import org.jacis.JacisApi;
+
 /**
  * A clustered tracked view provides access to sub views by a key.
  * The advantage is that only the desired sub view is cloned when accessing it.
@@ -15,6 +17,7 @@ import java.util.Collection;
  * @param <SVT> The type of the sub views
  * @author Jan Wiemer
  */
+@JacisApi
 public interface TrackedViewClustered<V, SVK, SVT extends TrackedView<V>> extends TrackedView<V> {
 
   /**

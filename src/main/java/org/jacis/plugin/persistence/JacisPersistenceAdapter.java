@@ -4,8 +4,9 @@
 
 package org.jacis.plugin.persistence;
 
+import org.jacis.JacisApi;
 import org.jacis.plugin.JacisModificationListener;
-import org.jacis.store.JacisStoreImpl;
+import org.jacis.store.JacisStore;
 
 /**
  * Interface for persistence adapters that may be plugged into a JACIS store to make it a <em>durable</em> store.
@@ -20,6 +21,7 @@ import org.jacis.store.JacisStoreImpl;
  * 
  * @author Jan Wiemer
  */
+@JacisApi
 public interface JacisPersistenceAdapter<K, V> extends JacisModificationListener<K, V> {
 
   /**
@@ -27,7 +29,7 @@ public interface JacisPersistenceAdapter<K, V> extends JacisModificationListener
    * 
    * @param store The JACIS store to initialize
    */
-  void initializeStore(JacisStoreImpl<K, V, ?> store);
+  void initializeStore(JacisStore<K, V> store);
 
   /**
    * Called after the prepare phase of the transaction has been executed for the store.

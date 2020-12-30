@@ -6,6 +6,7 @@ package org.jacis.plugin.txadapter;
 
 import java.util.Collection;
 
+import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 
@@ -23,6 +24,7 @@ import org.jacis.container.JacisTransactionHandle;
  * 
  * @author Jan Wiemer
  */
+@JacisApi
 public interface JacisTransactionAdapter {
 
   /**

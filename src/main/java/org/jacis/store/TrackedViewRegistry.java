@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisTrackedViewModificationException;
@@ -29,6 +30,7 @@ import org.jacis.trackedviews.TrackedViewClustered;
  * @param <TV> Value type of the store entry
  * @author Jan Wiemer
  */
+@JacisApi
 public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, TV> {
 
   /** Reference to the JACIS store the tracked view registry belongs to */

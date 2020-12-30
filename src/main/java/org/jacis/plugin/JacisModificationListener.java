@@ -4,6 +4,7 @@
 
 package org.jacis.plugin;
 
+import org.jacis.JacisApi;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.store.JacisStoreImpl;
@@ -23,6 +24,7 @@ import org.jacis.store.JacisStoreImpl;
  * @param <V> Value type of the store entry
  * @author Jan Wiemer
  */
+@JacisApi
 public interface JacisModificationListener<K, V> {
 
   /**

@@ -4,6 +4,7 @@
 
 package org.jacis.plugin.readonly.object;
 
+import org.jacis.JacisApi;
 import org.jacis.plugin.readonly.DefaultJacisStoreEntryReadOnlyModeAdapter;
 import org.jacis.plugin.readonly.JacisStoreEntryReadOnlyModeAdapter;
 
@@ -19,7 +20,7 @@ import org.jacis.plugin.readonly.JacisStoreEntryReadOnlyModeAdapter;
  *
  * @author Jan Wiemer
  */
-@SuppressWarnings("WeakerAccess")
+@JacisApi
 public interface JacisReadonlyModeSupport {
 
   /**

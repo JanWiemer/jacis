@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.container.JacisTransactionHandle;
@@ -18,6 +19,7 @@ import org.jacis.container.JacisTransactionHandle;
  *
  * @author Jan Wiemer
  */
+@JacisApi
 public class JacisTransactionInfo implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -108,6 +110,7 @@ public class JacisTransactionInfo implements Serializable {
   }
 
   /** Transaction information regarding a certain store. */
+  @JacisApi
   public static class StoreTxInfo implements Serializable {
 
     private static final long serialVersionUID = 1L;

@@ -4,6 +4,8 @@
 
 package org.jacis.store;
 
+import org.jacis.JacisApi;
+
 /**
  * State information regarding a store entry
  *
@@ -11,7 +13,7 @@ package org.jacis.store;
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @author Jan Wiemer
  */
-@SuppressWarnings({ "WeakerAccess" })
+@JacisApi
 public class StoreEntryInfo<K, TV> {
 
   /** the key of the entry */

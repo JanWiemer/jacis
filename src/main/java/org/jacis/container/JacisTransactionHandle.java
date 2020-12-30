@@ -4,6 +4,8 @@
 
 package org.jacis.container;
 
+import org.jacis.JacisApi;
+
 /**
  * Jacis handle for an external transaction.
  *
@@ -11,6 +13,7 @@ package org.jacis.container;
  *
  * @author Jan Wiemer
  */
+@JacisApi
 public class JacisTransactionHandle {
 
   /** The id of the transaction */

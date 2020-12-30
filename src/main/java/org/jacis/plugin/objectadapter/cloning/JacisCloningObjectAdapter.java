@@ -7,6 +7,7 @@ package org.jacis.plugin.objectadapter.cloning;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.jacis.JacisApi;
 import org.jacis.exception.ReadOnlyModeNotSupportedException;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 import org.jacis.plugin.readonly.DefaultJacisStoreEntryReadOnlyModeAdapter;
@@ -34,11 +35,10 @@ import org.jacis.plugin.readonly.JacisStoreEntryReadOnlyModeAdapter;
  * @param <V> The object type (note that in this case the committed values and the values in the transactional view have the same type)
  * @author Jan Wiemer
  */
+@JacisApi
 public class JacisCloningObjectAdapter<V> implements JacisObjectAdapter<V, V> {
 
-  /**
-   * Read only mode adapter used to switch objects from writable to read only mode if required and supported
-   */
+  /** Read only mode adapter used to switch objects from writable to read only mode if required and supported */
   private final JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapter;
   /** Flag indicating if the object adapter should throw an exception if a read only mode is required, but not supported. */
   private boolean throwIfMissingReadOnlyModeDetected = false;

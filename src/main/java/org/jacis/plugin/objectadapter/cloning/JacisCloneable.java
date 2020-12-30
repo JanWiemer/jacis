@@ -4,6 +4,8 @@
 
 package org.jacis.plugin.objectadapter.cloning;
 
+import org.jacis.JacisApi;
+
 /**
  * This interface should be implemented by an object that should be cloned by the
  * {@link JacisCloningObjectAdapter} by simply calling the {@link #clone()} method.
@@ -28,6 +30,7 @@ package org.jacis.plugin.objectadapter.cloning;
  * @param <OT> The type of the object implementing this interface.
  * @author Jan Wiemer
  */
+@JacisApi
 public interface JacisCloneable<OT> extends Cloneable {
 
   /** @return A clone of this object */

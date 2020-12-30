@@ -4,6 +4,7 @@
 
 package org.jacis.container;
 
+import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.plugin.dirtycheck.JacisDirtyCheck;
 import org.jacis.plugin.dirtycheck.StoreEntryBasedDirtyCheck;
@@ -35,6 +36,7 @@ import org.jacis.plugin.persistence.JacisPersistenceAdapter;
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
+@JacisApi
 public class JacisObjectTypeSpec<K, TV, CV> {
 
   /** Type of the keys in the store */

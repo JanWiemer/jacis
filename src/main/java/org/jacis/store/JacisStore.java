@@ -12,13 +12,13 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.exception.JacisTransactionAlreadyPreparedForCommitException;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
-import org.jacis.store.JacisStoreImpl.KeyValuePair;
 
 /**
  * Storing a single type of objects.
@@ -34,6 +34,7 @@ import org.jacis.store.JacisStoreImpl.KeyValuePair;
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @author Jan Wiemer
  */
+@JacisApi
 public interface JacisStore<K, TV> {
 
   /** @return the reference to the JACIS container this store belongs to */
