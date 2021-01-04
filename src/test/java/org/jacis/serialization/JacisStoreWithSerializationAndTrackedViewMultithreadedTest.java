@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
-import org.jacis.plugin.JacisTransactionListenerAdapter;
+import org.jacis.plugin.JacisTransactionListener;
 import org.jacis.store.JacisStore;
 import org.jacis.store.TrackedViewRegistry;
 import org.jacis.testhelper.JacisTestHelper;
@@ -140,7 +140,7 @@ public class JacisStoreWithSerializationAndTrackedViewMultithreadedTest {
 
   }
 
-  public static class TestJacisTransactionListenerAdapter extends JacisTransactionListenerAdapter {
+  public static class TestJacisTransactionListenerAdapter implements JacisTransactionListener {
 
     private final AtomicLong sum = new AtomicLong(0l);
     private JacisStore<String, TestObject> store;
@@ -162,7 +162,6 @@ public class JacisStoreWithSerializationAndTrackedViewMultithreadedTest {
 
     @Override
     public void afterCommit(JacisContainer container, JacisTransactionHandle tx) {
-      super.afterCommit(container, tx);
       Long ti = totalInc.get();
       long newVal = sum.getAndAdd(ti);
       log.debug("...AFTER COMMIT: incremented object {} Thread: {}", updateTxt.get(), Thread.currentThread().getName());
@@ -185,7 +184,6 @@ public class JacisStoreWithSerializationAndTrackedViewMultithreadedTest {
 
     @Override
     public void afterRollback(JacisContainer container, JacisTransactionHandle tx) {
-      super.afterRollback(container, tx);
       this.totalInc.set(0l);
       this.updateTxt.set("-");
     }

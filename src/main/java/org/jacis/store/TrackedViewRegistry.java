@@ -19,7 +19,6 @@ import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisTrackedViewModificationException;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.JacisTransactionListener;
-import org.jacis.plugin.JacisTransactionListenerAdapter;
 import org.jacis.trackedviews.TrackedView;
 import org.jacis.trackedviews.TrackedViewClustered;
 
@@ -41,7 +40,7 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
   TrackedViewRegistry(JacisStoreImpl<K, TV, ?> store, boolean checkConsistencyAfterCommit) {
     this.store = store;
     if (checkConsistencyAfterCommit) {
-      JacisTransactionListener txListener = new JacisTransactionListenerAdapter() {
+      JacisTransactionListener txListener = new JacisTransactionListener() {
 
         @Override
         public void afterCommit(JacisContainer container, JacisTransactionHandle tx) {

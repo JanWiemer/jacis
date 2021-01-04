@@ -15,6 +15,7 @@ import org.jacis.container.JacisTransactionHandle;
  *
  * @author Jan Wiemer
  */
+@Deprecated // no longer needed because interface has default implementations
 @JacisApi
 public abstract class JacisTransactionListenerAdapter implements JacisTransactionListener {
 
