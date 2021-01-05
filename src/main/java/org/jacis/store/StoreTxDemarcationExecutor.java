@@ -68,9 +68,9 @@ class StoreTxDemarcationExecutor {
         }
       }
     }
-    JacisPersistenceAdapter<K,TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
-    if(persistenceAdapter!=null) {
-      persistenceAdapter.prepareCommit();
+    JacisPersistenceAdapter<K, TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
+    if (persistenceAdapter != null) {
+      persistenceAdapter.afterPrepareForStore(store, transaction);
     }
   }
 
@@ -116,9 +116,9 @@ class StoreTxDemarcationExecutor {
       }
     } finally { // even if exceptions occur TX view has to be destroyed! See https://github.com/JanWiemer/jacis/issues/8
       txView.afterCommit();
-      JacisPersistenceAdapter<K,TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
-      if(persistenceAdapter!=null) {
-        persistenceAdapter.commit();
+      JacisPersistenceAdapter<K, TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
+      if (persistenceAdapter != null) {
+        persistenceAdapter.afterCommitForStore(store, transaction);
       }
     }
     if (toThrow != null) {
@@ -151,9 +151,9 @@ class StoreTxDemarcationExecutor {
       }
     }
     txView.afterRollback();
-    JacisPersistenceAdapter<K,TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
-    if(persistenceAdapter!=null) {
-      persistenceAdapter.rollback();
+    JacisPersistenceAdapter<K, TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
+    if (persistenceAdapter != null) {
+      persistenceAdapter.afterRollbackForStore(store, transaction);
     }
   }
 

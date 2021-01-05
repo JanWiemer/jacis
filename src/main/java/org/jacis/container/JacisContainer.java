@@ -100,7 +100,9 @@ public class JacisContainer {
    * @return This container itself for method chaining.
    */
   public JacisContainer registerTransactionListener(JacisTransactionListener listener) {
-    txListeners.add(listener);
+    if (!txListeners.contains(listener)) {
+      txListeners.add(listener);
+    }
     return this;
   }
 
@@ -121,6 +123,7 @@ public class JacisContainer {
     if (persistenceAdapter != null) {
       persistenceAdapter.initializeStore(store);
       store.registerModificationListener(persistenceAdapter);
+      registerTransactionListener(persistenceAdapter);
     }
     storeMap.put(storeIdentifier, store);
     return store;

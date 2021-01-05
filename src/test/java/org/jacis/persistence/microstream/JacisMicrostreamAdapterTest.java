@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.extension.persistence.MicrostreamPersistenceAdapter;
+import org.jacis.extension.persistence.MicrostreamStorage;
 import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.store.JacisStore;
@@ -54,7 +55,8 @@ public class JacisMicrostreamAdapterTest {
     JacisContainer container = testHelper.createTestContainer();
     JacisCloningObjectAdapter<TestObject> cloningAdapter = new JacisCloningObjectAdapter<>();
     JacisObjectTypeSpec<String, TestObject, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class, cloningAdapter);
-    objectTypeSpec.setPersistenceAdapter(new MicrostreamPersistenceAdapter<>(storageManager));
+    MicrostreamStorage storage = new MicrostreamStorage(storageManager);
+    objectTypeSpec.setPersistenceAdapter(new MicrostreamPersistenceAdapter<>(storage));
     container.createStore(objectTypeSpec);
     return container.getStore(String.class, TestObject.class);
   }
@@ -78,6 +80,7 @@ public class JacisMicrostreamAdapterTest {
   @Test
   public void testRestartWithOneElement() {
     Path storageDir = getStorageDir("testRestartWithOneElement");
+    log.info("===== START =====");
     EmbeddedStorageManager storageManager = createStorageManager(storageDir);
     JacisStore<String, TestObject> store = createTestStore(storageManager);
     // create and fill store
@@ -88,6 +91,7 @@ public class JacisMicrostreamAdapterTest {
     initTx.commit();
     assertEquals(1, store.size());
     // RESTART
+    log.info("===== RESTART =====");
     storageManager.shutdown();
     storageManager = createStorageManager(storageDir);
     store = createTestStore(storageManager);
@@ -96,6 +100,7 @@ public class JacisMicrostreamAdapterTest {
     assertEquals(1, store.size());
     assertEquals(1, store.get(testObjectName).getValue()); // ===== READ => committed value ====
     readingTx.commit();
+    log.info("===== FINISHED =====");
   }
 
   @Test

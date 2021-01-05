@@ -3,20 +3,19 @@
  */
 package org.jacis.extension.persistence;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jacis.container.JacisContainer;
+import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.plugin.persistence.JacisPersistenceAdapter;
 import org.jacis.store.JacisStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import one.microstream.storage.types.StorageManager;
 
 /**
  * Implementation of the JACIS persistence adapter based on Microstream serialization
@@ -43,54 +42,53 @@ public class MicrostreamPersistenceAdapter<K, V> implements JacisPersistenceAdap
 
   private static final Logger log = LoggerFactory.getLogger(MicrostreamPersistenceAdapter.class);
 
+  /** Identifier of the JACIS store. */
+  private StoreIdentifier storeIdentifier;
   /** Flag that can be used to enable trace logging in the adapter implementation. */
   private boolean traceLogging;
-  /** The Microstream storage manager used to persist entities. */
-  private StorageManager storageManager;
+  /** The Microstream multistore persistence adapter used to persist entities. */
+  private MicrostreamStorage multistoreAdapter;
   /** The root object stored by the Microstream storage manager. */
   private MicrostreamStoreRoot<K, V> storageRoot;
   /** A map storing the Microstream entity objects stored by the Microstream storage manager for each key in the store. */
   private Map<K, MicrostreamStoreEntity<K, V>> key2entity;
   /** Set of Microstream entity objects modified during the transaction. */
   private Set<Object> objectsToStore = null;
+  /** Number of threads used to initialize the JACIS store with the initial (already stored) elements */
+  private int initStoreThreads = 4;
 
   @Override
   public String toString() {
-    return "MPA(" + (storageRoot == null ? "-" : storageRoot.getStoreName()) + ")";
+    return getClass().getSimpleName();
   }
 
-  public MicrostreamPersistenceAdapter(StorageManager storageManager, boolean traceLogging) {
-    this.storageManager = storageManager;
+  public MicrostreamPersistenceAdapter(MicrostreamStorage multistoreAdapter, boolean traceLogging) {
+    this.multistoreAdapter = multistoreAdapter;
     this.traceLogging = traceLogging;
     key2entity = new HashMap<>();
-    log.debug("{} instantiated (storageManager: {})", this, storageManager);
-    log.debug("{}  - storage directory {}", this, storageManager.configuration().fileProvider().baseDirectory().toPathString());
   }
 
-  public MicrostreamPersistenceAdapter(StorageManager storageManager) {
-    this(storageManager, false);
+  public MicrostreamPersistenceAdapter(MicrostreamStorage multistoreAdapter) {
+    this(multistoreAdapter, false);
   }
 
-  @SuppressWarnings("unchecked")
+  public MicrostreamPersistenceAdapter<K, V> setInitStoreThreads(int initStoreThreads) {
+    this.initStoreThreads = initStoreThreads;
+    return this;
+  }
+
   @Override
   public void initializeStore(JacisStore<K, V> store) {
-    log.debug("{} start initialization...", this);
+    storeIdentifier = store.getStoreIdentifier();
+    log.debug("{} start store initialization for store {}...", this, storeIdentifier.toShortString());
     long t0 = System.nanoTime();
-    storageManager.start();
-    if (storageManager.root() == null) {
-      storageRoot = new MicrostreamStoreRoot<>(store.getStoreIdentifier().toShortString());
-      storageManager.setRoot(storageRoot);
-      storageManager.storeRoot();
-      log.debug("{} initialization: created new root; {}", this, storageRoot);
-    } else {
-      storageRoot = (MicrostreamStoreRoot<K, V>) storageManager.root();
-      log.debug("{} initialization: found existing root; {}", this, storageRoot);
-    }
+    storageRoot = multistoreAdapter.getOrCreateStoreRoot(store);
     List<MicrostreamStoreEntity<K, V>> rootList = storageRoot.toList();
-    store.initStoreNonTransactional(rootList, e -> e.getKey(), e -> e.getValue(), 4);
-    log.debug("{} initialized after {} (storage root: {} (size: {}), initial size: {})", this, stopTime(t0), storageRoot, rootList.size(), store.size());
+    store.initStoreNonTransactional(rootList, e -> e.getKey(), e -> e.getValue(), initStoreThreads);
+    log.debug("{} init finished after {} (store: {}, storage root: {} (found {} persisted entries), initial store size: {})", //
+        this, stopTime(t0), storeIdentifier.toShortString(), storageRoot, rootList.size(), store.size());
     if (traceLogging) {
-      log.trace("{} initialized -> persistent list: {}", this, storageRoot.toList());
+      log.trace("{} init: -> storage root list: {}", this, rootList);
     }
   }
 
@@ -112,194 +110,47 @@ public class MicrostreamPersistenceAdapter<K, V> implements JacisPersistenceAdap
       // nothing to do...
     }
     if (traceLogging) {
-      log.trace("{} track modification for {} ", this, key);
+      log.trace("{} track modification for {} (store: {}, old vale: {}, new value: {}) (TX: {})", this, key, storeIdentifier.toShortString(), oldValue, newValue, tx);
     }
   }
 
   @Override
-  public void prepareCommit() {
-    log.debug("{} prepareCommit", this);
-    // nothing to do here, we expect the microstream storage to be always available
-  }
-
-  @Override
-  public void commit() {
-    log.debug("{} commit (#{} objects to store: {}", this, objectsToStore == null ? 0 : objectsToStore.size(), objectsToStore);
-    long t0 = System.nanoTime();
+  public void afterCommitForStore(JacisStore<K, V> store, JacisTransactionHandle tx) {
+    log.debug("{} after commit for store track #{} objects to store. (store: {}, TX: {})", //
+        this, objectsToStore == null ? 0 : objectsToStore.size(), storeIdentifier.toShortString(), tx);
     if (objectsToStore != null && !objectsToStore.isEmpty()) {
-      storageManager.storeAll(objectsToStore);
+      multistoreAdapter.trackObjectsToStore(tx, objectsToStore);
     }
-    log.debug("{} commit took {}", this, stopTime(t0));
     if (traceLogging) {
-      log.trace("{} commit -> persistent list: {}", this, storageRoot.toList());
+      log.trace("{} after commit for store -> tracked objects to store: {}", this, objectsToStore);
+      log.trace("{} after commit for store -> persistent list: {}", this, storageRoot.toList());
     }
     objectsToStore = null;
   }
 
   @Override
-  public void rollback() {
-    log.debug("{} rollback (#{} objects to store: {}", this, objectsToStore == null ? 0 : objectsToStore.size(), objectsToStore);
-    objectsToStore = null; // discard changes
-  }
-
-  protected String stopTime(long startTimeNs) {
-    long nanos = System.nanoTime() - startTimeNs;
-    double millis = ((double) nanos) / (1000 * 1000);
-    return String.format("%.2f ms", millis);
-  }
-
-}
-
-//====================================================================================
-//====================================================================================
-//====================================================================================
-//====================================================================================
-
-/**
- * The root object stored by the Microstream storage manager.
- * Basically it stores (the head of) the linked list of Microstream entity objects representing the store entries.
- * 
- * @author Jan Wiemer
- *
- * @param <K> Key type of the store entry
- * @param <V> Value type of the store entry
- */
-class MicrostreamStoreRoot<K, V> {
-
-  /** The name of the JACIS store represented by this root object. */
-  private final String storeName;
-  /** The first object of the linked list of Microstream entity objects representing the store entries. */
-  private MicrostreamStoreEntity<K, V> firstElement;
-
-  public MicrostreamStoreRoot(String storeName) {
-    this.storeName = storeName;
+  public void afterRollbackForStore(JacisStore<K, V> store, JacisTransactionHandle tx) {
+    log.debug("{} after rollback for store skip #{} objects to store. (store: {}, TX: {})", //
+        this, objectsToStore == null ? 0 : objectsToStore.size(), storeIdentifier.toShortString(), tx);
+    if (traceLogging) {
+      log.trace("{} after rollback for store -> skipped objects to store: {}", this, objectsToStore);
+      log.trace("{} after rollback for store -> persistent list: {}", this, storageRoot.toList());
+    }
+    objectsToStore = null;
   }
 
   @Override
-  public String toString() {
-    return "StorageRoot(" + storeName + ")";
-  }
-
-  public void add(MicrostreamStoreEntity<K, V> entity, Set<Object> objectsToStore) {
-    if (firstElement != null) {
-      firstElement.setPrev(entity);
-      entity.setNext(firstElement);
-    }
-    firstElement = entity;
-    objectsToStore.add(entity);
-    objectsToStore.add(this);
-  }
-
-  public void remove(MicrostreamStoreEntity<K, V> entity, Set<Object> objectsToStore) {
-    MicrostreamStoreEntity<K, V> prev = entity.getPrev();
-    MicrostreamStoreEntity<K, V> next = entity.getNext();
-    if (prev != null) {
-      prev.setNext(next);
-      objectsToStore.add(prev);
-    } else {
-      objectsToStore.add(this);
-      firstElement = next;
-    }
-    if (next != null) {
-      next.setPrev(prev);
-      objectsToStore.add(next);
-    }
-    entity.setPrev(null).setNext(null);
-    objectsToStore.add(entity);
-  }
-
-  public MicrostreamStoreEntity<K, V> getFirstElement() {
-    return firstElement;
-  }
-
-  public void setFirstElement(MicrostreamStoreEntity<K, V> firstElement) {
-    this.firstElement = firstElement;
-  }
-
-  public String getStoreName() {
-    return storeName;
-  }
-
-  public List<MicrostreamStoreEntity<K, V>> toList() {
-    List<MicrostreamStoreEntity<K, V>> res = new ArrayList<>();
-    MicrostreamStoreEntity<K, V> e = firstElement;
-    while (e != null) {
-      res.add(e);
-      e = e.getNext();
-    }
-    return res;
-  }
-
-}
-
-//====================================================================================
-//====================================================================================
-//====================================================================================
-//====================================================================================
-
-/**
- * The Microstream entity object representing the store entries.
- * The entity objects build a linked list (see {@link #getPrev()} and {@link #getNext()}).
- * 
- * @author Jan Wiemer
- *
- * @param <K> Key type of the store entry
- * @param <V> Value type of the store entry
- */
-class MicrostreamStoreEntity<K, V> {
-
-  /** The key of the store entry represented by this Microstream entity object. */
-  private K key;
-  /** The value of the store entry represented by this Microstream entity object. */
-  private V value;
-  /** The next element in the linked list. */
-  private MicrostreamStoreEntity<K, V> next;
-  /** The previous element in the linked list. */
-  private MicrostreamStoreEntity<K, V> prev;
-
-  public MicrostreamStoreEntity(K key, V value) {
-    this.key = key;
-    this.value = value;
-  }
-
-  public K getKey() {
-    return key;
-  }
-
-  public V getValue() {
-    return value;
-  }
-
-  public MicrostreamStoreEntity<K, V> getNext() {
-    return next;
-  }
-
-  public MicrostreamStoreEntity<K, V> getPrev() {
-    return prev;
-  }
-
-  public MicrostreamStoreEntity<K, V> setKey(K key) {
-    this.key = key;
-    return this;
-  }
-
-  public MicrostreamStoreEntity<K, V> setValue(V value) {
-    this.value = value;
-    return this;
-  }
-
-  public MicrostreamStoreEntity<K, V> setNext(MicrostreamStoreEntity<K, V> next) {
-    this.next = next;
-    return this;
-  }
-
-  public MicrostreamStoreEntity<K, V> setPrev(MicrostreamStoreEntity<K, V> prev) {
-    this.prev = prev;
-    return this;
+  public void afterCommit(JacisContainer container, JacisTransactionHandle tx) {
+    multistoreAdapter.afterCommit(tx);
   }
 
   @Override
-  public String toString() {
-    return "Entity(" + key + ")";
+  public void afterRollback(JacisContainer container, JacisTransactionHandle tx) {
+    multistoreAdapter.afterRollback(tx);
   }
+
+  private String stopTime(long t0) {
+    return multistoreAdapter.stopTime(t0);
+  }
+
 }
