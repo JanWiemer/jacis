@@ -16,10 +16,6 @@ import org.jacis.container.JacisTransactionHandle;
  * Once registered on each lifecycle event of any transaction the container has joined causes the
  * corresponding lifecycle callback method to be invoked.
  *
- * The abstract {@link JacisTransactionListenerAdapter} class can be extended to simplify implementing this interface.
- * Since this adapter class provides empty default implementations for all methods declared in this interface.
- * This way the actual implementation only has to overwrite the desired methods.
- *
  * @author Jan Wiemer
  */
 @JacisApi
