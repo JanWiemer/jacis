@@ -47,6 +47,7 @@ public class JacisMicrostreamAdapterTest {
         .setBaseDirectory(storageDir.toString()) //
         .createEmbeddedStorageFoundation() //
         .createEmbeddedStorageManager();
+    storageManager.start();
     return storageManager;
   }
 

@@ -38,7 +38,6 @@ public class MicrostreamStorage {
     String storageDirectory = storageManager.configuration().fileProvider().baseDirectory().toPathString();
     log.debug("{} start init (storage dir: {})", this, storageDirectory);
     long t0 = System.nanoTime();
-    storageManager.start();
     if (storageManager.root() == null) {
       storageRoot = new MicrostreamRoot();
       storageManager.setRoot(storageRoot);
