@@ -8,8 +8,11 @@ plugins {
 }
 
 group = "org.jacis"
-version = Boolean.getBoolean("releasebuild") ? "$version" : "$version-SNAPSHOT"
+version = Boolean.getBoolean("releasebuild") ? "$version" : Boolean.getBoolean("usedateversion") ? "$version" + "-build" + getDate() : "$version-SNAPSHOT"
 
+def getDate() {
+    return new Date().format('yyyyMMdd') // .format('yyyyMMddHHmmss')
+}
 
 ext {
     projectName            = "jacis"
