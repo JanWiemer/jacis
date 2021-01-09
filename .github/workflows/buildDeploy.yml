@@ -56,19 +56,24 @@ jobs:
         arguments: publish -Dreleasebuild=${{ github.event.inputs.release }} -Dusedateversion=true -Ddeploy_user=JanWiemer -Ddeploy_pw=${{secrets.GITHUB_TOKEN}} -Ddeploy_repo_release=https://maven.pkg.github.com/janwiemer/jacis -Ddeploy_repo_snapshot=https://maven.pkg.github.com/janwiemer/jacis
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
-    - name: Determine versions
+    - name: Determine Release versions
       if: ${{ github.event.inputs.release }} == true
       uses: HardNorth/github-version-generate@v1.0.2
       with:
         version-source: file
         version-file: gradle.properties
         version-file-extraction-pattern: '(?<=version=).+'
+    - name: Get current time
+      uses: 1466587594/get-current-time@v2
+      id: current-time
+      with:
+        format: YYYYMMDD
     - name: Log Release Version 
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
       run: echo "version=${{ env.RELEASE_VERSION }}"
     - name: Log Snapshot Version 
       if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.release != 'true' }}
-      run: echo "version=${{ env.RELEASE_VERSION }}-SNAPSHOT"
+      run: echo "version=${{ env.RELEASE_VERSION }}-build${{ steps.current-time.outputs.formattedTime }}"
     - name: Create Release
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
       uses: actions/create-release@v1

@@ -23,7 +23,7 @@ ext {
     authorMail             = "jan.wiemer@online.de"
     licenseName            = "Apache-2.0 License"
     licenseURL             = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
-    isReleaseVersion       = !version.endsWith("SNAPSHOT")
+    isReleaseVersion       = Boolean.getBoolean("releasebuild")
     deploy_user            = System.properties.get("deploy_user")
     deploy_pw              = System.properties.get("deploy_pw")
     deploy_repo_release    = System.properties.get("deploy_repo_release")
