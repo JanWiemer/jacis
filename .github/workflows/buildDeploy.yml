@@ -73,7 +73,7 @@ jobs:
       run: echo "version=${{ env.RELEASE_VERSION }}"
     - name: Log Snapshot Version 
       if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.release != 'true' }}
-      run: echo "version=${{ env.RELEASE_VERSION }}-build${{ steps.current-time.outputs.formattedTime }}"
+      run: echo "version=${{ env.RELEASE_VERSION }}-build${{ steps.current-time.outputs.formattedTime }}-SNAPSHOT"
     - name: Create Release
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
       uses: actions/create-release@v1
