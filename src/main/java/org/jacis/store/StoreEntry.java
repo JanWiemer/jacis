@@ -7,7 +7,7 @@ package org.jacis.store;
 /**
  * Representing a committed version of an entry in the store.
  *
- * @param <K>  Key type of the store entry
+ * @param <K> Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
@@ -24,8 +24,12 @@ class StoreEntry<K, TV, CV> {
   private long version = 0;
   /** id of the transaction that has committed the current version (for logging / debugging only) */
   private String updatedBy = null;
+  /** name of the thread that has committed the current version (for logging / debugging only) */
+  private String updatedByThread = null;
   /** transaction this object is locked for (in the time between prepare and internalCommit) */
   private JacisStoreTxView<K, TV, CV> lockedFor = null;
+  /** name of the thread that this object is locked for (in the time between prepare and internalCommit) */
+  private String lockedForThread = null;
 
   StoreEntry(JacisStoreAdminInterface<K, TV, CV> store, K key) {
     this.store = store;
@@ -48,15 +52,18 @@ class StoreEntry<K, TV, CV> {
     }
     version++;
     updatedBy = byTx.getTxId();
+    updatedByThread = Thread.currentThread().getName();
   }
 
   synchronized void lockedFor(JacisStoreTxView<K, TV, CV> lockingTx) {
     lockedFor = lockingTx;
+    lockedForThread = Thread.currentThread().getName();
   }
 
   synchronized void releaseLockedFor(JacisStoreTxView<K, TV, CV> releasingTx) {
     if (releasingTx.equals(getLockedFor())) {
       lockedFor = null;
+      lockedForThread = null;
     }
   }
 
@@ -97,8 +104,16 @@ class StoreEntry<K, TV, CV> {
     return updatedBy;
   }
 
+  synchronized String getUpdatedByThread() {
+    return updatedByThread;
+  }
+
   synchronized JacisStoreTxView<K, TV, CV> getLockedFor() {
     return lockedFor;
+  }
+
+  public String getLockedForThread() {
+    return lockedForThread;
   }
 
   @Override

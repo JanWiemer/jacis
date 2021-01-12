@@ -9,7 +9,7 @@ import org.jacis.JacisApi;
 /**
  * State information regarding a store entry
  *
- * @param <K>  Key type of the store entry
+ * @param <K> Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @author Jan Wiemer
  */
@@ -22,8 +22,12 @@ public class StoreEntryInfo<K, TV> {
   private final long committedVersion;
   /** transaction ID of the transaction that committed the committed entry */
   private final String committedVersionLastCommitterTx;
+  /** thread name of the transaction that committed the committed entry */
+  private final String committedVersionLastCommitterThread;
   /** transaction ID of the transaction currently locking the committed entry (for commit) */
   private final String committedVersionLockedForTx;
+  /** thread name of the transaction currently locking the committed entry (for commit) */
+  private final String committedVersionLockedForThread;
   /** original version of the transactional view of the entry (the version from the committet entry at the time it was cloned to the TX view) */
   private final long txViewOrigVersion;
   /** flag indicating if the transaction view has been updated */
@@ -44,14 +48,18 @@ public class StoreEntryInfo<K, TV> {
     if (committedEntry != null) {
       committedVersion = committedEntry.getVersion();
       committedVersionLastCommitterTx = committedEntry.getUpdatedByTxId();
+      committedVersionLastCommitterThread = committedEntry.getUpdatedByThread();
       committedValueString = String.valueOf(committedEntry.getValue());
       JacisStoreTxView<K, TV, ?> lf = committedEntry.getLockedFor();
       committedVersionLockedForTx = lf == null ? null : lf.getTxId();
+      committedVersionLockedForThread = committedEntry.getLockedForThread();
     } else {
       committedVersion = -1;
       committedVersionLastCommitterTx = null;
+      committedVersionLastCommitterThread = null;
       committedValueString = null;
       committedVersionLockedForTx = null;
+      committedVersionLockedForThread = null;
     }
     if (entryTxView != null) {
       txViewValueString = String.valueOf(entryTxView.getValue());
@@ -86,8 +94,16 @@ public class StoreEntryInfo<K, TV> {
     return committedVersionLastCommitterTx;
   }
 
+  public String getCommittedVersionLastCommitterThread() {
+    return committedVersionLastCommitterThread;
+  }
+
   public String getCommittedVersionLockedForTx() {
     return committedVersionLockedForTx;
+  }
+
+  public String getCommittedVersionLockedForThread() {
+    return committedVersionLockedForThread;
   }
 
   public long getTxViewOrigVersion() {

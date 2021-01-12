@@ -10,7 +10,7 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 /**
  * Representing the view of a store entry the current transaction currently sees.
  *
- * @param <K>  Key type of the store entry
+ * @param <K> Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
@@ -117,13 +117,22 @@ class StoreEntryTxView<K, TV, CV> {
     msg.append("Object ").append(getKey());
     msg.append(" updated by current TX ").append(txView.getTxId()).append(" (from v. ").append(getOrigVersion()).append(")");
     JacisStoreTxView<K, TV, CV> lockedFor = theCommittedEntry.getLockedFor();
-    String otherTxId = lockedFor != null ? lockedFor.getTxId() : committedEntry.getUpdatedByTxId();
+    String otherTxId;
+    String otherThreadId;
+    if (lockedFor != null) {
+      otherTxId = lockedFor.getTxId();
+      otherThreadId = "???";
+    } else {
+      otherTxId = committedEntry.getUpdatedByTxId();
+      otherThreadId = committedEntry.getUpdatedByThread();
+    }
     if (lockedFor != null && !lockedFor.equals(txView)) {
       msg.append(" was already updated by prepared other TX ");
     } else {
       msg.append(" was already updated by other TX ");
     }
-    msg.append(otherTxId == null ? "?" : otherTxId).append("!");
+    msg.append(otherTxId == null ? "?" : otherTxId);
+    msg.append(" (Thread: ").append(otherThreadId).append(")!");
     msg.append(" (store: ").append(store).append(")");
     StringBuilder details = new StringBuilder();
     details.append("// Details: \n");
@@ -134,9 +143,9 @@ class StoreEntryTxView<K, TV, CV> {
     details.append(" - committed value         : ").append(theCommittedEntry.getValue()).append(" (v. ").append(theCommittedEntry.getVersion()).append(")").append("\n");
     details.append(" - current TX: ").append(txView).append("\n");
     if (lockedFor != null) {
-      details.append(" - other TX: ").append(lockedFor).append("\n");
+      details.append(" - other TX: ").append(lockedFor).append(" (Thread: ").append(otherThreadId).append(") (preparing)\n");
     } else {
-      details.append(" - other TX: ").append(theCommittedEntry.getUpdatedByTxId()).append("\n");
+      details.append(" - other TX: ").append(theCommittedEntry.getUpdatedByTxId()).append(" (Thread: ").append(otherThreadId).append(")\n");
     }
     details.append(" - store: ").append(store);
     throw new JacisStaleObjectException(msg.toString()).setDetails(details.toString());
