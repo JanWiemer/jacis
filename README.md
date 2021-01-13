@@ -1,4 +1,5 @@
 [![CI Java 8](https://github.com/JanWiemer/jacis/workflows/JACIS-CI-Build/badge.svg)](https://github.com/JanWiemer/jacis/actions?query=workflow%3AJACIS-CI-Build)
+![CodeQL](https://github.com/JanWiemer/jacis/workflows/CodeQL/badge.svg)
 
 # jacis
 Java ACI Store - Transient and transactional store for Java objects.
