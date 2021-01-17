@@ -231,4 +231,40 @@ public class JacisMicrostreamAdapterTest {
     readingTx.commit();
   }
 
+  @Test
+  public void testRestartDeleteRestart() {
+    Path storageDir = getStorageDir("testRestartDeleteRestart");
+    EmbeddedStorageManager storageManager = createStorageManager(storageDir);
+    JacisStore<String, TestObject> store = createTestStore(storageManager);
+    // create and fill store
+    JacisLocalTransaction initTx = store.getContainer().beginLocalTransaction();
+    store.update("obj-1", new TestObject("obj-1", 1));
+    store.update("obj-2", new TestObject("obj-2", 2));
+    store.update("obj-3", new TestObject("obj-3", 3));
+    store.update("obj-4", new TestObject("obj-4", 4));
+    store.update("obj-5", new TestObject("obj-5", 5));
+    initTx.commit();
+    assertEquals(5, store.size());
+    // RESTART
+    storageManager.shutdown();
+    storageManager = createStorageManager(storageDir);
+    store = createTestStore(storageManager);
+    JacisLocalTransaction updateTx = store.getContainer().beginLocalTransaction();
+    store.remove("obj-3");
+    updateTx.commit();
+    // RESTART
+    storageManager.shutdown();
+    storageManager = createStorageManager(storageDir);
+    store = createTestStore(storageManager);
+    //
+    JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
+    assertEquals(4, store.size());
+    assertEquals(1, store.get("obj-1").getValue());
+    assertEquals(2, store.get("obj-2").getValue());
+    assertNull(store.get("obj-3"));
+    assertEquals(4, store.get("obj-4").getValue());
+    assertEquals(5, store.get("obj-5").getValue());
+    readingTx.commit();
+  }
+
 }

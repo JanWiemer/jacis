@@ -87,6 +87,9 @@ public class MicrostreamPersistenceAdapter<K, V> implements JacisPersistenceAdap
     store.initStoreNonTransactional(rootList, e -> e.getKey(), e -> e.getValue(), initStoreThreads);
     log.debug("{} init finished after {} (store: {}, storage root: {} (found {} persisted entries), initial store size: {})", //
         this, stopTime(t0), storeIdentifier.toShortString(), storageRoot, rootList.size(), store.size());
+    for (MicrostreamStoreEntity<K, V> entity : rootList) {
+      key2entity.put(entity.getKey(), entity);
+    }
     if (traceLogging) {
       log.trace("{} init: -> storage root list: {}", this, rootList);
     }
