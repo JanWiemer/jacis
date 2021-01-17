@@ -11,8 +11,8 @@ import java.nio.file.Paths;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
-import org.jacis.extension.persistence.MicrostreamPersistenceAdapter;
-import org.jacis.extension.persistence.MicrostreamStorage;
+import org.jacis.extension.persistence.microstream.MicrostreamPersistenceAdapter;
+import org.jacis.extension.persistence.microstream.MicrostreamStorage;
 import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.store.JacisStore;

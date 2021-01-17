@@ -1,4 +1,4 @@
-package org.jacis.extension.persistence;
+package org.jacis.extension.persistence.microstream;
 
 import java.util.ArrayList;
 import java.util.List;

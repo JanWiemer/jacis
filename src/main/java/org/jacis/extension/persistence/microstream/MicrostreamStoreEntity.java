@@ -1,4 +1,4 @@
-package org.jacis.extension.persistence;
+package org.jacis.extension.persistence.microstream;
 
 /**
  * The Microstream entity object representing the store entries.

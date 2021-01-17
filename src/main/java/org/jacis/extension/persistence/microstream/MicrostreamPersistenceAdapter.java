@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020. Jan Wiemer
  */
-package org.jacis.extension.persistence;
+package org.jacis.extension.persistence.microstream;
 
 import java.util.HashMap;
 import java.util.HashSet;
