@@ -214,7 +214,7 @@ public class JacisMicrostreamAdapterTest {
     initTx.commit();
     assertEquals(5, store.size());
     JacisLocalTransaction updateTx = store.getContainer().beginLocalTransaction();
-    store.update("obj-3", null);
+    store.remove("obj-3");
     updateTx.commit();
     // RESTART
     storageManager.shutdown();
