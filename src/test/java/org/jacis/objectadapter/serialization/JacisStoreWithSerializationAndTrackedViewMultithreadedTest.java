@@ -2,7 +2,7 @@
  * Copyright (c) 2016. Jan Wiemer
  */
 
-package org.jacis.cloning;
+package org.jacis.objectadapter.serialization;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -22,15 +22,15 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JacisStoreWithCloningAndTrackedViewMultithreadedTest {
+public class JacisStoreWithSerializationAndTrackedViewMultithreadedTest {
 
-  static final Logger log = LoggerFactory.getLogger(JacisStoreWithCloningAndTrackedViewMultithreadedTest.class);
+  static final Logger log = LoggerFactory.getLogger(JacisStoreWithSerializationAndTrackedViewMultithreadedTest.class);
 
   @Test()
   public void testMultiThreadedAccess() {
     JacisTestHelper testHelper = new JacisTestHelper();
     AtomicReference<Throwable> exception = new AtomicReference<>();
-    final JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithSerialization();
     final JacisContainer container = store.getContainer();
     final TestJacisTransactionListenerAdapter txListener = new TestJacisTransactionListenerAdapter(store);
     container.registerTransactionListener(txListener);
@@ -117,7 +117,7 @@ public class JacisStoreWithCloningAndTrackedViewMultithreadedTest {
     assertTrue("more than " + numberOfObjects + ": " + view.getCount() + "!", view.getCount() <= numberOfObjects);
     Throwable e = exception.get();
     if (e != null) {
-      throw new RuntimeException("Exception occured in one thread: " + e, e);
+      throw new RuntimeException("Exception occurred in one thread: " + e, e);
     }
   }
 

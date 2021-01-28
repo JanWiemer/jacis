@@ -9,6 +9,7 @@ import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisNoTransactionException;
 import org.jacis.exception.JacisTransactionAlreadyStartedException;
+import org.jacis.extension.objectadapter.serialization.microstream.JacisMicrostreamCloningObjectAdapter;
 import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.plugin.objectadapter.serialization.JacisJavaSerializationObjectAdapter;
 import org.jacis.plugin.objectadapter.serialization.JacisSerializationObjectAdapter;
@@ -44,6 +45,30 @@ public class JacisTestHelper {
 
   public JacisStore<String, TestObjectWithoutReadOnlyMode> createTestStoreWithCloningAndWithoutReadonlyMode(JacisContainer container) {
     JacisCloningObjectAdapter<TestObjectWithoutReadOnlyMode> cloningAdapter = new JacisCloningObjectAdapter<>();
+    JacisObjectTypeSpec<String, TestObjectWithoutReadOnlyMode, TestObjectWithoutReadOnlyMode> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObjectWithoutReadOnlyMode.class, cloningAdapter);
+    container.createStore(objectTypeSpec);
+    return container.getStore(String.class, TestObjectWithoutReadOnlyMode.class);
+  }
+
+  public JacisStore<String, TestObject> createTestStoreWithMicrostreamCloning() {
+    JacisContainer container = createTestContainer();
+    return createTestStoreWithMicrostreamCloning(container);
+  }
+
+  public JacisStore<String, TestObject> createTestStoreWithMicrostreamCloning(JacisContainer container) {
+    JacisMicrostreamCloningObjectAdapter<TestObject> cloningAdapter = new JacisMicrostreamCloningObjectAdapter<>();
+    JacisObjectTypeSpec<String, TestObject, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class, cloningAdapter);
+    container.createStore(objectTypeSpec);
+    return container.getStore(String.class, TestObject.class);
+  }
+
+  public JacisStore<String, TestObjectWithoutReadOnlyMode> createTestStoreWithMicrostreamCloningAndWithoutReadonlyMode() {
+    JacisContainer container = createTestContainer();
+    return createTestStoreWithMicrostreamCloningAndWithoutReadonlyMode(container);
+  }
+
+  public JacisStore<String, TestObjectWithoutReadOnlyMode> createTestStoreWithMicrostreamCloningAndWithoutReadonlyMode(JacisContainer container) {
+    JacisMicrostreamCloningObjectAdapter<TestObjectWithoutReadOnlyMode> cloningAdapter = new JacisMicrostreamCloningObjectAdapter<>();
     JacisObjectTypeSpec<String, TestObjectWithoutReadOnlyMode, TestObjectWithoutReadOnlyMode> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObjectWithoutReadOnlyMode.class, cloningAdapter);
     container.createStore(objectTypeSpec);
     return container.getStore(String.class, TestObjectWithoutReadOnlyMode.class);

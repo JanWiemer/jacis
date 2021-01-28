@@ -2,7 +2,7 @@
  * Copyright (c) 2016. Jan Wiemer
  */
 
-package org.jacis.serialization;
+package org.jacis.objectadapter.serialization;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;

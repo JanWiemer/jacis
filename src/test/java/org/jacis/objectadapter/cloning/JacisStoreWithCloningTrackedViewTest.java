@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2016. Jan Wiemer
+ * Copyright (c) 2017. Jan Wiemer
  */
 
-package org.jacis.serialization;
+package org.jacis.objectadapter.cloning;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,12 +14,12 @@ import org.jacis.testhelper.TrackedTestView;
 import org.jacis.trackedviews.TrackedView;
 import org.junit.Test;
 
-public class JacisStoreWithSerializationTrackedViewTest {
+public class JacisStoreWithCloningTrackedViewTest {
 
   @Test
   public void testTrackedView() {
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject> store = testHelper.createTestStoreWithSerialization();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisContainer container = store.getContainer();
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1"));
@@ -44,5 +44,11 @@ public class JacisStoreWithSerializationTrackedViewTest {
       int viewVal = store.getTrackedViewRegistry().getView(TrackedTestView.class).getCount();
       assertEquals(5, viewVal);
     });
+    int viewVal = store.getTrackedViewRegistry().getView(TrackedTestView.class).getCount();
+    assertEquals(5, viewVal);
+    store.getTrackedViewRegistry().reinitializeView(TrackedTestView.class);
+    viewVal = store.getTrackedViewRegistry().getView(TrackedTestView.class).getCount();
+    assertEquals(5, viewVal);
   }
+
 }

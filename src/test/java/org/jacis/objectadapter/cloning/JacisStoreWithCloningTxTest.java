@@ -2,7 +2,7 @@
  * Copyright (c) 2016. Jan Wiemer
  */
 
-package org.jacis.cloning;
+package org.jacis.objectadapter.cloning;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

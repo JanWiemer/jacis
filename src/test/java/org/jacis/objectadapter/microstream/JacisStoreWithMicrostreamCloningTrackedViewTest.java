@@ -2,7 +2,7 @@
  * Copyright (c) 2017. Jan Wiemer
  */
 
-package org.jacis.cloning;
+package org.jacis.objectadapter.microstream;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,12 +14,12 @@ import org.jacis.testhelper.TrackedTestView;
 import org.jacis.trackedviews.TrackedView;
 import org.junit.Test;
 
-public class JacisStoreWithCloningTrackedViewTest {
+public class JacisStoreWithMicrostreamCloningTrackedViewTest {
 
   @Test
   public void testTrackedView() {
     JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithMicrostreamCloning();
     JacisContainer container = store.getContainer();
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1"));

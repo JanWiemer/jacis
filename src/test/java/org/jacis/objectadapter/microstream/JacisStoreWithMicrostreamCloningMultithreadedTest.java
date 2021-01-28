@@ -2,7 +2,7 @@
  * Copyright (c) 2016. Jan Wiemer
  */
 
-package org.jacis.cloning;
+package org.jacis.objectadapter.microstream;
 
 import static org.junit.Assert.assertEquals;
 
@@ -16,9 +16,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JacisStoreWithCloningMultithreadedTest {
+public class JacisStoreWithMicrostreamCloningMultithreadedTest {
 
-  private static final Logger log = LoggerFactory.getLogger(JacisStoreWithCloningMultithreadedTest.class);
+  private static final Logger log = LoggerFactory.getLogger(JacisStoreWithMicrostreamCloningMultithreadedTest.class);
 
   @Test()
   public void testSimpleMultiThreadedAccess() {
@@ -28,7 +28,7 @@ public class JacisStoreWithCloningMultithreadedTest {
   }
 
   public void checkSimpleMultiThreadedAccess() {
-    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithCloning();
+    JacisStore<String, TestObject> store = new JacisTestHelper().createTestStoreWithMicrostreamCloning();
     String testObjName = "TST";
     store.getContainer().withLocalTx(() -> {
       store.update(testObjName, new TestObject(testObjName, 0).setStrValue("0"));
