@@ -1,4 +1,4 @@
-package org.jacis.extension.objectadapter.serialization.microstream;
+package org.jacis.extension.objectadapter.cloning.microstream;
 
 import static one.microstream.X.notNull;
 

@@ -2,7 +2,7 @@
  * Copyright (c) 2016. Jan Wiemer
  */
 
-package org.jacis.extension.objectadapter.serialization.microstream;
+package org.jacis.extension.objectadapter.cloning.microstream;
 
 import java.io.Serializable;
 

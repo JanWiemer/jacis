@@ -9,7 +9,7 @@ import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisNoTransactionException;
 import org.jacis.exception.JacisTransactionAlreadyStartedException;
-import org.jacis.extension.objectadapter.serialization.microstream.JacisMicrostreamCloningObjectAdapter;
+import org.jacis.extension.objectadapter.cloning.microstream.JacisMicrostreamCloningObjectAdapter;
 import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.plugin.objectadapter.serialization.JacisJavaSerializationObjectAdapter;
 import org.jacis.plugin.objectadapter.serialization.JacisSerializationObjectAdapter;
