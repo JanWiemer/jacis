@@ -6,12 +6,10 @@ package org.jacis.store;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -31,6 +29,7 @@ import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.exception.JacisTransactionAlreadyPreparedForCommitException;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
+import org.jacis.util.ConcurrentWeakHashMap;
 
 /**
  * Storing a single type of objects.
@@ -42,7 +41,7 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  * Note that if an object is deleted in a transaction an entry with the value <code>null</code> remains in the transactional view.
  * Therefore also deletions are properly handled with respect to isolation.
  *
- * @param <K>  Key type of the store entry
+ * @param <K> Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
@@ -58,7 +57,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   /** The map containing the committed values of the objects (the core store) */
   private final ConcurrentHashMap<K, StoreEntry<K, TV, CV>> store = new ConcurrentHashMap<>();
   /** A Map assigning each active transaction handle the transactional view on this store */
-  private final Map<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>> txViewMap = Collections.synchronizedMap(new WeakHashMap<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>>());
+  private final Map<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>> txViewMap = new ConcurrentWeakHashMap<>();
   /** Mutex / Lock to synchronize changes on the committed entries of the store (specially during internalCommit) */
   private final ReadWriteLock storeAccessLock;
   /** The object adapter defining how to copy objects from the committed view to a transactional view and back */
@@ -617,6 +616,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   JacisStoreTxView<K, TV, CV> getTxView(JacisTransactionHandle transaction, boolean createIfAbsent) {
+    if (transaction == null) {
+      if (createIfAbsent) {
+        throw new IllegalArgumentException("Can not create transaction view without transaction!");
+      }
+      return null;
+    }
     JacisStoreTxView<K, TV, CV> txView = txViewMap.get(transaction);
     if (txView == null && createIfAbsent) {
       txView = new JacisStoreTxView<>(this, transaction);
@@ -626,6 +631,9 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   private void setTransactionContext(JacisStoreTxView<K, TV, CV> newTxContext) {
+    if (newTxContext == null) {
+      throw new IllegalArgumentException("setting >null< as transaction context is not allowed!");
+    }
     JacisTransactionHandle transaction = container.getCurrentTransaction(true);
     txViewMap.put(transaction, newTxContext);
   }
