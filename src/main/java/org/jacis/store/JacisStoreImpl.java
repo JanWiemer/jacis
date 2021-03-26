@@ -554,7 +554,10 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     K key = entryCommitted.getKey();
     Collection<JacisStoreTxView<K, TV, CV>> txs;
     synchronized (txViewMap) {
-      txs = new ArrayList<>(txViewMap.values());
+      txs = new ArrayList<>(txViewMap.size());
+      for (JacisStoreTxView<K, TV, CV> txView : txViewMap.values()) {
+        txs.add(txView);
+      }
     }
     for (JacisStoreTxView<K, TV, CV> txCtx : txs) {
       if (txCtx.isReadOnly()) {
