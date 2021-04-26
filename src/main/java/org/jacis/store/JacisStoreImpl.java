@@ -450,6 +450,17 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   @Override
+  public long getTransactionViewVersion(K key) {
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
+    if (entryTxView != null) {
+      return entryTxView.getOrigVersion();
+    }
+    StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
+    return committedEntry != null ? committedEntry.getVersion() : -1;
+  }
+
+  @Override
   public StoreEntryInfo<K, TV> getObjectInfo(K key) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
