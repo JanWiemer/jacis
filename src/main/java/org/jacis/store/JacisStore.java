@@ -461,6 +461,14 @@ public interface JacisStore<K, TV> {
   TV getTransactionStartValue(K key);
 
   /**
+   * Returns if there is a transaction local view existing for the passed key in the current transaction.
+   * 
+   * @param key The key of the desired object.
+   * @return if there is a transaction local view existing for the passed key in the current transaction.
+   */
+  boolean hasTransactionView(K key);
+
+  /**
    * Returns the original version object at the point of time it was cloned to the transactional view of the object
    * 
    * @param key The key of the desired object.
