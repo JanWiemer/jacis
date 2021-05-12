@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -478,7 +479,8 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   public synchronized void clear() {
     storeAccessLock.writeLock().lock();// <======= **WRITE** LOCK =====
     try {
-      for (JacisStoreTxView<K, TV, CV> txCtx : txViewMap.values()) {
+      Collection<JacisStoreTxView<K, TV, CV>> txs = safeGetAllTxViews();
+      for (JacisStoreTxView<K, TV, CV> txCtx : txs) {
         txCtx.invalidate("store cleared");
       }
       store.clear();
@@ -569,13 +571,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
       return; // cannot remove
     }
     K key = entryCommitted.getKey();
-    Collection<JacisStoreTxView<K, TV, CV>> txs;
-    synchronized (txViewMap) {
-      txs = new ArrayList<>(txViewMap.size());
-      for (JacisStoreTxView<K, TV, CV> txView : txViewMap.values()) {
-        txs.add(txView);
-      }
-    }
+    Collection<JacisStoreTxView<K, TV, CV>> txs = safeGetAllTxViews();
     for (JacisStoreTxView<K, TV, CV> txCtx : txs) {
       if (txCtx.isReadOnly()) {
         continue;
@@ -660,6 +656,19 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
 
   void notifyTxViewDestroyed(JacisStoreTxView<K, TV, CV> txView) {
     txViewMap.remove(txView.getTransaction());
+  }
+
+  private Collection<JacisStoreTxView<K, TV, CV>> safeGetAllTxViews() {
+    Collection<JacisStoreTxView<K, TV, CV>> txs;
+    txs = new ArrayList<>(txViewMap.size() + 5); // safety, size may vary
+    try {
+      for (JacisStoreTxView<K, TV, CV> txView : txViewMap.values()) {
+        txs.add(txView);
+      }
+    } catch (NoSuchElementException e) {
+      // all entries still there have been visited
+    }
+    return txs;
   }
 
   // ======================================================================================
