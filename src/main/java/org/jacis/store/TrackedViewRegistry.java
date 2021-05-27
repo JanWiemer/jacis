@@ -5,12 +5,12 @@
 package org.jacis.store;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.jacis.JacisApi;
@@ -25,7 +25,7 @@ import org.jacis.trackedviews.TrackedViewClustered;
 /**
  * Registry where tracked views can be registered for an object store.
  *
- * @param <K>  Key type of the store entry
+ * @param <K> Key type of the store entry
  * @param <TV> Value type of the store entry
  * @author Jan Wiemer
  */
@@ -35,7 +35,7 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
   /** Reference to the JACIS store the tracked view registry belongs to */
   private final JacisStoreImpl<K, TV, ?> store;
   /** Map assigning the tracked views maintained by this registry to the view classes */
-  private final Map<String, TrackedView<TV>> viewMap = new HashMap<>();
+  private final Map<String, TrackedView<TV>> viewMap = new ConcurrentHashMap<>();
 
   TrackedViewRegistry(JacisStoreImpl<K, TV, ?> store, boolean checkConsistencyAfterCommit) {
     this.store = store;
@@ -151,7 +151,7 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
 
   @SuppressWarnings("unchecked")
   public <VT extends TrackedView<TV>> VT getLifeView(String viewName) {
-    return store.computeAtomic(() -> (VT) viewMap.get(viewName));
+    return (VT) viewMap.get(viewName);
   }
 
   @SuppressWarnings("unchecked")
