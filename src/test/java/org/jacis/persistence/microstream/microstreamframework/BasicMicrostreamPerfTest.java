@@ -21,10 +21,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import one.microstream.jdk8.java.util.BinaryHandlersJDK8;
 import one.microstream.storage.configuration.Configuration;
-import one.microstream.storage.types.EmbeddedStorageFoundation;
-import one.microstream.storage.types.EmbeddedStorageManager;
+import one.microstream.storage.embedded.types.EmbeddedStorageFoundation;
+import one.microstream.storage.embedded.types.EmbeddedStorageManager;
 
 @Ignore
 public class BasicMicrostreamPerfTest {
@@ -48,12 +47,10 @@ public class BasicMicrostreamPerfTest {
   protected EmbeddedStorageManager createStorageManager(Path storageDir) {
     EmbeddedStorageFoundation<?> foundation = Configuration.Default() //
         .setBaseDirectory(storageDir.toString()) //
-        .setBackupDirectory(storageDir.toString() + "/backup") //
-        .setDeletionDirectory(storageDir.toString() + "/deletion") //
+        .setBackupDirectory(storageDir + "/backup") //
+        .setDeletionDirectory(storageDir + "/deletion") //
         .createEmbeddedStorageFoundation();
-    foundation.onConnectionFoundation(BinaryHandlersJDK8::registerJDK8TypeHandlers);
-    EmbeddedStorageManager storageManager = foundation.createEmbeddedStorageManager().start();
-    return storageManager;
+    return foundation.createEmbeddedStorageManager().start();
   }
 
   @Test

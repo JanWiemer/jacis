@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import one.microstream.storage.configuration.Configuration;
-import one.microstream.storage.types.EmbeddedStorageManager;
+import one.microstream.storage.embedded.types.EmbeddedStorageManager;
 
 public class JacisMicrostreamAdapterTest {
 
