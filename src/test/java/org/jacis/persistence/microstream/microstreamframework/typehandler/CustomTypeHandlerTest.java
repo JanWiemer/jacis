@@ -20,8 +20,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import one.microstream.storage.types.EmbeddedStorage;
-import one.microstream.storage.types.EmbeddedStorageManager;
+import one.microstream.storage.embedded.types.EmbeddedStorage;
+import one.microstream.storage.embedded.types.EmbeddedStorageManager;
 
 public class CustomTypeHandlerTest {
 
@@ -67,7 +67,7 @@ public class CustomTypeHandlerTest {
     list.add("Three");
     log.info("TEST list: {}", list);
     storageManager.storeRoot();
-    list.getContent().forEach(e -> storageManager.store(e));
+    list.getContent().forEach(storageManager::store);
     storageManager.shutdown();
     EmbeddedStorageManager storageManager2 = createStorageManager(storageDir);
     TestListObject checkList1 = (TestListObject) storageManager2.root();
