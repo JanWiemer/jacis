@@ -283,6 +283,45 @@ public class JacisContainer {
   }
 
   /**
+   * Helper method executing the passed task (a {@link Supplier} (returning a result)
+   * usually passed as a lambda expression) within a locally started transaction.
+   * First a locally managed transaction is started.
+   * Then the passed task is executed.
+   * If execution of the task succeeds the transaction is committed.
+   * In case of any exception the transaction is rolled back.
+   * The result of the passed task is returned by the method.
+   *
+   * @param task The task to execute inside a locally managed transaction
+   * @return the result of the passed task
+   * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
+   */
+  public <R> R withLocalTx(Supplier<R> task) throws IllegalStateException {
+    JacisLocalTransaction tx = beginLocalTransaction();
+    Throwable txException = null;
+    try {
+      R result = task.get();
+      tx.prepare(); // phase 1 of the two phase internalCommit protocol
+      tx.commit(); // phase 2 of the two phase internalCommit protocol
+      tx = null;
+      return result;
+    } catch (Throwable e) {
+      txException = e;
+      throw e;
+    } finally {
+      if (tx != null) { // if not committed roll it back
+        try {
+          tx.rollback();
+        } catch (Throwable rollbackException) {
+          RuntimeException exceptionToThrow = new RuntimeException("Rollback failed after " + txException, txException);
+          exceptionToThrow.addSuppressed(rollbackException);
+          // noinspection ThrowFromFinallyBlock
+          throw exceptionToThrow;
+        }
+      }
+    }
+  }
+
+  /**
    * Helper method executing the passed task (a {@link Runnable} usually passed as a lambda expression) within a locally started transaction.
    * If another transaction has concurrently updated an object that should be updated in this transaction as well a {@link JacisStaleObjectException} is thrown.
    * This method catches this exception and retries to execute the passed task inside a new transaction for the passed number of attempts.
