@@ -4,6 +4,7 @@
 
 package org.jacis.store;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -30,7 +31,7 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  * Note that if an object is deleted in a transaction an entry with the value <code>null</code> remains in the transactional view.
  * Therefore also deletions are properly handled with respect to isolation.
  * 
- * @param <K> Key type of the store entry
+ * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @author Jan Wiemer
  */
@@ -155,7 +156,7 @@ public interface JacisStore<K, TV> {
    *
    * @param key        The key of the desired entry.
    * @param projection The projection function computing the desired return value (of the passed type 'P') from the object.
-   * @param            <P> The result type of the projection
+   * @param <P>        The result type of the projection
    * @return a read only projection of the object for the passed value.
    */
   <P> P getProjectionReadOnly(K key, Function<TV, P> projection);
@@ -280,7 +281,7 @@ public interface JacisStore<K, TV> {
    * @param comparator a comparator to sort the object.
    * @param offset     The offset of the desired page in the sorted and filtered list of objects.
    * @param pageSize   The size of the desired page.
-   * @param            <PV> The type of the wrapper object used in the returned page
+   * @param <PV>       The type of the wrapper object used in the returned page
    * @return the page of n (=pageSize) wrapped objects starting at the offset in the filtered and sorted list
    */
   <PV> List<PV> getWrapperPageReadOnly(Function<TV, PV> wrapper, Predicate<PV> filter, Comparator<PV> comparator, long offset, long pageSize);
@@ -297,6 +298,17 @@ public interface JacisStore<K, TV> {
    * @throws JacisTransactionAlreadyPreparedForCommitException if the current transaction has already been prepared for commit
    */
   void update(K key, TV value) throws JacisTransactionAlreadyPreparedForCommitException;
+
+  /**
+   * This method updates or inserts all passed values as a bulk update / insert.
+   * The keys for the objects is computed using the mandatory keyExtractor function.
+   * The functionality is similar to the update method for a single object (see {@link #update(Object, Object)}).
+   * 
+   * @param values       The set of objects to update or insert.
+   * @param keyExtractor The function computing the key for each object to update or insert.
+   * @throws JacisTransactionAlreadyPreparedForCommitException if the current transaction has already been prepared for commit
+   */
+  void update(Collection<TV> values, Function<TV, K> keyExtractor) throws JacisTransactionAlreadyPreparedForCommitException;
 
   /**
    * Remove the object for the passed key from the store (first only in the transactional view of course).
@@ -338,7 +350,7 @@ public interface JacisStore<K, TV> {
    * @param entries        The entries from which the store is initialized.
    * @param keyExtractor   Method to extract the key from an entry.
    * @param valueExtractor Method to extract the value from an entry.
-   * @param                <ST> The type of the entries
+   * @param <ST>           The type of the entries
    * @param nThreads       Number of threads to use for multythreaded inserts.
    */
   public <ST> void initStoreNonTransactional(List<ST> entries, Function<ST, K> keyExtractor, Function<ST, TV> valueExtractor, int nThreads);
@@ -392,7 +404,7 @@ public interface JacisStore<K, TV> {
    * Note that this operation ensures only to be atomic for the current store. It does not guarantee that e.g. simultaneously a commit for another store is done.
    *
    * @param atomicOperation The operation to execute atomically
-   * @param                 <R> The return type of the operation
+   * @param <R>             The return type of the operation
    * @return The return value of the operation
    */
   <R> R computeAtomic(Supplier<R> atomicOperation);
@@ -412,7 +424,7 @@ public interface JacisStore<K, TV> {
    * even if the commit is (currently) executed for any other store belonging to the same JACIS container.
    *
    * @param atomicOperation The operation to execute atomically
-   * @param                 <R> The return type of the operation
+   * @param <R>             The return type of the operation
    * @return The return value of the operation
    */
   <R> R computeGlobalAtomic(Supplier<R> atomicOperation);
@@ -434,7 +446,7 @@ public interface JacisStore<K, TV> {
    *
    * @param target      The initial value for the target
    * @param accumulator The accumulator method getting the current value of the accumulation target (type 'C') and an object (type 'TV').
-   * @param             <C> The type of the accumulation target.
+   * @param <C>         The type of the accumulation target.
    * @return The accumulation result.
    */
   <C> C accumulate(C target, BiConsumer<C, TV> accumulator);
@@ -447,7 +459,7 @@ public interface JacisStore<K, TV> {
    *
    * @param target      The initial value for the target
    * @param accumulator The accumulator method getting the current value of the accumulation target (type 'C') and an object (type 'TV').
-   * @param             <C> The type of the accumulation target.
+   * @param <C>         The type of the accumulation target.
    * @return The accumulation result (computed as an atomic operation).
    */
   <C> C accumulateAtomic(C target, BiConsumer<C, TV> accumulator);

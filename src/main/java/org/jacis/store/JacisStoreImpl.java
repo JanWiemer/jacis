@@ -42,7 +42,7 @@ import org.jacis.util.ConcurrentWeakHashMap;
  * Note that if an object is deleted in a transaction an entry with the value <code>null</code> remains in the transactional view.
  * Therefore also deletions are properly handled with respect to isolation.
  *
- * @param <K> Key type of the store entry
+ * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
@@ -299,6 +299,22 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     }
     StoreEntryTxView<K, TV, CV> entryTxView = getOrCreateEntryTxView(txView, key);
     txView.updateValue(entryTxView, value);
+  }
+
+  public void update(Collection<TV> values, Function<TV, K> keyExtractor) throws JacisTransactionAlreadyPreparedForCommitException {
+    JacisStoreTxView<K, TV, CV> txView = getOrCreateTxView().assertWritable();
+    if (txView.isCommitPending()) {
+      throw new JacisTransactionAlreadyPreparedForCommitException("Failed to execute bulk update for " + values.size() + " objects because transaction is already prepared for commit: " + txView);
+    } else if (values == null || values.isEmpty()) {
+      return;
+    } else if (keyExtractor == null) {
+      throw new NullPointerException("keyExtractor parameter must not be null!");
+    }
+    for (TV value : values) {
+      K key = keyExtractor.apply(value);
+      StoreEntryTxView<K, TV, CV> entryTxView = getOrCreateEntryTxView(txView, key);
+      txView.updateValue(entryTxView, value);
+    }
   }
 
   @Override
