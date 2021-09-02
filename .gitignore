@@ -9,6 +9,7 @@
 .idea
 .metadata
 .settings
+/src/main/resources/logback.xml
 /storage/backup
 /build
 /deploy
