@@ -23,6 +23,8 @@ import org.jacis.exception.ReadOnlyException;
 @JacisApi
 public abstract class AbstractReadOnlyModeSupportingObject implements JacisReadonlyModeSupport {
 
+  public static final boolean WRITE_ACCESS_MODE_SINGLE_THREAD = true;
+
   /** The thread currently permitted to modify the object (if any) */
   private transient Thread threadWithWriteAccess = null;
 
@@ -56,7 +58,11 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
 
   @Override
   public boolean isWritable() {
-    return Thread.currentThread().equals(threadWithWriteAccess);
+    if (WRITE_ACCESS_MODE_SINGLE_THREAD) {
+      return Thread.currentThread().equals(threadWithWriteAccess);
+    } else {
+      return threadWithWriteAccess != null;
+    }
   }
 
   /**
@@ -68,7 +74,7 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
   protected void checkWritable() throws ReadOnlyException {
     if (threadWithWriteAccess == null) {
       throw new ReadOnlyException("Object currently in read only mode! Accessing Thread: " + Thread.currentThread() + ". Object: " + this);
-    } else if (!threadWithWriteAccess.equals(Thread.currentThread())) {
+    } else if (WRITE_ACCESS_MODE_SINGLE_THREAD && !threadWithWriteAccess.equals(Thread.currentThread())) {
       throw new ReadOnlyException("Object currently only writable for thread " + threadWithWriteAccess + "! Accessing Thread: " + Thread.currentThread() + ". Object: " + this);
     }
   }
