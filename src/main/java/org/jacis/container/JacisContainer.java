@@ -34,8 +34,7 @@ import org.jacis.store.JacisStore;
 import org.jacis.store.JacisStoreAdminInterface;
 import org.jacis.store.JacisStoreImpl;
 import org.jacis.store.JacisTransactionInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jacis.util.TransactionExecutor;
 
 //       _   _    ____ ___ ____
 //      | | / \  / ___|_ _/ ___|
@@ -56,8 +55,6 @@ import org.slf4j.LoggerFactory;
  */
 @JacisApi
 public class JacisContainer {
-
-  private static final Logger log = LoggerFactory.getLogger(JacisContainer.class);
 
   /** {@link JacisTransactionAdapter} to bind the Jacis Store to externally managed transactions. */
   private final JacisTransactionAdapter txAdapter;
@@ -219,10 +216,7 @@ public class JacisContainer {
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
    */
   public JacisLocalTransaction beginLocalTransaction() throws IllegalStateException {
-    String description = Stream.of(new Exception("-").getStackTrace()) // go through the stack trace elements
-        .filter(se -> !getClass().getName().equals(se.getClassName())) // ignore all stack trace elements for this class
-        .map(StackTraceElement::toString).findFirst().orElse("-"); // use the first from outside (the calling method) as description
-    return beginLocalTransaction(description);
+    return beginLocalTransaction(null);
   }
 
   /**
@@ -238,6 +232,12 @@ public class JacisContainer {
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
    */
   public JacisLocalTransaction beginLocalTransaction(String description) throws IllegalStateException {
+    if (description == null) {
+      description = Stream.of(new Exception("-").getStackTrace()) // go through the stack trace elements
+          .filter(se -> !getClass().getName().equals(se.getClassName())) // ignore all stack trace elements for this class
+          .filter(se -> !TransactionExecutor.class.getName().equals(se.getClassName())) // ignore all stack trace elements for this class
+          .map(StackTraceElement::toString).findFirst().orElse("-"); // use the first from outside (the calling method) as description
+    }
     if (txAdapter instanceof JacisTransactionAdapterLocal) {
       JacisTransactionAdapterLocal txAdapterLocal = (JacisTransactionAdapterLocal) txAdapter;
       lastFinishedTransactionInfo.remove();
@@ -248,38 +248,29 @@ public class JacisContainer {
   }
 
   /**
+   * @return a customizable helper class to execute transaction with retry logic.
+   */
+  public TransactionExecutor withLocalTx() {
+    return new TransactionExecutor(this);
+  }
+
+  /**
    * Helper method executing the passed task (a {@link Runnable} usually passed as a lambda expression) within a locally started transaction.
    * First a locally managed transaction is started.
    * Then the passed task is executed.
    * If execution of the task succeeds the transaction is committed.
    * In case of any exception the transaction is rolled back.
    *
-   * @param task The task to execute inside a locally managed transaction
+   * @param task     The task to execute inside a locally managed transaction
+   * @param taskName A name of the task to execute (used for logging and exception messages...).
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
    */
+  public void withLocalTx(Runnable task, String taskName) throws IllegalStateException {
+    TransactionExecutor.singleAttempt(this).execute(task, taskName);
+  }
+
   public void withLocalTx(Runnable task) throws IllegalStateException {
-    JacisLocalTransaction tx = beginLocalTransaction();
-    Throwable txException = null;
-    try {
-      task.run();
-      tx.prepare(); // phase 1 of the two phase internalCommit protocol
-      tx.commit(); // phase 2 of the two phase internalCommit protocol
-      tx = null;
-    } catch (Throwable e) {
-      txException = e;
-      throw e;
-    } finally {
-      if (tx != null) { // if not committed roll it back
-        try {
-          tx.rollback();
-        } catch (Throwable rollbackException) {
-          RuntimeException exceptionToThrow = new RuntimeException("Rollback failed after " + txException, txException);
-          exceptionToThrow.addSuppressed(rollbackException);
-          // noinspection ThrowFromFinallyBlock
-          throw exceptionToThrow;
-        }
-      }
-    }
+    withLocalTx(task, null);
   }
 
   /**
@@ -291,34 +282,17 @@ public class JacisContainer {
    * In case of any exception the transaction is rolled back.
    * The result of the passed task is returned by the method.
    *
-   * @param task The task to execute inside a locally managed transaction
+   * @param task     The task to execute inside a locally managed transaction
+   * @param taskName A name of the task to execute (used for logging and exception messages...).
    * @return the result of the passed task
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
    */
+  public <R> R withLocalTx(Supplier<R> task, String taskName) throws IllegalStateException {
+    return TransactionExecutor.singleAttempt(this).execute(task, taskName);
+  }
+
   public <R> R withLocalTx(Supplier<R> task) throws IllegalStateException {
-    JacisLocalTransaction tx = beginLocalTransaction();
-    Throwable txException = null;
-    try {
-      R result = task.get();
-      tx.prepare(); // phase 1 of the two phase internalCommit protocol
-      tx.commit(); // phase 2 of the two phase internalCommit protocol
-      tx = null;
-      return result;
-    } catch (Throwable e) {
-      txException = e;
-      throw e;
-    } finally {
-      if (tx != null) { // if not committed roll it back
-        try {
-          tx.rollback();
-        } catch (Throwable rollbackException) {
-          RuntimeException exceptionToThrow = new RuntimeException("Rollback failed after " + txException, txException);
-          exceptionToThrow.addSuppressed(rollbackException);
-          // noinspection ThrowFromFinallyBlock
-          throw exceptionToThrow;
-        }
-      }
-    }
+    return withLocalTx(task, null);
   }
 
   /**
@@ -328,23 +302,40 @@ public class JacisContainer {
    * If the {@link JacisStaleObjectException} is thrown repeatedly for all these attempts the exception is propagated to the caller.
    * In case of any other exception the transaction is rolled back and the exception is propagated to the caller immediately.
    *
-   * @param task    The task to execute inside a locally managed transaction
-   * @param retries Number of retries if transaction failed with {@link JacisStaleObjectException}
+   * @param retries  Number of retries if transaction failed with {@link JacisStaleObjectException}
+   * @param task     The task to execute inside a locally managed transaction
+   * @param taskName A name of the task to execute (used for logging and exception messages...).
    * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
    */
+  public void withLocalTxAndRetry(int retries, Runnable task, String taskName) {
+    TransactionExecutor.withRetries(this, retries).execute(task, taskName);
+  }
+
   public void withLocalTxAndRetry(int retries, Runnable task) {
-    while (retries-- > 0) {
-      try {
-        withLocalTx(task);
-        return; // if one attempt succeeds return immediately
-      } catch (JacisStaleObjectException e) { // check if we retry
-        log.warn("Stale object exception caught: {}", "" + e.getMessage());
-        log.info("Detail message: \n{}", e.getDetails());
-        if (retries == 0) {
-          throw e;
-        }
-      } // other exceptions are not handled and are propagated to the caller
-    } // END OF: while (retries-- > 0) {
+    withLocalTxAndRetry(retries, task, null);
+  }
+
+  /**
+   * Helper method executing the passed task (a {@link Supplier} (returning a result)
+   * usually passed as a lambda expression) within a locally started transaction.
+   * If another transaction has concurrently updated an object that should be updated in this transaction as well a {@link JacisStaleObjectException} is thrown.
+   * This method catches this exception and retries to execute the passed task inside a new transaction for the passed number of attempts.
+   * If the {@link JacisStaleObjectException} is thrown repeatedly for all these attempts the exception is propagated to the caller.
+   * In case of any other exception the transaction is rolled back and the exception is propagated to the caller immediately.
+   * The result of the passed task is returned by the method.
+   *
+   * @param retries  Number of retries if transaction failed with {@link JacisStaleObjectException}
+   * @param task     The task to execute inside a locally managed transaction
+   * @param taskName A name of the task to execute (used for logging and exception messages...).
+   * @return the result of the passed task
+   * @throws IllegalStateException if the container was not initialized with transaction adapter for locally managed transactions.
+   */
+  public <R> R withLocalTxAndRetry(int retries, Supplier<R> task, String taskName) {
+    return TransactionExecutor.withRetries(this, retries).execute(task, taskName);
+  }
+
+  public <R> R withLocalTxAndRetry(int retries, Supplier<R> task) {
+    return withLocalTxAndRetry(retries, task, null);
   }
 
   /**
