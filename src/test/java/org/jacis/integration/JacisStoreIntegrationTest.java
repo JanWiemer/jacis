@@ -195,6 +195,56 @@ public class JacisStoreIntegrationTest {
   }
 
   @Test
+  public void testReadOnlySnapshot() {
+    String testObjectName = "obj-1";
+    TestObject testObject = new TestObject(testObjectName, 1);
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisLocalTransaction writingTx = store.getContainer().beginLocalTransaction();
+    JacisTransactionHandle writingTxHandle = testHelper.suspendTx();
+    JacisLocalTransaction readingTx = store.getContainer().beginLocalTransaction();
+    JacisTransactionHandle readingTxHandle = testHelper.suspendTx();
+    //
+    assertEquals(0, store.getReadOnlySnapshot().size()); // snapshot without tx
+    testHelper.resumeTx(readingTxHandle);
+    assertEquals(0, store.getReadOnlySnapshot().size()); // snapshot in reading tx
+    testHelper.suspendTx();
+    testHelper.resumeTx(writingTxHandle);
+    assertEquals(0, store.getReadOnlySnapshot().size()); // snapshot in writing tx
+    testHelper.suspendTx();
+    //
+    // insert
+    testHelper.resumeTx(writingTxHandle);
+    store.update(testObjectName, testObject); // <--------------------
+    testHelper.suspendTx();
+    //
+    assertEquals(0, store.getReadOnlySnapshot().size()); // snapshot without tx
+    testHelper.resumeTx(readingTxHandle);
+    assertEquals(0, store.getReadOnlySnapshot().size()); // snapshot in reading tx
+    testHelper.suspendTx();
+    testHelper.resumeTx(writingTxHandle);
+    assertEquals(0, store.getReadOnlySnapshot().size()); // snapshot in writing tx
+    testHelper.suspendTx();
+    //
+    // commit
+    testHelper.resumeTx(writingTxHandle);
+    store.update(testObjectName, testObject); // <--------------------
+    writingTx.prepare(); // <--------------------
+    writingTx.commit(); // <--------------------
+    //
+    assertEquals(1, store.getReadOnlySnapshot().size()); // snapshot without tx
+    testHelper.resumeTx(readingTxHandle);
+    assertEquals(1, store.getReadOnlySnapshot().size()); // snapshot in reading tx
+    testHelper.suspendTx();
+    testHelper.resumeTx(writingTxHandle);
+    assertEquals(1, store.getReadOnlySnapshot().size()); // snapshot in writing tx
+    testHelper.suspendTx();
+    //
+    testHelper.resumeTx(readingTxHandle);
+    readingTx.commit();
+  }
+
+  @Test
   public void testNonTransactionInit() {
     int n = 10000;
     List<TestObject> objects = new ArrayList<>(n);

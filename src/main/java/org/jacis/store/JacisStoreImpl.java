@@ -271,6 +271,35 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return streamReadOnly(filter).collect(Collectors.toList());
   }
 
+  public List<TV> getReadOnlySnapshot(Predicate<TV> filter) {
+    ArrayList<TV> res = new ArrayList<TV>(size());
+    if (filter == null) {
+      return getReadOnlySnapshot();
+    }
+    for (StoreEntry<K, TV, CV> storeEntry : store.values()) {
+      CV cv = storeEntry.getValue();
+      if (cv != null) {
+        TV ev = getObjectAdapter().cloneCommitted2ReadOnlyTxView(cv);
+        if (filter.test(ev)) {
+          res.add(ev);
+        }
+      }
+    }
+    return res;
+  }
+
+  public List<TV> getReadOnlySnapshot() {
+    ArrayList<TV> res = new ArrayList<TV>(size());
+    for (StoreEntry<K, TV, CV> storeEntry : store.values()) {
+      CV cv = storeEntry.getValue();
+      if (cv != null) {
+        TV ev = getObjectAdapter().cloneCommitted2ReadOnlyTxView(cv);
+        res.add(ev);
+      }
+    }
+    return res;
+  }
+
   @Override
   public List<TV> getAllAtomic(Predicate<TV> filter) {
     return computeAtomic(() -> getAll(filter));
@@ -279,6 +308,14 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   @Override
   public List<TV> getAllReadOnlyAtomic(Predicate<TV> filter) {
     return computeAtomic(() -> getAllReadOnly(filter));
+  }
+
+  public List<TV> getReadOnlySnapshotAtomic() {
+    return computeAtomic(() -> getReadOnlySnapshot());
+  }
+
+  public List<TV> getReadOnlySnapshotAtomic(Predicate<TV> filter) {
+    return computeAtomic(() -> getReadOnlySnapshot(filter));
   }
 
   @Override
@@ -301,6 +338,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     txView.updateValue(entryTxView, value);
   }
 
+  @Override
   public void update(Collection<TV> values, Function<TV, K> keyExtractor) throws JacisTransactionAlreadyPreparedForCommitException {
     JacisStoreTxView<K, TV, CV> txView = getOrCreateTxView().assertWritable();
     if (txView.isCommitPending()) {
