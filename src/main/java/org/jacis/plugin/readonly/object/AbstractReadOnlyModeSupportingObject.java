@@ -15,7 +15,7 @@ import org.jacis.exception.ReadOnlyException;
  * as thread with write access (see {@link #threadWithWriteAccess}).
  *
  * For actual implementations the class provides the protected method {@link #checkWritable()}.
- * This method should be called prior to all modifying accesses to the object (e.g. in al setter-methods).
+ * This method should be called prior to all modifying accesses to the object (e.g. in all setter-methods).
  * The method will throw a {@link ReadOnlyException} if the current thread has no write access to the object.
  *
  * @author Jan Wiemer
