@@ -58,7 +58,7 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
 
   @Override
   public boolean isWritable() {
-    if (WRITE_ACCESS_MODE_SINGLE_THREAD) {
+    if (isSingleThreadedWriteAccessRequirred()) {
       return Thread.currentThread().equals(threadWithWriteAccess);
     } else {
       return threadWithWriteAccess != null;
@@ -74,9 +74,18 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
   protected void checkWritable() throws ReadOnlyException {
     if (threadWithWriteAccess == null) {
       throw new ReadOnlyException("Object currently in read only mode! Accessing Thread: " + Thread.currentThread() + ". Object: " + this);
-    } else if (WRITE_ACCESS_MODE_SINGLE_THREAD && !threadWithWriteAccess.equals(Thread.currentThread())) {
+    } else if (isSingleThreadedWriteAccessRequirred() && !threadWithWriteAccess.equals(Thread.currentThread())) {
       throw new ReadOnlyException("Object currently only writable for thread " + threadWithWriteAccess + "! Accessing Thread: " + Thread.currentThread() + ". Object: " + this);
     }
+  }
+
+  /**
+   * Overwrite this method and return false if write access should not be restricted to a single thread.
+   * 
+   * @return if single threaded write access is required (default: true)
+   */
+  protected boolean isSingleThreadedWriteAccessRequirred() {
+    return WRITE_ACCESS_MODE_SINGLE_THREAD;
   }
 
 }
