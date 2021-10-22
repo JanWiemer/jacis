@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.jacis.container.JacisTransactionHandle;
@@ -71,14 +72,16 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
       readOnlyCache.put(mapEntry.getKey(), cacheEntry);
     }
     storeTxView = readOnlyCache;
-    trackedViews = new HashMap<>(orig.trackedViews);
+    trackedViews = new ConcurrentHashMap<>(orig.trackedViews); // Enable multithreaded access to read only context. See iaaue #30
     numberOfEntries = storeTxView.size();
   }
 
+  @Override
   public String getTxId() {
     return readOnlyTxId == null ? tx.getTxId() : readOnlyTxId + "|" + tx.getTxId();
   }
 
+  @Override
   public String getReadOnlyTxId() {
     return readOnlyTxId;
   }
