@@ -125,7 +125,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   @Override
   public JacisReadOnlyTransactionContext createReadOnlyTransactionView(String withTxName) {
     JacisStoreTxView<K, TV, CV> originalTxView = getTxView(true);
-    return new JacisStoreTxView<>(withTxName, originalTxView);
+    return new JacisStoreTxView<>(withTxName, originalTxView, true);
+  }
+
+  public JacisReadOnlyTransactionContext createReadOnlyTransactionViewUnsafe(String withTxName) {
+    JacisStoreTxView<K, TV, CV> originalTxView = getTxView(true);
+    return new JacisStoreTxView<>(withTxName, originalTxView, false);
   }
 
   @Override
@@ -271,6 +276,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return streamReadOnly(filter).collect(Collectors.toList());
   }
 
+  @Override
   public List<TV> getReadOnlySnapshot(Predicate<TV> filter) {
     ArrayList<TV> res = new ArrayList<TV>(size());
     if (filter == null) {
@@ -288,6 +294,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return res;
   }
 
+  @Override
   public List<TV> getReadOnlySnapshot() {
     ArrayList<TV> res = new ArrayList<TV>(size());
     for (StoreEntry<K, TV, CV> storeEntry : store.values()) {
@@ -310,10 +317,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return computeAtomic(() -> getAllReadOnly(filter));
   }
 
+  @Override
   public List<TV> getReadOnlySnapshotAtomic() {
     return computeAtomic(() -> getReadOnlySnapshot());
   }
 
+  @Override
   public List<TV> getReadOnlySnapshotAtomic(Predicate<TV> filter) {
     return computeAtomic(() -> getReadOnlySnapshot(filter));
   }

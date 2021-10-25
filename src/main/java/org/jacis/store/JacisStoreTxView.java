@@ -60,19 +60,19 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
     this.trackedViews = new HashMap<>();
   }
 
-  JacisStoreTxView(String readOnlyTxId, JacisStoreTxView<K, TV, CV> orig) { // only to create a read only snapshot
+  JacisStoreTxView(String readOnlyTxId, JacisStoreTxView<K, TV, CV> orig, boolean threadsafe) { // only to create a read only snapshot
     this.store = orig.store;
     this.tx = orig.tx;
     this.readOnlyTxId = readOnlyTxId;
     this.creationTimestamp = orig.creationTimestamp;
     Map<K, StoreEntryTxView<K, TV, CV>> origCache = orig.storeTxView;
-    Map<K, StoreEntryTxView<K, TV, CV>> readOnlyCache = new HashMap<>(origCache.size());
+    Map<K, StoreEntryTxView<K, TV, CV>> readOnlyCache = threadsafe ? new ConcurrentHashMap<>(origCache.size()) : new HashMap<>(origCache.size());
     for (Entry<K, StoreEntryTxView<K, TV, CV>> mapEntry : origCache.entrySet()) {
       StoreEntryTxView<K, TV, CV> cacheEntry = new StoreEntryTxView<>(mapEntry.getValue());
       readOnlyCache.put(mapEntry.getKey(), cacheEntry);
     }
     storeTxView = readOnlyCache;
-    trackedViews = new ConcurrentHashMap<>(orig.trackedViews); // Enable multithreaded access to read only context. See iaaue #30
+    trackedViews = threadsafe ? new ConcurrentHashMap<>(orig.trackedViews) : new HashMap<>(orig.trackedViews); // Enable multithreaded access to read only context. See iaaue #30
     numberOfEntries = storeTxView.size();
   }
 

@@ -70,11 +70,24 @@ public interface JacisStore<K, TV> {
    * This can be used to share one single transaction view in several threads.
    * Before accessing the object store the other thread should set the returned context
    * with the method {@link #startReadOnlyTransactionWithContext(JacisReadOnlyTransactionContext)}.
+   * Note: the returned context is threadsafe!
    *
    * @param withTxName transaction name used for the read only view.
    * @return a read only view of the current transaction context.
    */
   JacisReadOnlyTransactionContext createReadOnlyTransactionView(String withTxName);
+
+  /**
+   * Create a read only view of the current transaction context that can be used (read only) in a different thread.
+   * This can be used to share one single transaction view in several threads.
+   * Before accessing the object store the other thread should set the returned context
+   * with the method {@link #startReadOnlyTransactionWithContext(JacisReadOnlyTransactionContext)}.
+   * Note: the returned context is *not* threadsafe!
+   *
+   * @param withTxName transaction name used for the read only view.
+   * @return a read only view of the current transaction context.
+   */
+  JacisReadOnlyTransactionContext createReadOnlyTransactionViewUnsafe(String withTxName);
 
   /**
    * Starts a new (read only) transaction with the passed transaction context.
