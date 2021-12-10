@@ -195,6 +195,62 @@ public class JacisStoreIntegrationTest {
   }
 
   @Test
+  public void testGetCommittedVersion() {
+    String testObjectName = "obj-1";
+    TestObject testObject = new TestObject(testObjectName, 1);
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisLocalTransaction tx = store.getContainer().beginLocalTransaction();
+    store.update(testObjectName, testObject);
+    tx.commit();
+    // --------------------
+    assertEquals(1, store.getCommittedValue(testObjectName).getValue());
+    // --------------------
+    tx = store.getContainer().beginLocalTransaction();
+    assertEquals(1, store.getCommittedValue(testObjectName).getValue());
+    store.getReadOnly(testObjectName);
+    assertEquals(1, store.getCommittedValue(testObjectName).getValue());
+    TestObject testObjTxView = store.get(testObjectName);
+    assertEquals(1, store.getCommittedValue(testObjectName).getValue());
+    testObjTxView.setValue(2);
+    assertEquals(1, store.getCommittedValue(testObjectName).getValue());
+    store.update(testObjectName, testObjTxView);
+    assertEquals(1, store.getCommittedValue(testObjectName).getValue());
+    tx.prepare();
+    assertEquals(1, store.getCommittedValue(testObjectName).getValue());
+    tx.commit();
+    assertEquals(2, store.getCommittedValue(testObjectName).getValue());
+    // --------------------
+    // --------------------
+    tx = store.getContainer().beginLocalTransaction();
+    assertEquals(2, store.getCommittedValue(testObjectName).getValue());
+    store.getReadOnly(testObjectName);
+    assertEquals(2, store.getCommittedValue(testObjectName).getValue());
+    testObjTxView = store.get(testObjectName);
+    assertEquals(2, store.getCommittedValue(testObjectName).getValue());
+    testObjTxView.setValue(3);
+    assertEquals(2, store.getCommittedValue(testObjectName).getValue());
+    store.update(testObjectName, testObjTxView);
+    JacisTransactionHandle txHandle1 = testHelper.suspendTx();
+    JacisLocalTransaction tx2 = store.getContainer().beginLocalTransaction();
+    TestObject testObjTxView2 = store.get(testObjectName);
+    testObjTxView2.setValue(4);
+    store.update(testObjectName, testObjTxView2);
+    tx2.commit();
+    testHelper.resumeTx(txHandle1);
+    assertEquals(4, store.getCommittedValue(testObjectName).getValue());
+    assertEquals(2, store.getTransactionStartValue(testObjectName).getValue());
+    assertEquals(3, store.getReadOnly(testObjectName).getValue());
+    assertEquals(3, store.get(testObjectName).getValue());
+    assertEquals(4, store.refresh(testObjectName).getValue());
+    assertEquals(4, store.get(testObjectName).getValue());
+    tx.prepare();
+    tx.commit();
+    assertEquals(4, store.getCommittedValue(testObjectName).getValue());
+    // --------------------
+  }
+
+  @Test
   public void testReadOnlySnapshot() {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);

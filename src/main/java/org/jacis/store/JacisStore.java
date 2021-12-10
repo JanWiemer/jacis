@@ -253,7 +253,7 @@ public interface JacisStore<K, TV> {
    *
    * @return a list of read-only views for all committed objects (not <code>null</code>) currently stored in the store.
    */
-  public List<TV> getReadOnlySnapshot();
+  List<TV> getReadOnlySnapshot();
 
   /**
    * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
@@ -262,7 +262,7 @@ public interface JacisStore<K, TV> {
    * @param filter a filter predicate deciding if an object should be contained in the resulting list (<code>null</code> means all objects should be contained)
    * @return a list of read-only views for all committed objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    */
-  public List<TV> getReadOnlySnapshot(Predicate<TV> filter);
+  List<TV> getReadOnlySnapshot(Predicate<TV> filter);
 
   /**
    * Returns a list of all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
@@ -296,7 +296,7 @@ public interface JacisStore<K, TV> {
    *
    * @return a list of read-only views for all objects (not <code>null</code>) currently stored in the store.
    */
-  public List<TV> getReadOnlySnapshotAtomic();
+  List<TV> getReadOnlySnapshotAtomic();
 
   /**
    * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
@@ -309,7 +309,7 @@ public interface JacisStore<K, TV> {
    * @param filter a filter predicate deciding if an object should be contained in the resulting list (<code>null</code> means all objects should be contained)
    * @return a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    */
-  public List<TV> getReadOnlySnapshotAtomic(Predicate<TV> filter);
+  List<TV> getReadOnlySnapshotAtomic(Predicate<TV> filter);
 
   /**
    * Helper method to get a paging access to the elements (read only versions) stored in the store.
@@ -408,7 +408,7 @@ public interface JacisStore<K, TV> {
    * @param <ST>           The type of the entries
    * @param nThreads       Number of threads to use for multythreaded inserts.
    */
-  public <ST> void initStoreNonTransactional(List<ST> entries, Function<ST, K> keyExtractor, Function<ST, TV> valueExtractor, int nThreads);
+  <ST> void initStoreNonTransactional(List<ST> entries, Function<ST, K> keyExtractor, Function<ST, TV> valueExtractor, int nThreads);
 
   /**
    * Initialize the store with the passed values.
@@ -421,7 +421,7 @@ public interface JacisStore<K, TV> {
    * @param keyExtractor Method to extract the key from a value.
    * @param nThreads     Number of threads to use for multythreaded inserts.
    */
-  public void initStoreNonTransactional(List<TV> values, Function<TV, K> keyExtractor, int nThreads);
+  void initStoreNonTransactional(List<TV> values, Function<TV, K> keyExtractor, int nThreads);
 
   /**
    * Initialize the store with the passed key-value pairs.
@@ -432,7 +432,7 @@ public interface JacisStore<K, TV> {
    * @param entries  The entries (key value pairs) from which the store is initialized.
    * @param nThreads Number of threads to use for multythreaded inserts.
    */
-  public void initStoreNonTransactional(List<KeyValuePair<K, TV>> entries, int nThreads);
+  void initStoreNonTransactional(List<KeyValuePair<K, TV>> entries, int nThreads);
 
   /**
    * Returns the current size of the store.
@@ -528,6 +528,20 @@ public interface JacisStore<K, TV> {
   TV getTransactionStartValue(K key);
 
   /**
+   * Returns a read only version of the currently committed value of the object.
+   * The method can be called inside or outside of a transaction.
+   * 
+   * Calling this method does not affect the current transaction view of the object.
+   * If before the call the transaction has no own view of the object it will not have one after the call.
+   * If before the call the transaction has an own view of the object this is ignored and a different instance
+   * cloned from the currently committed version (this may be committed before or after the TX view has been created).
+   *
+   * @param key The key of the desired object.
+   * @return a read only version of the currently committed value of the object.
+   */
+  TV getCommittedValue(K key);
+
+  /**
    * Returns if there is a transaction local view existing for the passed key in the current transaction.
    * 
    * @param key The key of the desired object.
@@ -536,12 +550,20 @@ public interface JacisStore<K, TV> {
   boolean hasTransactionView(K key);
 
   /**
-   * Returns the original version object at the point of time it was cloned to the transactional view of the object
+   * Returns the original version of the object at the point of time it was cloned to the transactional view of the object.
    * 
    * @param key The key of the desired object.
-   * @return the original version or the transactional view of the object (version of the object at the point of time it was cloned to the transaction view).
+   * @return the original version of the object at the point of time it was cloned to the transactional view of the object.
    */
-  public long getTransactionViewVersion(K key);
+  long getTransactionViewVersion(K key);
+
+  /**
+   * Returns the version of the currently committed object.
+   * 
+   * @param key The key of the desired object.
+   * @return the version of the currently committed object.
+   */
+  long getCommittedVersion(K key);
 
   /**
    * Returns a info object (type {@link StoreEntryInfo}) containing information regarding the current state of the object

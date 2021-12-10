@@ -128,6 +128,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return new JacisStoreTxView<>(withTxName, originalTxView, true);
   }
 
+  @Override
   public JacisReadOnlyTransactionContext createReadOnlyTransactionViewUnsafe(String withTxName) {
     JacisStoreTxView<K, TV, CV> originalTxView = getTxView(true);
     return new JacisStoreTxView<>(withTxName, originalTxView, false);
@@ -514,6 +515,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   @Override
+  public TV getCommittedValue(K key) {
+    StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
+    return committedEntry == null ? null : objectAdapter.cloneCommitted2ReadOnlyTxView(committedEntry.getValue());
+  }
+
+  @Override
   public boolean hasTransactionView(K key) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
     return txView != null && txView.containsTxView(key);
@@ -526,6 +533,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     if (entryTxView != null) {
       return entryTxView.getOrigVersion();
     }
+    StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
+    return committedEntry != null ? committedEntry.getVersion() : -1;
+  }
+
+  @Override
+  public long getCommittedVersion(K key) {
     StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
     return committedEntry != null ? committedEntry.getVersion() : -1;
   }
