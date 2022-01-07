@@ -62,7 +62,7 @@ public interface JacisStore<K, TV> {
    */
   JacisStore<K, TV> registerModificationListener(JacisModificationListener<K, TV> listener);
 
-  /** @return tte registry of tracked views for this store that are kept up to date on each commit automatically */
+  /** @return the registry of tracked views for this store that are kept up to date on each commit automatically */
   TrackedViewRegistry<K, TV> getTrackedViewRegistry();
 
   /**
