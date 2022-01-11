@@ -67,6 +67,7 @@ class StoreTxDemarcationExecutor {
           entryCommitted.lockedFor(txView);
         }
       }
+      store.getIndexRegistry().lockUniqueIndexKeysForTx(txView.getTransaction());
     }
     JacisPersistenceAdapter<K, TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
     if (persistenceAdapter != null) {
@@ -93,6 +94,9 @@ class StoreTxDemarcationExecutor {
     }
     RuntimeException toThrow = null;
     try {
+      if (txView.getNumberOfUpdatedEntries() > 0) {
+        store.getIndexRegistry().unlockUniqueIndexKeysForTx(txView.getTransaction());
+      }
       for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
         K key = entryTxView.getKey();
         StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
@@ -140,6 +144,7 @@ class StoreTxDemarcationExecutor {
       logger.trace("rollback {} on {} by Thread {}", txView, store, Thread.currentThread().getName());
     }
     if (txView.getNumberOfUpdatedEntries() > 0) {
+      store.getIndexRegistry().unlockUniqueIndexKeysForTx(txView.getTransaction());
       for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
         K key = entryTxView.getKey();
         StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();

@@ -28,6 +28,10 @@ import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.exception.JacisTransactionAlreadyPreparedForCommitException;
+import org.jacis.index.JacisIndexRegistry;
+import org.jacis.index.JacisIndexRegistryTxView;
+import org.jacis.index.JacisNonUniqueIndex;
+import org.jacis.index.JacisUniqueIndex;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 import org.jacis.util.ConcurrentWeakHashMap;
@@ -63,6 +67,8 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   private final ReadWriteLock storeAccessLock;
   /** The object adapter defining how to copy objects from the committed view to a transactional view and back */
   private final JacisObjectAdapter<TV, CV> objectAdapter;
+  /** The registry of (unique or not unique) indexes for this store */
+  private final JacisIndexRegistry<K, TV> indexRegistry;
   /** The registry of tracked views for this store that are kept up to date on each commit automatically */
   private final TrackedViewRegistry<K, TV> trackedViewRegistry;
   /** List of listeners notified on each modification on the committed values in the store */
@@ -74,6 +80,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     this.spec = spec;
     this.objectAdapter = spec.getObjectAdapter();
     this.trackedViewRegistry = new TrackedViewRegistry<>(this, spec.isCheckViewsOnCommit());
+    this.indexRegistry = new JacisIndexRegistry<>(this, spec.isCheckViewsOnCommit());
     this.storeAccessLock = spec.isSyncStoreOnContainerTransaction() ? container.getTransactionDemarcationLock() : new ReentrantReadWriteLock(true); // by default the store accesses are synced on the whole container TX
     registerModificationListener(trackedViewRegistry);
   }
@@ -120,6 +127,35 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   @Override
   public TrackedViewRegistry<K, TV> getTrackedViewRegistry() {
     return trackedViewRegistry;
+  }
+
+  JacisIndexRegistry<K, TV> getIndexRegistry() {
+    return indexRegistry;
+  }
+
+  public JacisIndexRegistryTxView<K, TV> getIndexRegistryTransactionView() {
+    JacisStoreTxView<K, TV, CV> txView = getTxView(false);
+    return txView == null ? null : txView.getIndexRegistryTxView();
+  }
+
+  @Override
+  public <IK> JacisNonUniqueIndex<IK, K, TV> createNonUniqueIndex(String indexName, Function<TV, IK> indexKeyFunction) {
+    return indexRegistry.createNonUniqueIndex(indexName, indexKeyFunction);
+  }
+
+  @Override
+  public <IK> JacisNonUniqueIndex<IK, K, TV> getNonUniqueIndex(String indexName) {
+    return indexRegistry.getNonUniqueIndex(indexName);
+  }
+
+  @Override
+  public <IK> JacisUniqueIndex<IK, K, TV> createUniqueIndex(String indexName, Function<TV, IK> indexKeyFunction) {
+    return indexRegistry.createUniqueIndex(indexName, indexKeyFunction);
+  }
+
+  @Override
+  public <IK> JacisUniqueIndex<IK, K, TV> getUniqueIndex(String indexName) {
+    return indexRegistry.getUniqueIndex(indexName);
   }
 
   @Override
@@ -255,6 +291,23 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     } else {
       return streamReadOnly();
     }
+  }
+
+  public Stream<KeyValuePair<K, TV>> streamKeyValuePairsReadOnly(Predicate<TV> filter) {
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    if (filter != null) {
+      return keyStream().map(k -> new KeyValuePair<>(k, getReadOnly(k, txView))).filter(p -> p.getVal() != null && filter.test(p.getVal()));
+    } else {
+      return keyStream().map(k -> new KeyValuePair<>(k, getReadOnly(k, txView))).filter(p -> p.getVal() != null);
+    }
+  }
+
+  @Override
+  public Stream<KeyValuePair<K, TV>> streamAllUpdated(Predicate<TV> filter) {
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    return txView.getAllEntryTxViews().stream() //
+        .filter(entryTxView -> entryTxView.isUpdated() && (filter == null || filter.test(entryTxView.getValue()))) //
+        .map(entryTxView -> new KeyValuePair<>(entryTxView.getKey(), entryTxView.getValue()));
   }
 
   @Override

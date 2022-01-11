@@ -18,6 +18,8 @@ import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.exception.JacisTransactionAlreadyPreparedForCommitException;
+import org.jacis.index.JacisNonUniqueIndex;
+import org.jacis.index.JacisUniqueIndex;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
@@ -64,6 +66,44 @@ public interface JacisStore<K, TV> {
 
   /** @return the registry of tracked views for this store that are kept up to date on each commit automatically */
   TrackedViewRegistry<K, TV> getTrackedViewRegistry();
+
+  /**
+   * Create and register a non-unique Index to access the values in the store by an index key.
+   * 
+   * @param <IK>             The type of the index key.
+   * @param indexName        The Name of the index (has to be unique).
+   * @param indexKeyFunction The function to extract the index key from a value.
+   * @return An object representing the index and providing methods to access objects by the index key.
+   */
+  <IK> JacisNonUniqueIndex<IK, K, TV> createNonUniqueIndex(String indexName, Function<TV, IK> indexKeyFunction);
+
+  /**
+   * Get a registered non-unique Index to access the values in the store by an index key.
+   * 
+   * @param <IK>      The type of the index key.
+   * @param indexName The Name of the index (an index has to be registered with this name).
+   * @return An object representing the index and providing methods to access objects by the index key.
+   */
+  <IK> JacisNonUniqueIndex<IK, K, TV> getNonUniqueIndex(String indexName);
+
+  /**
+   * Create and register an unique Index to access the values in the store by an index key.
+   * 
+   * @param <IK>             The type of the index key.
+   * @param indexName        The Name of the index (has to be unique).
+   * @param indexKeyFunction The function to extract the index key from a value.
+   * @return An object representing the index and providing methods to access objects by the index key.
+   */
+  <IK> JacisUniqueIndex<IK, K, TV> createUniqueIndex(String indexName, Function<TV, IK> indexKeyFunction);
+
+  /**
+   * Get a registered unique Index to access the values in the store by an index key.
+   * 
+   * @param <IK>      The type of the index key.
+   * @param indexName The Name of the index (an index has to be registered with this name).
+   * @return An object representing the index and providing methods to access objects by the index key.
+   */
+  <IK> JacisUniqueIndex<IK, K, TV> getUniqueIndex(String indexName);
 
   /**
    * Create a read only view of the current transaction context that can be used (read only) in a different thread.
@@ -214,6 +254,14 @@ public interface JacisStore<K, TV> {
    * @return a stream of all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    */
   Stream<TV> streamReadOnly(Predicate<TV> filter);
+
+  /**
+   * Stream all store entries updated in the current transaction (update method has been called).
+   * 
+   * @param filter an optional filter on the updated values (null means all updated entries are included in the result).
+   * @return a stream of key value pairs for all updated objects (the value may be null if the object has been deleted in this transaction).
+   */
+  Stream<KeyValuePair<K, TV>> streamAllUpdated(Predicate<TV> filter);
 
   /**
    * Returns a list of all objects (not <code>null</code>) currently stored in the store.

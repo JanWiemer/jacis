@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.jacis.container.JacisTransactionHandle;
+import org.jacis.index.JacisIndexRegistryTxView;
 import org.jacis.trackedviews.TrackedView;
 
 /**
@@ -49,7 +50,9 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   /** the number of updated entries of this TX view */
   private int numberOfUpdatedEntries = 0;
   /** tracked views by this transaction view. The tracked views in this map are kept up-to-date during the current TX */
-  private final Map<String, TrackedViewTransactionLocal<K, TV>> trackedViews;
+  private final Map<String, TrackedView<TV>> trackedViews;
+  /** transaction view of the index values */
+  private JacisIndexRegistryTxView<K, TV> indexRegistryTxView;
 
   JacisStoreTxView(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
     this.store = store;
@@ -58,6 +61,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
     this.creationTimestamp = System.currentTimeMillis();
     this.storeTxView = new HashMap<>();
     this.trackedViews = new HashMap<>();
+    this.indexRegistryTxView = new JacisIndexRegistryTxView<>(store.getIndexRegistry());
   }
 
   JacisStoreTxView(String readOnlyTxId, JacisStoreTxView<K, TV, CV> orig, boolean threadsafe) { // only to create a read only snapshot
@@ -73,6 +77,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
     }
     storeTxView = readOnlyCache;
     trackedViews = threadsafe ? new ConcurrentHashMap<>(orig.trackedViews) : new HashMap<>(orig.trackedViews); // Enable multithreaded access to read only context. See iaaue #30
+    this.indexRegistryTxView = orig.indexRegistryTxView;
     numberOfEntries = storeTxView.size();
   }
 
@@ -159,11 +164,18 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
         }
         numberOfUpdatedEntries--; // removed an updated element
       }
-      TV oldOrigValue = entryTxView.getOrigValue();
-      entryTxView.refreshFromCommitted();
-      TV newValue = entryTxView.getValue();
-      for (TrackedViewTransactionLocal<K, TV> trackedView : trackedViews.values()) {
-        trackedView.trackModification(oldOrigValue, newValue, entryTxView);
+      boolean trackingRequired = isTrackingRequired();
+      if (trackingRequired) {
+        TV prevValue = entryTxView.getLastUpdatedValue();
+        if (prevValue == null) {
+          prevValue = entryTxView.getOrigValue();
+        }
+        entryTxView.refreshFromCommitted();
+        entryTxView.trackLastUpdated();
+        TV newValue = entryTxView.getValue();
+        trackUpdate(key, prevValue, newValue);
+      } else {
+        entryTxView.refreshFromCommitted();
       }
     }
     return true;
@@ -173,10 +185,29 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
     if (!entryTxView.isUpdated()) {
       numberOfUpdatedEntries++; // a new updated element
     }
-    entryTxView.updateValue(newValue);
-    for (TrackedViewTransactionLocal<K, TV> trackedView : trackedViews.values()) {
-      trackedView.trackModification(entryTxView.getOrigValue(), newValue, entryTxView);
+    boolean trackingRequired = isTrackingRequired();
+    if (trackingRequired) {
+      TV prevValue = entryTxView.getLastUpdatedValue();
+      if (prevValue == null) {
+        prevValue = entryTxView.getOrigValue();
+      }
+      entryTxView.updateValue(newValue);
+      entryTxView.trackLastUpdated();
+      trackUpdate(entryTxView.getKey(), prevValue, newValue);
+    } else {
+      entryTxView.updateValue(newValue);
     }
+  }
+
+  private boolean isTrackingRequired() {
+    return !trackedViews.isEmpty() || indexRegistryTxView.isTrackingRequired();
+  }
+
+  private void trackUpdate(K key, TV prevValue, TV newValue) {
+    for (TrackedView<TV> trackedView : trackedViews.values()) {
+      trackedView.trackModification(prevValue, newValue);
+    }
+    indexRegistryTxView.onTxLocalUpdate(key, prevValue, newValue);
   }
 
   void startCommitPhase() {
@@ -216,14 +247,15 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   private <VT extends TrackedView<TV>> VT internalGetTrackedView(String internalViewKey, Supplier<VT> initialViewSupplier) {
     if (!this.trackedViews.containsKey(internalViewKey)) {
       VT view = initialViewSupplier.get();
-      TrackedViewTransactionLocal<K, TV> local = new TrackedViewTransactionLocal<>(view);
-
       for (StoreEntryTxView<K, TV, ?> entryTxView : getAllEntryTxViews()) {
-        local.trackModification(entryTxView.getOrigValue(), entryTxView.getValue(), entryTxView);
+        view.trackModification(entryTxView.getOrigValue(), entryTxView.getValue());
+        if (entryTxView.isUpdated() && entryTxView.getLastUpdatedValue() == null) {
+          entryTxView.trackLastUpdated();
+        }
       }
-      this.trackedViews.put(internalViewKey, local);
+      this.trackedViews.put(internalViewKey, view);
     }
-    return (VT) this.trackedViews.get(internalViewKey).getTrackedView();
+    return (VT) this.trackedViews.get(internalViewKey);
   }
 
   <VT extends TrackedView<TV>> VT getTrackedView(String viewName, Supplier<VT> initialViewSupplier) {
@@ -240,6 +272,10 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
 
   boolean containsTrackedSubView(String viewName, Object subViewKey) {
     return this.trackedViews.containsKey("SV:" + viewName + "-" + subViewKey);
+  }
+
+  public JacisIndexRegistryTxView<K, TV> getIndexRegistryTxView() {
+    return indexRegistryTxView;
   }
 
   @Override
