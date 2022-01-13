@@ -45,7 +45,7 @@ public class JacisUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV> {
    * @param indexKey The index key of the desired entry.
    * @return the unique value for the passed index key.
    */
-  TV get(IK indexKey) {
+  public TV get(IK indexKey) {
     return indexRegistry.getFromUniqueIndex(this, indexKey);
   }
 
@@ -56,7 +56,7 @@ public class JacisUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV> {
    * @param indexKey The index key of the desired entry.
    * @return the unique read only value for the passed key.
    */
-  TV getReadOnly(IK indexKey) {
+  public TV getReadOnly(IK indexKey) {
     return indexRegistry.getFromUniqueIndexReadOnly(this, indexKey);
   }
 }

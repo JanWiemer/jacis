@@ -44,7 +44,7 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
    * @param indexKey The index key of the desired entry.
    * @return the unique value for the passed index key.
    */
-  Collection<TV> get(IK indexKey) {
+  public Collection<TV> get(IK indexKey) {
     return indexRegistry.getFromNonUniqueIndex(this, indexKey);
   }
 
@@ -55,7 +55,7 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
    * @param indexKey The index key of the desired entry.
    * @return the read only values for the passed key.
    */
-  Collection<TV> getReadOnly(IK indexKey) {
+  public Collection<TV> getReadOnly(IK indexKey) {
     return indexRegistry.getFromNonUniqueIndexReadOnly(this, indexKey);
   }
 
