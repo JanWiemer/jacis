@@ -50,7 +50,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   /** the number of updated entries of this TX view */
   private int numberOfUpdatedEntries = 0;
   /** tracked views by this transaction view. The tracked views in this map are kept up-to-date during the current TX */
-  private final Map<String, TrackedView<TV>> trackedViews;
+  private final Map<String, TrackedViewTransactionLocal<K, TV>> trackedViews;
   /** transaction view of the index values */
   private JacisIndexRegistryTxView<K, TV> indexRegistryTxView;
 
@@ -164,19 +164,21 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
         }
         numberOfUpdatedEntries--; // removed an updated element
       }
-      boolean trackingRequired = isTrackingRequired();
+      boolean trackingRequired = isTrackingAtIndicesRequired();
+      TV oldOrigValue = entryTxView.getOrigValue();
       if (trackingRequired) {
         TV prevValue = entryTxView.getLastUpdatedValue();
         if (prevValue == null) {
-          prevValue = entryTxView.getOrigValue();
+          prevValue = oldOrigValue;
         }
         entryTxView.refreshFromCommitted();
         entryTxView.trackLastUpdated();
         TV newValue = entryTxView.getValue();
-        trackUpdate(key, prevValue, newValue);
+        trackUpdateAtIndices(entryTxView.getKey(), prevValue, newValue);
       } else {
         entryTxView.refreshFromCommitted();
       }
+      trackUpdateAtViews(oldOrigValue, entryTxView.getValue(), entryTxView);
     }
     return true;
   }
@@ -185,7 +187,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
     if (!entryTxView.isUpdated()) {
       numberOfUpdatedEntries++; // a new updated element
     }
-    boolean trackingRequired = isTrackingRequired();
+    boolean trackingRequired = isTrackingAtIndicesRequired();
     if (trackingRequired) {
       TV prevValue = entryTxView.getLastUpdatedValue();
       if (prevValue == null) {
@@ -193,21 +195,25 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
       }
       entryTxView.updateValue(newValue);
       entryTxView.trackLastUpdated();
-      trackUpdate(entryTxView.getKey(), prevValue, newValue);
+      trackUpdateAtIndices(entryTxView.getKey(), prevValue, newValue);
     } else {
       entryTxView.updateValue(newValue);
     }
+    trackUpdateAtViews(entryTxView.getOrigValue(), newValue, entryTxView);
   }
 
-  private boolean isTrackingRequired() {
-    return !trackedViews.isEmpty() || indexRegistryTxView.isTrackingRequired();
+  private boolean isTrackingAtIndicesRequired() {
+    return indexRegistryTxView.isTrackingRequired();
   }
 
-  private void trackUpdate(K key, TV prevValue, TV newValue) {
-    for (TrackedView<TV> trackedView : trackedViews.values()) {
-      trackedView.trackModification(prevValue, newValue);
-    }
+  private void trackUpdateAtIndices(K key, TV prevValue, TV newValue) {
     indexRegistryTxView.onTxLocalUpdate(key, prevValue, newValue);
+  }
+
+  private void trackUpdateAtViews(TV prevValue, TV newValue, StoreEntryTxView<K, TV, CV> entryTxView) {
+    for (TrackedViewTransactionLocal<K, TV> trackedView : trackedViews.values()) {
+      trackedView.trackModification(prevValue, newValue, entryTxView);
+    }
   }
 
   void startCommitPhase() {
@@ -247,15 +253,14 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   private <VT extends TrackedView<TV>> VT internalGetTrackedView(String internalViewKey, Supplier<VT> initialViewSupplier) {
     if (!this.trackedViews.containsKey(internalViewKey)) {
       VT view = initialViewSupplier.get();
+      TrackedViewTransactionLocal<K, TV> local = new TrackedViewTransactionLocal<>(view);
+
       for (StoreEntryTxView<K, TV, ?> entryTxView : getAllEntryTxViews()) {
-        view.trackModification(entryTxView.getOrigValue(), entryTxView.getValue());
-        if (entryTxView.isUpdated() && entryTxView.getLastUpdatedValue() == null) {
-          entryTxView.trackLastUpdated();
-        }
+        local.trackModification(entryTxView.getOrigValue(), entryTxView.getValue(), entryTxView);
       }
-      this.trackedViews.put(internalViewKey, view);
+      this.trackedViews.put(internalViewKey, local);
     }
-    return (VT) this.trackedViews.get(internalViewKey);
+    return (VT) this.trackedViews.get(internalViewKey).getTrackedView();
   }
 
   <VT extends TrackedView<TV>> VT getTrackedView(String viewName, Supplier<VT> initialViewSupplier) {
