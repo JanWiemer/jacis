@@ -26,6 +26,20 @@ public class JacisStoreWithSerializationAndTrackedViewMultithreadedTest {
 
   static final Logger log = LoggerFactory.getLogger(JacisStoreWithSerializationAndTrackedViewMultithreadedTest.class);
 
+  // only for manual execution:
+  // @Test()
+  public void testMultiThreadedAccessMultiple() {
+    for (int i = 1; i <= 100; i++) {
+      log.info("------- iteration {} ----------", i);
+      try {
+        testMultiThreadedAccess();
+      } catch (Throwable e) {
+        log.error("Failed in iteration {} with: {}", i, "" + e, e);
+        throw e;
+      }
+    }
+  }
+
   @Test()
   public void testMultiThreadedAccess() {
     JacisTestHelper testHelper = new JacisTestHelper();

@@ -16,6 +16,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -665,10 +666,20 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   // helper methods to deal with transaction views of entries
   // ======================================================================================
 
+  private final static class StoreEntryTxViewReference<K, TV, CV> {
+    StoreEntryTxView<K, TV, CV> ref;
+  }
+
   private StoreEntryTxView<K, TV, CV> getOrCreateEntryTxView(JacisStoreTxView<K, TV, CV> txView, K key) {
     StoreEntryTxView<K, TV, CV> entryTxView = txView.getEntryTxView(key);
     if (entryTxView == null) {
-      entryTxView = withReadLock(() -> txView.createTxViewEntry(getOrCreateCommittedEntry(key)));
+      StoreEntryTxViewReference<K, TV, CV> newTxView = new StoreEntryTxViewReference<>();
+      updateCommittedEntry(key, (k, existingCommittedEntry) -> {
+        StoreEntry<K, TV, CV> newCommittedEntry = existingCommittedEntry != null ? existingCommittedEntry : new StoreEntry<>(this, key);
+        newTxView.ref = txView.createTxViewEntry(newCommittedEntry);
+        return newCommittedEntry;
+      });
+      entryTxView = newTxView.ref;
     }
     return entryTxView;
   }
@@ -677,27 +688,17 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   // helper methods to deal with committed entries
   // ======================================================================================
 
-  private StoreEntry<K, TV, CV> createCommittedEntry(K key) {
-    StoreEntry<K, TV, CV> newCommittedEntry = new StoreEntry<>(this, key);
-    StoreEntry<K, TV, CV> oldCommittedEntry = store.putIfAbsent(key, newCommittedEntry); // safe if another TX created one in the meantime
-    return oldCommittedEntry != null ? oldCommittedEntry : newCommittedEntry;
-  }
-
   private StoreEntry<K, TV, CV> getCommittedEntry(K key) {
     return store.get(key);
   }
 
-  private StoreEntry<K, TV, CV> getOrCreateCommittedEntry(K key) {
-    StoreEntry<K, TV, CV> committedEntry = store.get(key);
-    if (committedEntry == null) {
-      committedEntry = createCommittedEntry(key);
-    }
-    return committedEntry;
+  void updateCommittedEntry(K key, BiFunction<K, StoreEntry<K, TV, CV>, StoreEntry<K, TV, CV>> updateFunction) {
+    store.compute(key, updateFunction);
   }
 
-  void checkRemoveCommittedEntry(StoreEntry<K, TV, CV> entryCommitted, JacisStoreTxView<K, TV, CV> currTxView) {
+  boolean checkRemoveCommittedEntry(StoreEntry<K, TV, CV> entryCommitted, JacisStoreTxView<K, TV, CV> currTxView) {
     if (entryCommitted.getValue() != null || entryCommitted.isLocked()) {
-      return; // cannot remove
+      return false; // cannot remove
     }
     K key = entryCommitted.getKey();
     Collection<JacisStoreTxView<K, TV, CV>> txs = safeGetAllTxViews();
@@ -708,10 +709,10 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
         continue; // the current transaction referring a core entry can be ignored
       }
       if (txCtx.containsTxView(key)) {
-        return; // still referred by transaction
+        return false; // still referred by transaction
       }
     }
-    store.remove(key);
+    return true;
   }
 
   // ======================================================================================

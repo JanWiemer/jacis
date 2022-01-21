@@ -99,8 +99,8 @@ class StoreTxDemarcationExecutor {
       }
       for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
         K key = entryTxView.getKey();
-        StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
-        if (entryTxView.isUpdated()) {
+        boolean isUpdated = entryTxView.isUpdated();
+        if (isUpdated) {
           if (trace) {
             logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
           }
@@ -113,10 +113,17 @@ class StoreTxDemarcationExecutor {
               toThrow.addSuppressed(e);
             }
           }
-          entryCommitted.update(entryTxView, txView);
         }
-        entryCommitted.releaseLockedFor(txView);
-        store.checkRemoveCommittedEntry(entryCommitted, txView);
+        store.updateCommittedEntry(key, (k, entryCommitted) -> {
+          if (isUpdated) {
+            entryCommitted.update(entryTxView, txView);
+          }
+          entryCommitted.releaseLockedFor(txView);
+          if (store.checkRemoveCommittedEntry(entryCommitted, txView)) {
+            return null;
+          }
+          return entryCommitted;
+        });
       }
     } finally { // even if exceptions occur TX view has to be destroyed! See https://github.com/JanWiemer/jacis/issues/8
       txView.afterCommit();
@@ -147,12 +154,16 @@ class StoreTxDemarcationExecutor {
       store.getIndexRegistry().unlockUniqueIndexKeysForTx(txView.getTransaction());
       for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
         K key = entryTxView.getKey();
-        StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
         if (trace) {
           logger.trace("... rollback {}, Store: {}", store.getObjectInfo(key), this);
         }
-        entryCommitted.releaseLockedFor(txView);
-        store.checkRemoveCommittedEntry(entryCommitted, txView);
+        store.updateCommittedEntry(key, (k, entryCommitted) -> {
+          entryCommitted.releaseLockedFor(txView);
+          if (store.checkRemoveCommittedEntry(entryCommitted, txView)) {
+            return null;
+          }
+          return entryCommitted;
+        });
       }
     }
     txView.afterRollback();
