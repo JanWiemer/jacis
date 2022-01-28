@@ -132,22 +132,23 @@ class StoreTxDemarcationExecutor {
               return entryCommitted;
             });
           }
-          for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
-            if (entryTxView.isUpdated()) {
-              continue; // handled in the loop above
-            }
-            K key = entryTxView.getKey();
-            store.updateCommittedEntry(key, (k, entryCommitted) -> {
-              if (store.checkRemoveCommittedEntry(entryCommitted, txView)) {
-                return null;
-              }
-              return entryCommitted;
-            });
-          }
         } finally {
           storeAccessLock.writeLock().unlock();
         }
       }
+      for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+        if (entryTxView.isUpdated()) {
+          continue; // handled in the loop above
+        }
+        K key = entryTxView.getKey();
+        store.updateCommittedEntry(key, (k, entryCommitted) -> {
+          if (store.checkRemoveCommittedEntry(entryCommitted, txView)) {
+            return null;
+          }
+          return entryCommitted;
+        });
+      }
+
     } finally { // even if exceptions occur TX view has to be destroyed! See https://github.com/JanWiemer/jacis/issues/8
       txView.afterCommit();
       JacisPersistenceAdapter<K, TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
