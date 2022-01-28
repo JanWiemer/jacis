@@ -132,6 +132,18 @@ class StoreTxDemarcationExecutor {
               return entryCommitted;
             });
           }
+          for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+            if (entryTxView.isUpdated()) {
+              continue; // handled in the loop above
+            }
+            K key = entryTxView.getKey();
+            store.updateCommittedEntry(key, (k, entryCommitted) -> {
+              if (store.checkRemoveCommittedEntry(entryCommitted, txView)) {
+                return null;
+              }
+              return entryCommitted;
+            });
+          }
         } finally {
           storeAccessLock.writeLock().unlock();
         }
