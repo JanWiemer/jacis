@@ -122,6 +122,49 @@ public class JacisStoreIntegrationTest {
   }
 
   @Test
+  public void testCoreStoreGarbageOnCommit() {
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisLocalTransaction writingTx = store.getContainer().beginLocalTransaction();
+    TestObject testObject = store.get("testObj");
+    assertNull(testObject);
+    assertEquals(1, store.size()); // a shadow core object for the null object in the TX view exists
+    writingTx.commit(); // <--------------------
+    assertEquals(0, store.size()); // the shadow core object is cleaned up
+  }
+
+  @Test
+  public void testCoreStoreGarbageOnRollback() {
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisLocalTransaction writingTx = store.getContainer().beginLocalTransaction();
+    TestObject testObject = store.get("testObj");
+    assertNull(testObject);
+    assertEquals(1, store.size()); // a shadow core object for the null object in the TX view exists
+    writingTx.rollback(); // <--------------------
+    assertEquals(0, store.size()); // the shadow core object is cleaned up
+  }
+
+  @Test
+  public void testCoreStoreGarbageOnCommitOfLastTx() {
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisLocalTransaction writingTx1 = store.getContainer().beginLocalTransaction();
+    assertNull(store.get("testObj"));
+    assertEquals(1, store.size()); // a shadow core object for the null object in the TX view exists
+    JacisTransactionHandle txHandle1 = testHelper.suspendTx();
+    JacisLocalTransaction writingTx2 = store.getContainer().beginLocalTransaction();
+    assertNull(store.get("testObj"));
+    assertEquals(1, store.size()); // again the same shador core object
+    writingTx2.commit(); // <--------------------
+    assertEquals(1, store.size()); // still referenced in TX1
+    testHelper.resumeTx(txHandle1);
+    assertEquals(1, store.size()); // still referenced in TX1
+    writingTx1.commit(); // <--------------------
+    assertEquals(0, store.size()); // the shadow core object is cleaned up
+  }
+
+  @Test
   public void testTransactionInfo() {
     String testObjectName = "obj-1";
     TestObject testObject = new TestObject(testObjectName, 1);

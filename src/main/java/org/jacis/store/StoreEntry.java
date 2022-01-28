@@ -7,7 +7,7 @@ package org.jacis.store;
 /**
  * Representing a committed version of an entry in the store.
  *
- * @param <K> Key type of the store entry
+ * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
@@ -30,6 +30,8 @@ class StoreEntry<K, TV, CV> {
   private JacisStoreTxView<K, TV, CV> lockedFor = null;
   /** name of the thread that this object is locked for (in the time between prepare and internalCommit) */
   private String lockedForThread = null;
+  /** The number of TX views having a transaction local view for this committed object */
+  private volatile int txViewReferenceCount = 0;
 
   StoreEntry(JacisStoreAdminInterface<K, TV, CV> store, K key) {
     this.store = store;
@@ -40,6 +42,19 @@ class StoreEntry<K, TV, CV> {
     this.store = store;
     this.key = key;
     this.value = store.getObjectAdapter().cloneTxView2Committed(value);
+  }
+
+  void referencedByTxView() { // anyway synchronized on ConcurrentHashMap entry in JacisStoreImpl.updateCommittedEntry
+    txViewReferenceCount++;
+  }
+
+  boolean unreferencedByTxViewAnCheckIfGarbage() { // anyway synchronized on ConcurrentHashMap entry in JacisStoreImpl.updateCommittedEntry
+    txViewReferenceCount--;
+    return txViewReferenceCount <= 0 && value == null && lockedFor == null; // garbage
+  }
+
+  public int getTxViewReferenceCount() {
+    return txViewReferenceCount;
   }
 
   @SuppressWarnings("ObjectEquality")
@@ -112,7 +127,7 @@ class StoreEntry<K, TV, CV> {
     return lockedFor;
   }
 
-  public String getLockedForThread() {
+  synchronized String getLockedForThread() {
     return lockedForThread;
   }
 

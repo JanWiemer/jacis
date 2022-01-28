@@ -696,23 +696,17 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     store.compute(key, updateFunction);
   }
 
-  boolean checkRemoveCommittedEntry(StoreEntry<K, TV, CV> entryCommitted, JacisStoreTxView<K, TV, CV> currTxView) {
-    if (entryCommitted.getValue() != null || entryCommitted.isLocked()) {
-      return false; // cannot remove
+  void checkRemoveCommittedEntries(JacisStoreTxView<K, TV, CV> finishedTxView) {
+    // collect and delete committed entries referring a null value and not referenced by any TX (garbage)
+    for (StoreEntryTxView<K, TV, CV> entryTxView : finishedTxView.getAllEntryTxViews()) {
+      K key = entryTxView.getKey();
+      updateCommittedEntry(key, (k, entryCommitted) -> {
+        if (entryCommitted.unreferencedByTxViewAnCheckIfGarbage()) {
+          return null;
+        }
+        return entryCommitted;
+      });
     }
-    K key = entryCommitted.getKey();
-    Collection<JacisStoreTxView<K, TV, CV>> txs = safeGetAllTxViews();
-    for (JacisStoreTxView<K, TV, CV> txCtx : txs) {
-      if (txCtx.isReadOnly()) {
-        continue;
-      } else if (currTxView.getTransaction().equals(txCtx.getTransaction())) {
-        continue; // the current transaction referring a core entry can be ignored
-      }
-      if (txCtx.containsTxView(key)) {
-        return false; // still referred by transaction
-      }
-    }
-    return true;
   }
 
   // ======================================================================================

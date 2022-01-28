@@ -32,6 +32,7 @@ class StoreEntryTxView<K, TV, CV> {
 
   StoreEntryTxView(StoreEntry<K, TV, CV> committedEntry, boolean trackOriginal) {
     this.committedEntry = committedEntry;
+    this.committedEntry.referencedByTxView();
     JacisObjectAdapter<TV, CV> ca = committedEntry.getStore().getObjectAdapter();
     this.txValue = ca.cloneCommitted2WritableTxView(committedEntry.getValue());
     this.origVersion = committedEntry.getVersion();
