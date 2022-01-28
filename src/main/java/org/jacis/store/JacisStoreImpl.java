@@ -626,22 +626,22 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
 
   @Override
   protected void internalPrepare(JacisTransactionHandle transaction) {
-    withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executePrepare(this, transaction)));
+    new StoreTxDemarcationExecutor().executePrepare(this, transaction, storeAccessLock);
   }
 
   @Override
   protected void internalCommit(JacisTransactionHandle transaction) {
-    withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeCommit(this, transaction)));
+    new StoreTxDemarcationExecutor().executeCommit(this, transaction, storeAccessLock);
   }
 
   @Override
   protected void internalRollback(JacisTransactionHandle transaction) {
-    withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeRollback(this, transaction)));
+    new StoreTxDemarcationExecutor().executeRollback(this, transaction, storeAccessLock);
   }
 
   @Override
   protected void internalDestroy(JacisTransactionHandle transaction) {
-    withWriteLock(runnableWrapper(() -> new StoreTxDemarcationExecutor().executeDestroy(this, transaction)));
+    new StoreTxDemarcationExecutor().executeDestroy(this, transaction, storeAccessLock);
   }
 
   // ======================================================================================

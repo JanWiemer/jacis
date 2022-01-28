@@ -4,6 +4,8 @@
 
 package org.jacis.store;
 
+import java.util.concurrent.locks.ReadWriteLock;
+
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisModificationListenerException;
 import org.jacis.exception.JacisTrackedViewModificationException;
@@ -46,7 +48,7 @@ class StoreTxDemarcationExecutor {
     }
   }
 
-  <K, TV, CV> void executePrepare(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
+  <K, TV, CV> void executePrepare(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction, ReadWriteLock storeAccessLock) {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
       return;
@@ -60,14 +62,19 @@ class StoreTxDemarcationExecutor {
     logger.trace("prepare {} on {} by Thread {}", txView, this, Thread.currentThread().getName());
     txView.startCommitPhase();
     if (txView.getNumberOfUpdatedEntries() > 0) {
-      for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
-        StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
-        if (entryTxView.isUpdated()) {
-          entryTxView.assertNotStale(txView);
-          entryCommitted.lockedFor(txView);
+      try {
+        storeAccessLock.writeLock().lock();
+        for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+          StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
+          if (entryTxView.isUpdated()) {
+            entryTxView.assertNotStale(txView);
+            entryCommitted.lockedFor(txView);
+          }
         }
+        store.getIndexRegistry().lockUniqueIndexKeysForTx(txView.getTransaction());
+      } finally {
+        storeAccessLock.writeLock().unlock();
       }
-      store.getIndexRegistry().lockUniqueIndexKeysForTx(txView.getTransaction());
     }
     JacisPersistenceAdapter<K, TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
     if (persistenceAdapter != null) {
@@ -75,7 +82,7 @@ class StoreTxDemarcationExecutor {
     }
   }
 
-  <K, TV, CV> void executeCommit(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
+  <K, TV, CV> void executeCommit(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction, ReadWriteLock storeAccessLock) {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
       return;
@@ -86,7 +93,7 @@ class StoreTxDemarcationExecutor {
       return;
     }
     if (!txView.isCommitPending()) {
-      executePrepare(store, transaction);
+      executePrepare(store, transaction, storeAccessLock);
     }
     boolean trace = logger.isTraceEnabled();
     if (trace) {
@@ -95,35 +102,39 @@ class StoreTxDemarcationExecutor {
     RuntimeException toThrow = null;
     try {
       if (txView.getNumberOfUpdatedEntries() > 0) {
-        store.getIndexRegistry().unlockUniqueIndexKeysForTx(txView.getTransaction());
-      }
-      for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
-        K key = entryTxView.getKey();
-        boolean isUpdated = entryTxView.isUpdated();
-        if (isUpdated) {
-          if (trace) {
-            logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
-          }
-          try {
-            trackModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
-          } catch (JacisTrackedViewModificationException e) {
-            if (toThrow == null) {
-              toThrow = e;
-            } else {
-              toThrow.addSuppressed(e);
+        try {
+          storeAccessLock.writeLock().lock();
+          store.getIndexRegistry().unlockUniqueIndexKeysForTx(txView.getTransaction());
+          for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+            K key = entryTxView.getKey();
+            boolean isUpdated = entryTxView.isUpdated();
+            if (!isUpdated) {
+              continue;
             }
+            if (trace) {
+              logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
+            }
+            try {
+              trackModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
+            } catch (JacisTrackedViewModificationException e) {
+              if (toThrow == null) {
+                toThrow = e;
+              } else {
+                toThrow.addSuppressed(e);
+              }
+            }
+            store.updateCommittedEntry(key, (k, entryCommitted) -> {
+              entryCommitted.update(entryTxView, txView);
+              entryCommitted.releaseLockedFor(txView);
+              if (store.checkRemoveCommittedEntry(entryCommitted, txView)) {
+                return null;
+              }
+              return entryCommitted;
+            });
           }
+        } finally {
+          storeAccessLock.writeLock().unlock();
         }
-        store.updateCommittedEntry(key, (k, entryCommitted) -> {
-          if (isUpdated) {
-            entryCommitted.update(entryTxView, txView);
-          }
-          entryCommitted.releaseLockedFor(txView);
-          if (store.checkRemoveCommittedEntry(entryCommitted, txView)) {
-            return null;
-          }
-          return entryCommitted;
-        });
       }
     } finally { // even if exceptions occur TX view has to be destroyed! See https://github.com/JanWiemer/jacis/issues/8
       txView.afterCommit();
@@ -137,7 +148,7 @@ class StoreTxDemarcationExecutor {
     }
   }
 
-  <K, TV, CV> void executeRollback(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
+  <K, TV, CV> void executeRollback(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction, ReadWriteLock storeAccessLock) {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView == null) {
       return;
@@ -151,19 +162,24 @@ class StoreTxDemarcationExecutor {
       logger.trace("rollback {} on {} by Thread {}", txView, store, Thread.currentThread().getName());
     }
     if (txView.getNumberOfUpdatedEntries() > 0) {
-      store.getIndexRegistry().unlockUniqueIndexKeysForTx(txView.getTransaction());
-      for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
-        K key = entryTxView.getKey();
-        if (trace) {
-          logger.trace("... rollback {}, Store: {}", store.getObjectInfo(key), this);
-        }
-        store.updateCommittedEntry(key, (k, entryCommitted) -> {
-          entryCommitted.releaseLockedFor(txView);
-          if (store.checkRemoveCommittedEntry(entryCommitted, txView)) {
-            return null;
+      try {
+        storeAccessLock.writeLock().lock();
+        store.getIndexRegistry().unlockUniqueIndexKeysForTx(txView.getTransaction());
+        for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+          K key = entryTxView.getKey();
+          if (trace) {
+            logger.trace("... rollback {}, Store: {}", store.getObjectInfo(key), this);
           }
-          return entryCommitted;
-        });
+          store.updateCommittedEntry(key, (k, entryCommitted) -> {
+            entryCommitted.releaseLockedFor(txView);
+            if (store.checkRemoveCommittedEntry(entryCommitted, txView)) {
+              return null;
+            }
+            return entryCommitted;
+          });
+        }
+      } finally {
+        storeAccessLock.writeLock().unlock();
       }
     }
     txView.afterRollback();
@@ -173,7 +189,7 @@ class StoreTxDemarcationExecutor {
     }
   }
 
-  <K, TV, CV> void executeDestroy(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
+  <K, TV, CV> void executeDestroy(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction, ReadWriteLock storeAccessLock) {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView != null) {
       txView.destroy();
