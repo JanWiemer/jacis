@@ -20,7 +20,7 @@ jobs:
       matrix:
 #        os: [windows-latest]
         os: [windows-latest, ubuntu-latest, macos-latest]
-        java: [8, 11, 14]
+        java: [8, 11, 14, 17]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout 
@@ -32,7 +32,7 @@ jobs:
       with:
         java-version: ${{ matrix.java }}
     - name: Test
-      uses: eskatos/gradle-command-action@v1
+      uses: eskatos/gradle-command-action@v2
       with:
         arguments: build -Dreleasebuild=${{ github.event.inputs.release }}
 
