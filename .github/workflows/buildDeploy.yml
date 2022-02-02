@@ -20,7 +20,7 @@ jobs:
       matrix:
 #        os: [windows-latest]
         os: [windows-latest, ubuntu-latest, macos-latest]
-        java: [8, 11, 14, 17]
+        java: [8, 11, 14]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout 
