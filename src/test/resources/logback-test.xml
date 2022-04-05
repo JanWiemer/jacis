@@ -16,11 +16,11 @@
     <file>log/jacis.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- rollover daily -->
-      <fileNamePattern>log/jacis-%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+      <fileNamePattern>log/jacis-%d{yyyy-MM-dd}.%3i.log.zip</fileNamePattern>
       <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-        <maxFileSize>100MB</maxFileSize>
+        <maxFileSize>10MB</maxFileSize>
       </timeBasedFileNamingAndTriggeringPolicy>
-      <maxHistory>10</maxHistory>
+      <maxHistory>100</maxHistory>
     </rollingPolicy>
     <encoder>
       <pattern>%-5level %d{yyyy-MM-dd HH:mm:ss.SSS} [%25.25thread] - %msg \(%C{0}.java:%L\)%n</pattern>
