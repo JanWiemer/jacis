@@ -21,7 +21,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import one.microstream.storage.configuration.Configuration;
+import one.microstream.storage.embedded.configuration.types.EmbeddedStorageConfigurationBuilder;
 import one.microstream.storage.embedded.types.EmbeddedStorage;
 import one.microstream.storage.embedded.types.EmbeddedStorageManager;
 
@@ -84,8 +84,8 @@ public class BasicMicrostreamTest {
   @Test
   public void testInsertAndStoreArrayRoot() {
     Path storageDir = getStorageDir("testInsertAndStoreArrayRoot");
-    EmbeddedStorageManager storageManager = Configuration.Default() //
-        .setBaseDirectory(storageDir.toString()) //
+    EmbeddedStorageManager storageManager = EmbeddedStorageConfigurationBuilder.New() //
+        .setStorageDirectory(storageDir.toString()) //
         .createEmbeddedStorageFoundation() //
         .createEmbeddedStorageManager();
     log.info("initialize data with 5 elements...");

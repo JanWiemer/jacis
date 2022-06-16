@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import one.microstream.storage.configuration.Configuration;
+import one.microstream.storage.embedded.configuration.types.EmbeddedStorageConfigurationBuilder;
 import one.microstream.storage.embedded.types.EmbeddedStorageManager;
 
 public class JacisMicrostreamAdapterTest {
@@ -43,8 +43,8 @@ public class JacisMicrostreamAdapterTest {
   }
 
   private EmbeddedStorageManager createStorageManager(Path storageDir) {
-    EmbeddedStorageManager storageManager = Configuration.Default() //
-        .setBaseDirectory(storageDir.toString()) //
+    EmbeddedStorageManager storageManager = EmbeddedStorageConfigurationBuilder.New() //
+        .setStorageDirectory(storageDir.toString()) //
         .createEmbeddedStorageFoundation() //
         .createEmbeddedStorageManager();
     storageManager.start();

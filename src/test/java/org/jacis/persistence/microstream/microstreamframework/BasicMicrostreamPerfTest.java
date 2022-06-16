@@ -21,7 +21,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import one.microstream.storage.configuration.Configuration;
+import one.microstream.storage.embedded.configuration.types.EmbeddedStorageConfigurationBuilder;
 import one.microstream.storage.embedded.types.EmbeddedStorageFoundation;
 import one.microstream.storage.embedded.types.EmbeddedStorageManager;
 
@@ -45,8 +45,8 @@ public class BasicMicrostreamPerfTest {
   }
 
   protected EmbeddedStorageManager createStorageManager(Path storageDir) {
-    EmbeddedStorageFoundation<?> foundation = Configuration.Default() //
-        .setBaseDirectory(storageDir.toString()) //
+    EmbeddedStorageFoundation<?> foundation = EmbeddedStorageConfigurationBuilder.New() //
+        .setStorageDirectory(storageDir.toString()) //
         .setBackupDirectory(storageDir + "/backup") //
         .setDeletionDirectory(storageDir + "/deletion") //
         .createEmbeddedStorageFoundation();
