@@ -45,17 +45,23 @@ println '------------------------------- '
 
 dependencies {
     // --- logging
-    implementation     group: 'org.slf4j',         name: 'slf4j-api', version: version_slf4j
-    testRuntimeOnly    group: 'ch.qos.logback',    name: 'logback-core', version: version_logback
-    testRuntimeOnly    group: 'ch.qos.logback',    name: 'logback-classic', version: version_logback
+    implementation     group: 'org.slf4j',           name: 'slf4j-api', version: version_slf4j
+    testRuntimeOnly    group: 'ch.qos.logback',      name: 'logback-core', version: version_logback
+    testRuntimeOnly    group: 'ch.qos.logback',      name: 'logback-classic', version: version_logback
     // --- transaction
-    implementation     group: 'javax.transaction', name: 'jta', version: '1.1'
+    implementation     group: 'javax.transaction',   name: 'jta', version: '1.1'
     // --- EXTENSION microstream persistence
-    compileOnly        group: 'one.microstream',   name: 'microstream-storage-embedded', version: version_microstream
-    testImplementation group: 'one.microstream',   name: 'microstream-storage-embedded', version: version_microstream
-    testImplementation group: 'one.microstream',   name: 'microstream-storage-embedded-configuration', version: version_microstream
+    compileOnly        group: 'one.microstream',     name: 'microstream-storage-embedded', version: version_microstream
+    testImplementation group: 'one.microstream',     name: 'microstream-storage-embedded', version: version_microstream
+    testImplementation group: 'one.microstream',     name: 'microstream-storage-embedded-configuration', version: version_microstream
+    // --- EXTENSION JetBrains Xodus
+    compileOnly        group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version_jackson
+    compileOnly        group: 'org.jetbrains.xodus', name: 'xodus-openAPI', version: version_xodus
+    compileOnly        group: 'org.jetbrains.xodus', name: 'xodus-environment', version: version_xodus
+    testImplementation group: 'org.jetbrains.xodus', name: 'xodus-openAPI', version: version_xodus
+    testImplementation group: 'org.jetbrains.xodus', name: 'xodus-environment', version: version_xodus
     // --- junit
-    testImplementation group: 'junit',             name: 'junit', version: version_junit
+    testImplementation group: 'junit',               name: 'junit', version: version_junit
 }
 
 clean.doFirst {

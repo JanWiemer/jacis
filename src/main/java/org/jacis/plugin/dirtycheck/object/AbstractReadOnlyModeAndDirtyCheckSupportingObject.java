@@ -18,7 +18,7 @@ import org.jacis.plugin.readonly.object.AbstractReadOnlyModeSupportingObject;
 @JacisApi
 public abstract class AbstractReadOnlyModeAndDirtyCheckSupportingObject extends AbstractReadOnlyModeSupportingObject implements JacisDirtyTrackingObject {
 
-  private boolean dirty = false;
+  private transient boolean dirty = false;
 
   /** @return if the object is dirty */
   @Override
