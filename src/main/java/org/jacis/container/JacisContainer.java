@@ -282,6 +282,7 @@ public class JacisContainer {
    * In case of any exception the transaction is rolled back.
    * The result of the passed task is returned by the method.
    *
+   * @param <R>      class / type of the returned result
    * @param task     The task to execute inside a locally managed transaction
    * @param taskName A name of the task to execute (used for logging and exception messages...).
    * @return the result of the passed task
@@ -324,6 +325,7 @@ public class JacisContainer {
    * In case of any other exception the transaction is rolled back and the exception is propagated to the caller immediately.
    * The result of the passed task is returned by the method.
    *
+   * @param <R>      class / type of the returned result
    * @param retries  Number of retries if transaction failed with {@link JacisStaleObjectException}
    * @param task     The task to execute inside a locally managed transaction
    * @param taskName A name of the task to execute (used for logging and exception messages...).
