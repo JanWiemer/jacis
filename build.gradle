@@ -55,11 +55,13 @@ dependencies {
     testImplementation group: 'one.microstream',     name: 'microstream-storage-embedded', version: version_microstream
     testImplementation group: 'one.microstream',     name: 'microstream-storage-embedded-configuration', version: version_microstream
     // --- EXTENSION JetBrains Xodus
-    compileOnly        group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version_jackson
     compileOnly        group: 'org.jetbrains.xodus', name: 'xodus-openAPI', version: version_xodus
     compileOnly        group: 'org.jetbrains.xodus', name: 'xodus-environment', version: version_xodus
     testImplementation group: 'org.jetbrains.xodus', name: 'xodus-openAPI', version: version_xodus
     testImplementation group: 'org.jetbrains.xodus', name: 'xodus-environment', version: version_xodus
+    // --- UTILITIES
+    compileOnly        group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version_jackson
+    testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version_jackson
     // --- junit
     testImplementation group: 'junit',               name: 'junit', version: version_junit
 }
