@@ -56,6 +56,14 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     this.store = store;
   }
 
+  public void clearIndices() {
+    store.executeAtomic(() -> {
+      nonUniqueIndexDataMap.values().forEach(idxMap -> idxMap.clear());
+      uniqueIndexDataMap.values().forEach(idxMap -> idxMap.clear());
+      uniqueIndexLockMap.clear();
+    });
+  }
+
   public boolean hasAnyRegisteredIndex() {
     boolean isEmpty = uniqueIndexDefinitionMap.isEmpty() && nonUniqueIndexDefinitionMap.isEmpty();
     return !isEmpty;

@@ -5,6 +5,7 @@
 package org.jacis.index;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
@@ -220,6 +221,18 @@ public class JacisUniqueIndexTest {
     }
     testHelper.resumeTx(suspendTx2);
     tx2.commit();
+  }
+
+  @Test
+  public void testUniqueIndexClearedDuringClear() {
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisContainer container = store.getContainer();
+    JacisUniqueIndex<Object, String, TestObject> idx = store.createUniqueIndex("IDX-NAME", o -> o.getStrValue());
+    container.withLocalTx(() -> store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-1")));
+    assertNotNull(idx.getReadOnly("IDX-1"));
+    container.withLocalTx(() -> store.clear());
+    assertNull(idx.getReadOnly("IDX-1"));
   }
 
 }

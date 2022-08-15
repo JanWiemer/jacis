@@ -615,6 +615,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
       }
       store.clear();
       trackedViewRegistry.clearViews();
+      indexRegistry.clearIndices();
     } finally {
       storeAccessLock.writeLock().unlock();// <======= **WRITE** UNLOCK =====
     }

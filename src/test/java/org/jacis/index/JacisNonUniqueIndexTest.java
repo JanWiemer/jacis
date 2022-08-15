@@ -184,4 +184,17 @@ public class JacisNonUniqueIndexTest {
     assertEquals(3, index.getReadOnly("IDX-0").size());
   }
 
+  @Test
+  public void testNonUniqueIndexClearedDuringClear() {
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisContainer container = store.getContainer();
+    JacisNonUniqueIndex<Object, String, TestObject> idx = store.createNonUniqueIndex("IDX-NAME", o -> o.getStrValue());
+    assertEquals(0, idx.getReadOnly("IDX-1").size());
+    container.withLocalTx(() -> store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-1")));
+    assertEquals(1, idx.getReadOnly("IDX-1").size());
+    container.withLocalTx(() -> store.clear());
+    assertEquals(0, idx.getReadOnly("IDX-1").size());
+  }
+
 }
