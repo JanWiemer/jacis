@@ -203,6 +203,28 @@ public interface JacisStore<K, TV> {
   TV getReadOnly(K key);
 
   /**
+   * Returns the value for the passed key and ensures it is locked optimistically to the current version.
+   * If the object is already stored in the transactional view of the current transaction this value is returned.
+   * Otherwise the behavior depends on the object type:
+   * If the object adapter for the store supports a read only mode, then a read only view on the committed value is returned.
+   * Additionally the current version of the object is stored.
+   * During commit this version is compared to the version of the object at commit time.
+   * If the commited object has been changed in the meantime a {@link JacisStaleObjectException} is thrown
+   * Otherwise the committed entry for the key it is copied to the transactional view now.
+   *
+   * @param key The key of the desired entry.
+   * @return the value for the passed key.
+   */
+  TV lockReadOnly(K key);
+
+  /**
+   * Removes a stored version for the passed key optimistically locking it to this version.
+   * 
+   * @param key The key of the desired entry.
+   */
+  void unlock(K key);
+
+  /**
    * Returns a read only projection of the object for the passed value.
    * First a read only view (if supported) of the object is obtained by the {@link #getReadOnly(Object)} method.
    * The projected is computed from the object by applying the passed projection function.
@@ -296,6 +318,16 @@ public interface JacisStore<K, TV> {
   List<TV> getAllReadOnly(Predicate<TV> filter);
 
   /**
+   * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
+   * Like the method {@link #lockReadOnly(Object)} it optimistically locks the returned objects to their current version.
+   * The method uses the {@link #streamReadOnly(Predicate)} method and collects the results to a list.
+   *
+   * @param filter a filter predicate deciding if an object should be contained in the resulting list (<code>null</code> means all objects should be contained)
+   * @return a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
+   */
+  List<TV> lockAllReadOnly(Predicate<TV> filter);
+
+  /**
    * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store.
    * The method is independent from an active transaction and takes a read only snapshot of the objects committed in the store.
    *
@@ -335,11 +367,23 @@ public interface JacisStore<K, TV> {
   List<TV> getAllReadOnlyAtomic(Predicate<TV> filter);
 
   /**
+   * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
+   * Like the method {@link #lockReadOnly(Object)} it optimistically locks the returned objects to their current version.
+   * The method executes the {@link #getAllReadOnly(Predicate)} method as an atomic operations.
+   * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
+   * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
+   *
+   * @param filter a filter predicate deciding if an object should be contained in the resulting list (<code>null</code> means all objects should be contained)
+   * @return a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
+   */
+  List<TV> lockAllReadOnlyAtomic(Predicate<TV> filter);
+
+  /**
    * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store.
    * The method is independent from an active transaction and takes a read only snapshot of the objects committed in the store.
    * The method executes the {@link #getReadOnlySnapshot()} method as an atomic operations
    * (using this method it is possible to get a snapshot without 'phantom reads').
-   * . * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
+   * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
    * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
    * @return a list of read-only views for all objects (not <code>null</code>) currently stored in the store.
@@ -604,6 +648,14 @@ public interface JacisStore<K, TV> {
    * @return the original version of the object at the point of time it was cloned to the transactional view of the object.
    */
   long getTransactionViewVersion(K key);
+
+  /**
+   * Returns the version of an optimistic lock if one has been created (<code>null</code> if not).
+   * 
+   * @param key The key of the desired object.
+   * @return the version of an optimistic lock if one has been created (<code>null</code> if not).
+   */
+  Long getLockedVersion(K key);
 
   /**
    * Returns the version of the currently committed object.

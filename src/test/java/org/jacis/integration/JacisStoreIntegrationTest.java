@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
+import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.store.JacisStore;
 import org.jacis.store.JacisTransactionInfo;
@@ -357,6 +358,85 @@ public class JacisStoreIntegrationTest {
     assertTrue(store.containsKey("obj-1"));
     assertEquals(n, store.size());
     readingTx.commit();
+  }
+
+  @Test
+  public void testReadOnlyWithoutOptimisticLocking() {
+    String testObjectName = "obj-1";
+    TestObject testObject = new TestObject(testObjectName, 1);
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisLocalTransaction tx0 = store.getContainer().beginLocalTransaction();
+    store.update(testObjectName, testObject);
+    tx0.commit();
+    assertEquals(1, store.getReadOnly(testObjectName).getValue());
+    //
+    JacisLocalTransaction tx1 = store.getContainer().beginLocalTransaction();
+    JacisTransactionHandle tx1Handle = testHelper.suspendTx();
+    JacisLocalTransaction tx2 = store.getContainer().beginLocalTransaction();
+    JacisTransactionHandle tx2Handle = testHelper.suspendTx();
+    //
+    testHelper.resumeTx(tx1Handle);
+    assertEquals(1, store.getReadOnly(testObjectName).getValue());
+    testHelper.suspendTx();
+    //
+    testHelper.resumeTx(tx2Handle);
+    store.update(testObjectName, store.get(testObjectName).setValue(2));
+    testHelper.suspendTx();
+    //
+    testHelper.resumeTx(tx1Handle);
+    assertEquals(1, store.getReadOnly(testObjectName).getValue());
+    testHelper.suspendTx();
+    //
+    testHelper.resumeTx(tx2Handle);
+    tx2.commit();
+    //
+    testHelper.resumeTx(tx1Handle);
+    assertEquals(2, store.getReadOnly(testObjectName).getValue()); // tx2 committed, read only not cloning -> updated value
+    tx1.commit();
+  }
+
+  @Test
+  public void testReadOnlyWithOptimisticLocking() {
+    String testObjectName = "obj-1";
+    TestObject testObject = new TestObject(testObjectName, 1);
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisLocalTransaction tx0 = store.getContainer().beginLocalTransaction();
+    store.update(testObjectName, testObject);
+    tx0.commit();
+    assertEquals(1, store.getReadOnly(testObjectName).getValue());
+    //
+    JacisLocalTransaction tx1 = store.getContainer().beginLocalTransaction();
+    JacisTransactionHandle tx1Handle = testHelper.suspendTx();
+    JacisLocalTransaction tx2 = store.getContainer().beginLocalTransaction();
+    JacisTransactionHandle tx2Handle = testHelper.suspendTx();
+    //
+    testHelper.resumeTx(tx1Handle);
+    assertEquals(1, store.lockReadOnly(testObjectName).getValue()); // OPTIMISTIC LOCKED
+    testHelper.suspendTx();
+    //
+    testHelper.resumeTx(tx2Handle);
+    store.update(testObjectName, store.get(testObjectName).setValue(2));
+    testHelper.suspendTx();
+    //
+    testHelper.resumeTx(tx1Handle);
+    assertEquals(1, store.getReadOnly(testObjectName).getValue());
+    testHelper.suspendTx();
+    //
+    testHelper.resumeTx(tx2Handle);
+    tx2.commit();
+    //
+    testHelper.resumeTx(tx1Handle);
+    assertEquals(2, store.getReadOnly(testObjectName).getValue());
+    // tx2 committed, read only not cloning -> updated value
+    // BUT object locked -> STALE expected!
+    try {
+      tx1.commit();
+      throw new IllegalStateException("Commit should throw stale because object was locked optimistically!");
+    } catch (JacisStaleObjectException e) { // expected
+      log.info("Caught expected exception: " + e);
+    }
   }
 
   protected void sleep(long duration) {

@@ -33,6 +33,8 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   private final long creationTimestamp;
   /** the entries with an own view in this TX */
   private final Map<K, StoreEntryTxView<K, TV, CV>> storeTxView;
+  /** map of optimistic locks created for entries of the store */
+  private Map<K, Long> optimisticLockVersionMap;
   /** the name of the TX if this is a read only snapshot (null <-> writable) */
   private final String readOnlyTxId;
   /** reference to the main store */
@@ -200,6 +202,34 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
       entryTxView.updateValue(newValue);
     }
     trackUpdateAtViews(entryTxView.getOrigValue(), newValue, entryTxView);
+  }
+
+  public void addOptimisticLock(K key, StoreEntry<K, TV, CV> committedEntry) {
+    if (optimisticLockVersionMap == null) {
+      optimisticLockVersionMap = new HashMap<>();
+    }
+    optimisticLockVersionMap.putIfAbsent(key, committedEntry.getVersion());
+  }
+
+  public void addOptimisticLock(K key, StoreEntryTxView<K, TV, CV> entryTxView) {
+    if (optimisticLockVersionMap == null) {
+      optimisticLockVersionMap = new HashMap<>();
+    }
+    optimisticLockVersionMap.putIfAbsent(key, entryTxView.getOrigVersion());
+  }
+
+  public void removeOptimisticLock(K key) {
+    if (optimisticLockVersionMap != null) {
+      optimisticLockVersionMap.remove(key);
+    }
+  }
+
+  public Long getOptimisticLockVersion(K key) {
+    return optimisticLockVersionMap == null ? null : optimisticLockVersionMap.get(key);
+  }
+
+  public Map<K, Long> getOptimisticLockVersionMap() {
+    return optimisticLockVersionMap;
   }
 
   private boolean isTrackingAtIndicesRequired() {

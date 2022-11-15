@@ -4,6 +4,8 @@
 
 package org.jacis.store;
 
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.locks.ReadWriteLock;
 
 import org.jacis.container.JacisTransactionHandle;
@@ -61,9 +63,19 @@ class StoreTxDemarcationExecutor {
     executeDirtyCheck(store, txView);
     logger.trace("prepare {} on {} by Thread {}", txView, this, Thread.currentThread().getName());
     txView.startCommitPhase();
-    if (txView.getNumberOfUpdatedEntries() > 0) {
+    Map<K, Long> optimisticLockVersionMap = txView.getOptimisticLockVersionMap();
+    if (txView.getNumberOfUpdatedEntries() > 0 || optimisticLockVersionMap != null) {
       try {
         storeAccessLock.writeLock().lock();
+        if (optimisticLockVersionMap != null) {
+          for (Entry<K, Long> optLock : optimisticLockVersionMap.entrySet()) {
+            Long lockedVersion = optLock.getValue();
+            StoreEntry<K, TV, CV> entryCommitted = store.getCommittedEntry(optLock.getKey());
+            StoreEntryTxView<K, TV, CV> entryTxView = new StoreEntryTxView<>(entryCommitted, lockedVersion);
+            entryTxView.assertNotStale(txView);
+            entryCommitted.lockedFor(txView);
+          }
+        }
         for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
           StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
           if (entryTxView.isUpdated()) {

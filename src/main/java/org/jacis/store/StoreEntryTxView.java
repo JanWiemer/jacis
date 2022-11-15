@@ -51,6 +51,13 @@ class StoreEntryTxView<K, TV, CV> {
     this.origVersion = orig.origVersion;
   }
 
+  StoreEntryTxView(StoreEntry<K, TV, CV> committedEntry, long lockedVersion) { // for optimistic locking without cloning (lockReadOnly)
+    this.committedEntry = committedEntry;
+    this.txValue = null;
+    this.origVersion = lockedVersion;
+    origValue = null;
+  }
+
   void updateValue(TV newValue) {
     this.txValue = newValue;
     this.updated = true;

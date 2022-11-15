@@ -252,6 +252,19 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   @Override
+  public TV lockReadOnly(K key) {
+    return lockReadOnly(key, getOrCreateTxView());
+  }
+
+  @Override
+  public void unlock(K key) {
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    if (txView != null) {
+      txView.removeOptimisticLock(key);
+    }
+  }
+
+  @Override
   public <P> P getProjectionReadOnly(K key, Function<TV, P> projection) {
     return projection.apply(getReadOnly(key));
   }
@@ -273,6 +286,11 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return keyStream().map(k -> getReadOnly(k, txView)).filter(Objects::nonNull);
   }
 
+  public Stream<TV> streamAndLockReadOnly() {
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    return keyStream().map(k -> lockReadOnly(k, txView)).filter(Objects::nonNull);
+  }
+
   @Override
   public Stream<TV> stream(Predicate<TV> filter) {
     if (filter != null) {
@@ -291,6 +309,15 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
       return keyStream().map(k -> getReadOnly(k, txView)).filter(v -> v != null && filter.test(v));
     } else {
       return streamReadOnly();
+    }
+  }
+
+  public Stream<TV> streamAndLockReadOnly(Predicate<TV> filter) {
+    if (filter != null) {
+      JacisStoreTxView<K, TV, CV> txView = getTxView();
+      return keyStream().map(k -> lockReadOnly(k, txView)).filter(v -> v != null && filter.test(v));
+    } else {
+      return streamAndLockReadOnly();
     }
   }
 
@@ -332,6 +359,11 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   @Override
+  public List<TV> lockAllReadOnly(Predicate<TV> filter) {
+    return streamAndLockReadOnly(filter).collect(Collectors.toList());
+  }
+
+  @Override
   public List<TV> getReadOnlySnapshot(Predicate<TV> filter) {
     ArrayList<TV> res = new ArrayList<TV>(size());
     if (filter == null) {
@@ -370,6 +402,11 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   @Override
   public List<TV> getAllReadOnlyAtomic(Predicate<TV> filter) {
     return computeAtomic(() -> getAllReadOnly(filter));
+  }
+
+  @Override
+  public List<TV> lockAllReadOnlyAtomic(Predicate<TV> filter) {
+    return computeAtomic(() -> lockAllReadOnly(filter));
   }
 
   @Override
@@ -592,6 +629,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   @Override
+  public Long getLockedVersion(K key) {
+    JacisStoreTxView<K, TV, CV> txView = getTxView();
+    return txView == null ? null : txView.getOptimisticLockVersion(key);
+  }
+
+  @Override
   public long getCommittedVersion(K key) {
     StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
     return committedEntry != null ? committedEntry.getVersion() : -1;
@@ -659,6 +702,18 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     }
   }
 
+  private TV lockReadOnly(K key, JacisStoreTxView<K, TV, CV> txView) {
+    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
+    if (entryTxView != null) {
+      txView.addOptimisticLock(key, entryTxView);
+      return entryTxView.getValue();
+    } else {
+      StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
+      txView.addOptimisticLock(key, committedEntry);
+      return committedEntry == null ? null : objectAdapter.cloneCommitted2ReadOnlyTxView(committedEntry.getValue());
+    }
+  }
+
   public TV get(K key, JacisStoreTxView<K, TV, CV> txView) {
     return getOrCreateEntryTxView(txView, key).getValue();
   }
@@ -689,7 +744,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   // helper methods to deal with committed entries
   // ======================================================================================
 
-  private StoreEntry<K, TV, CV> getCommittedEntry(K key) {
+  StoreEntry<K, TV, CV> getCommittedEntry(K key) {
     return store.get(key);
   }
 
