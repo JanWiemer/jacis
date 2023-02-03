@@ -18,6 +18,10 @@ public class StoreEntryBasedDirtyCheck<K, TV extends JacisDirtyTrackingObject> i
 
   @Override
   public boolean isDirty(K key, TV originalValue, TV currentValue) {
-    return currentValue.isDirty();
+    if(currentValue==null) {
+      return originalValue!=null;
+    } else {
+      return currentValue.isDirty();
+    }
   }
 }
