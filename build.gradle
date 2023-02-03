@@ -143,6 +143,7 @@ publishing {
       } else {
         url deploy_repo_snapshot
       }
+      allowInsecureProtocol = true
     }
   }  
 }
