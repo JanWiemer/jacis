@@ -30,7 +30,7 @@ public interface JacisModificationListener<K, V> {
 
   /**
    * Callback method called during the prepare phase of a transaction for each modified value.
-   * Note that implementing methods can throw an {@linke JacisModificationVetoException} to deny the modification and rollback the transaction.
+   * Note that implementing methods can throw an {@link JacisModificationVetoException} to deny the modification and rollback the transaction.
    *
    * @param key      The key of the modified object
    * @param oldValue The original value of the modified object when it was copied to the transactional view.
