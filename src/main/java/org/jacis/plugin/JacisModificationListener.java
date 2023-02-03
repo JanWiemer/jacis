@@ -7,6 +7,7 @@ package org.jacis.plugin;
 import org.jacis.JacisApi;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.container.JacisTransactionHandle;
+import org.jacis.exception.JacisModificationVetoException;
 import org.jacis.store.JacisStoreImpl;
 
 /**
@@ -26,6 +27,20 @@ import org.jacis.store.JacisStoreImpl;
  */
 @JacisApi
 public interface JacisModificationListener<K, V> {
+
+  /**
+   * Callback method called during the prepare phase of a transaction for each modified value.
+   * Note that implementing methods can throw an {@linke JacisModificationVetoException} to deny the modification and rollback the transaction.
+   *
+   * @param key      The key of the modified object
+   * @param oldValue The original value of the modified object when it was copied to the transactional view.
+   * @param newValue The new modified value that is written back to the committed values.
+   * @param tx       The transaction that is currently committed.
+   * @throws JacisModificationVetoException to deny the modification and rollback the transaction
+   */
+  default void onPrepareModification(K key, V oldValue, V newValue, JacisTransactionHandle tx) throws JacisModificationVetoException {
+    // default implementation empty
+  }
 
   /**
    * Callback method called during the commit phase of a transaction for each modified value written back

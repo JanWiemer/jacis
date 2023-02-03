@@ -14,6 +14,7 @@ import org.jacis.exception.JacisTrackedViewModificationException;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.dirtycheck.JacisDirtyCheck;
 import org.jacis.plugin.persistence.JacisPersistenceAdapter;
+import org.jacis.plugin.readonly.object.JacisReadonlyModeSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,8 +80,13 @@ class StoreTxDemarcationExecutor {
         for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
           StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
           if (entryTxView.isUpdated()) {
+            K key = entryTxView.getKey();
             entryTxView.assertNotStale(txView);
             entryCommitted.lockedFor(txView);
+            if (entryTxView.getValue() != null && store.getObjectTypeSpec().isReadOnlyModeSupport()) {
+              ((JacisReadonlyModeSupport) entryTxView.getValue()).switchToReadOnlyMode();
+            }
+            trackPrepareModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
           }
         }
         store.getIndexRegistry().lockUniqueIndexKeysForTx(txView.getTransaction());
@@ -201,6 +207,13 @@ class StoreTxDemarcationExecutor {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView != null) {
       txView.destroy();
+    }
+  }
+
+  private <K, TV, CV> void trackPrepareModification(JacisStoreImpl<K, TV, CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
+    assert store.getObjectTypeSpec().isTrackOriginalValueEnabled() : "Tracking prepaired modification is only possible if original value is tracked";
+    for (JacisModificationListener<K, TV> listener : store.getModificationListeners()) {
+      listener.onPrepareModification(key, oldValue, newValue, tx);
     }
   }
 

@@ -12,6 +12,7 @@ import org.jacis.plugin.dirtycheck.object.JacisDirtyTrackingObject;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 import org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter;
 import org.jacis.plugin.persistence.JacisPersistenceAdapter;
+import org.jacis.plugin.readonly.object.JacisReadonlyModeSupport;
 
 /**
  * Specification of the Objects in a Store
@@ -43,6 +44,8 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   private final Class<K> keyClass;
   /** Type of the values in the store */
   private final Class<TV> valueClass;
+  /** Flag indicating if the stored object supports a read only mode (implementing 'JacisReadonlyModeSupport'). */
+  private final boolean readOnlyModeSupport;
   /** The object adapter defining how to copy the committed values to the transactional view and back. */
   private JacisObjectAdapter<TV, CV> objectAdapter;
   /** The dirty check used to automatically set an transactional view to updated if it has changed */
@@ -59,6 +62,7 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   public JacisObjectTypeSpec(Class<K> keyClass, Class<TV> valueClass, JacisObjectAdapter<TV, CV> objectAdapter) {
     this.keyClass = keyClass;
     this.valueClass = valueClass;
+    readOnlyModeSupport = JacisReadonlyModeSupport.class.isAssignableFrom(valueClass);
     this.objectAdapter = objectAdapter;
     trackOriginalValue = true;
     checkViewsOnCommit = false;
@@ -126,6 +130,11 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   public JacisObjectTypeSpec<K, TV, CV> setPersistenceAdapter(JacisPersistenceAdapter<K, TV> persistenceAdapter) {
     this.persistenceAdapter = persistenceAdapter;
     return this;
+  }
+
+  /** @return if the stored object supports a read only mode (implementing 'JacisReadonlyModeSupport'). */
+  public boolean isReadOnlyModeSupport() {
+    return readOnlyModeSupport;
   }
 
   /** @return if the store keeps track of the original value of an object at the time it was copied to the transactional view (default: 'false'). */
