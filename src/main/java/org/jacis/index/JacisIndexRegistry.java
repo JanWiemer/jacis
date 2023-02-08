@@ -99,7 +99,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     String indexName = idx.getIndexName();
     store.executeAtomic(() -> {
       checkRegisterModificationListener();
-      nonUniqueIndexDataMap.put(indexName, new HashMap<>());
+      nonUniqueIndexDataMap.put(indexName, new ConcurrentHashMap<>());
       store.streamKeyValuePairsReadOnly(null).forEach(pair -> trackModificationAtNonUniqueIndex(idx, pair.getKey(), null, pair.getVal()));
     });
   }
