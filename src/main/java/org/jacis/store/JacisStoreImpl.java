@@ -715,6 +715,9 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   public TV get(K key, JacisStoreTxView<K, TV, CV> txView) {
+    if (txView.isCommitPending() && getObjectTypeSpec().isSwitchToReadOnlyModeInPrepare()) {
+      return getReadOnly(key);
+    }
     return getOrCreateEntryTxView(txView, key).getValue();
   }
 

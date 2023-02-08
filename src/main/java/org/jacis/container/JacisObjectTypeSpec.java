@@ -58,6 +58,8 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   private boolean checkViewsOnCommit = false;
   /** Defines if the read and write locks of the store sync on the global lock of the container synchronizing the whole prepare and commit phases for the container transaction. */
   private boolean syncStoreOnContainerTransaction = true;
+  /** Flag indicating if a modified object is switched to read only in the prepare phase of a transaction (preventing a later modification). */
+  private boolean switchToReadOnlyModeInPrepare = false;
 
   public JacisObjectTypeSpec(Class<K> keyClass, Class<TV> valueClass, JacisObjectAdapter<TV, CV> objectAdapter) {
     this.keyClass = keyClass;
@@ -152,6 +154,11 @@ public class JacisObjectTypeSpec<K, TV, CV> {
     return syncStoreOnContainerTransaction;
   }
 
+  /** @return if a modified object is switched to read only in the prepare phase of a transaction (preventing a later modification). */
+  public boolean isSwitchToReadOnlyModeInPrepare() {
+    return switchToReadOnlyModeInPrepare;
+  }
+
   /**
    * Sets if all registered tracked views are checked for consistency on each internalCommit (default: 'false').
    * Note that the value should only be set before the corresponding store is used, otherwise the behavior is undefined.
@@ -198,6 +205,20 @@ public class JacisObjectTypeSpec<K, TV, CV> {
    */
   public JacisObjectTypeSpec<K, TV, CV> setSyncStoreOnContainerTransaction(boolean syncStoreOnContainerTransaction) {
     this.syncStoreOnContainerTransaction = syncStoreOnContainerTransaction;
+    return this;
+  }
+
+  /**
+   * Sets if a modified object is switched to read only in the prepare phase of a transaction (preventing a later modification).
+   * 
+   * @param switchToReadOnlyModeInPrepare Define if a switch to read only mode is done during prepare.
+   * @return The object type specification itself for method chaining.
+   */
+  public JacisObjectTypeSpec<K, TV, CV> setSwitchToReadOnlyModeInPrepare(boolean switchToReadOnlyModeInPrepare) {
+    if(switchToReadOnlyModeInPrepare && !isReadOnlyModeSupport()) {
+      throw new IllegalArgumentException("Switching to read only mode during prepare is only supported if read only mode is supported!");
+    }
+    this.switchToReadOnlyModeInPrepare = switchToReadOnlyModeInPrepare;
     return this;
   }
 

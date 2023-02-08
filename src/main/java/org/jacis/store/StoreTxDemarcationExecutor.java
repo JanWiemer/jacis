@@ -83,7 +83,7 @@ class StoreTxDemarcationExecutor {
             K key = entryTxView.getKey();
             entryTxView.assertNotStale(txView);
             entryCommitted.lockedFor(txView);
-            if (entryTxView.getValue() != null && store.getObjectTypeSpec().isReadOnlyModeSupport()) {
+            if (entryTxView.getValue() != null && store.getObjectTypeSpec().isSwitchToReadOnlyModeInPrepare()) {
               ((JacisReadonlyModeSupport) entryTxView.getValue()).switchToReadOnlyMode();
             }
             trackPrepareModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
