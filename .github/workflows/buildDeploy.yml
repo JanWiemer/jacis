@@ -18,13 +18,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-#        os: [windows-latest]
         os: [windows-latest, ubuntu-latest, macos-latest]
         java: [8, 11, 17]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout 
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Fix Permissions
       run: chmod +x gradlew
     - name: Setup Java ${{ matrix.java }}
@@ -33,7 +32,7 @@ jobs:
         java-version: ${{ matrix.java }}
         distribution: 'temurin'
     - name: Test
-      uses: eskatos/gradle-command-action@v2
+      uses: gradle/gradle-build-action@v2
       with:
         arguments: build -Dreleasebuild=${{ github.event.inputs.release }}
 
@@ -53,7 +52,7 @@ jobs:
         java-version: 17
         distribution: 'temurin'
     - name: Deploy ( to https://maven.pkg.github.com/janwiemer/jacis )
-      uses: eskatos/gradle-command-action@v2
+      uses: gradle/gradle-build-action@v2
       with:
         arguments: publish -Dreleasebuild=${{ github.event.inputs.release }} -Dusedateversion=true -Ddeploy_user=JanWiemer -Ddeploy_pw=${{secrets.GITHUB_TOKEN}} -Ddeploy_repo_release=https://maven.pkg.github.com/janwiemer/jacis -Ddeploy_repo_snapshot=https://maven.pkg.github.com/janwiemer/jacis
       env:
