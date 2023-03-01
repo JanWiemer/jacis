@@ -58,13 +58,13 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
     - name: Determine Release versions
       if: ${{ github.event.inputs.release }} == true
-      uses: HardNorth/github-version-generate@v1.0.2
+      uses: HardNorth/github-version-generate@v1.3.0
       with:
         version-source: file
         version-file: gradle.properties
         version-file-extraction-pattern: '(?<=version=).+'
     - name: Get current time
-      uses: 1466587594/get-current-time@v2
+      uses: josStorer/get-current-time@v2
       id: current-time
       with:
         format: YYYYMMDD
