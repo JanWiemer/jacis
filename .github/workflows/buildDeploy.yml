@@ -31,6 +31,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         java-version: ${{ matrix.java }}
+        distribution: 'temurin'
     - name: Test
       uses: eskatos/gradle-command-action@v2
       with:
