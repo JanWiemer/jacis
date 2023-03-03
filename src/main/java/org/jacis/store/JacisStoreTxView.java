@@ -4,8 +4,11 @@
 
 package org.jacis.store;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,12 +52,16 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   private String invalidationReason = null;
   /** the number of entries of this TX view */
   private int numberOfEntries = 0;
+  /** updated sequence */
+  private int updateSequence = 0;
   /** the number of updated entries of this TX view */
   private int numberOfUpdatedEntries = 0;
   /** tracked views by this transaction view. The tracked views in this map are kept up-to-date during the current TX */
   private final Map<String, TrackedViewTransactionLocal<K, TV>> trackedViews;
   /** transaction view of the index values */
   private JacisIndexRegistryTxView<K, TV> indexRegistryTxView;
+  /** cached list of updated entries that have to be committed */
+  private List<StoreEntryTxView<K, TV, CV>> updatedEntries;
 
   JacisStoreTxView(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
     this.store = store;
@@ -150,6 +157,21 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
     return storeTxView.values();
   }
 
+  Collection<StoreEntryTxView<K, TV, CV>> getUpdatedEntriesForCommit() {
+    if (updatedEntries == null) {
+      updatedEntries = new ArrayList<>();
+      for (StoreEntryTxView<K, TV, CV> entry : getAllEntryTxViews()) {
+        if (entry.isUpdated()) {
+          updatedEntries.add(entry);
+        }
+      }
+      if (store.getObjectTypeSpec().isTrackModificationInOrderOfUpdateCalls()) {
+        Collections.sort(updatedEntries);
+      }
+    }
+    return updatedEntries;
+  }
+
   StoreEntryTxView<K, TV, CV> createTxViewEntry(StoreEntry<K, TV, CV> committedEntry) {
     StoreEntryTxView<K, TV, CV> entry = new StoreEntryTxView<>(committedEntry, store.getObjectTypeSpec().isTrackOriginalValueEnabled());
     storeTxView.put(entry.getKey(), entry);
@@ -186,6 +208,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   }
 
   void updateValue(StoreEntryTxView<K, TV, CV> entryTxView, TV newValue) {
+    updateSequence++;
     if (!entryTxView.isUpdated()) {
       numberOfUpdatedEntries++; // a new updated element
     }
@@ -195,11 +218,11 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
       if (prevValue == null) {
         prevValue = entryTxView.getOrigValue();
       }
-      entryTxView.updateValue(newValue);
+      entryTxView.updateValue(newValue, updateSequence);
       entryTxView.trackLastUpdated();
       trackUpdateAtIndices(entryTxView.getKey(), prevValue, newValue);
     } else {
-      entryTxView.updateValue(newValue);
+      entryTxView.updateValue(newValue, updateSequence);
     }
     trackUpdateAtViews(entryTxView.getOrigValue(), newValue, entryTxView);
   }

@@ -60,6 +60,8 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   private boolean syncStoreOnContainerTransaction = true;
   /** Flag indicating if a modified object is switched to read only in the prepare phase of a transaction (preventing a later modification). */
   private boolean switchToReadOnlyModeInPrepare = false;
+  /** Flag indicating if the track modification calls are executed in the order the update calls happened (default: true). */
+  private boolean trackModificationInOrderOfUpdateCalls = true;
 
   public JacisObjectTypeSpec(Class<K> keyClass, Class<TV> valueClass, JacisObjectAdapter<TV, CV> objectAdapter) {
     this.keyClass = keyClass;
@@ -159,6 +161,11 @@ public class JacisObjectTypeSpec<K, TV, CV> {
     return switchToReadOnlyModeInPrepare;
   }
 
+  /** @return if the track modification calls are executed in the order the update calls happened (default: true). */
+  public boolean isTrackModificationInOrderOfUpdateCalls() {
+    return trackModificationInOrderOfUpdateCalls ;
+  }
+
   /**
    * Sets if all registered tracked views are checked for consistency on each internalCommit (default: 'false').
    * Note that the value should only be set before the corresponding store is used, otherwise the behavior is undefined.
@@ -219,6 +226,11 @@ public class JacisObjectTypeSpec<K, TV, CV> {
       throw new IllegalArgumentException("Switching to read only mode during prepare is only supported if read only mode is supported!");
     }
     this.switchToReadOnlyModeInPrepare = switchToReadOnlyModeInPrepare;
+    return this;
+  }
+
+  public JacisObjectTypeSpec<K, TV, CV>  setTrackModificationInOrderOfUpdateCalls(boolean trackModificationInOrderOfUpdateCalls) {
+    this.trackModificationInOrderOfUpdateCalls = trackModificationInOrderOfUpdateCalls;
     return this;
   }
 

@@ -15,8 +15,8 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
-class StoreEntryTxView<K, TV, CV> {
-
+class StoreEntryTxView<K, TV, CV> implements Comparable<StoreEntryTxView<K, TV, CV>>{
+ 
   /** link to the committed entry (note this is the real committed instance that might be changed by other TXs) */
   private final StoreEntry<K, TV, CV> committedEntry;
   /** current value of the entry in this TX */
@@ -28,7 +28,7 @@ class StoreEntryTxView<K, TV, CV> {
   /** original version of the entry when cloning it to the transaction view (for optimistic locking) */
   private long origVersion;
   /** flag indicating if entry was updated in the current transaction (initially false) */
-  private boolean updated = false;
+  private int updated = 0;
 
   StoreEntryTxView(StoreEntry<K, TV, CV> committedEntry, boolean trackOriginal) {
     this.committedEntry = committedEntry;
@@ -58,9 +58,14 @@ class StoreEntryTxView<K, TV, CV> {
     origValue = null;
   }
 
-  void updateValue(TV newValue) {
+  @Override
+  public int compareTo(StoreEntryTxView<K, TV, CV> that) {
+    return Integer.compare(this.updated, that.updated); // try to preserve update order
+  }
+
+  void updateValue(TV newValue, int updateSeq) {
     this.txValue = newValue;
-    this.updated = true;
+    this.updated = updateSeq;
   }
 
   void refreshFromCommitted() {
@@ -72,7 +77,7 @@ class StoreEntryTxView<K, TV, CV> {
     } else {
       origValue = null;
     }
-    this.updated = false;
+    this.updated = 0;
   }
 
   void trackLastUpdated() {
@@ -114,7 +119,7 @@ class StoreEntryTxView<K, TV, CV> {
   }
 
   boolean isUpdated() {
-    return updated;
+    return updated > 0;
   }
 
   boolean isStale(JacisStoreTxView<K, TV, CV> txView) {
@@ -193,7 +198,7 @@ class StoreEntryTxView<K, TV, CV> {
   public String toString() {
     StringBuilder b = new StringBuilder();
     b.append(getKey()).append("->").append(txValue);
-    if (updated) {
+    if (isUpdated()) {
       b.append(" (updated from v.").append(origVersion).append(":").append(origValue).append(")");
     } else {
       b.append(" (v.").append(origVersion).append(")");

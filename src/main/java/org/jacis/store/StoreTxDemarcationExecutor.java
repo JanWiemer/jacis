@@ -4,6 +4,7 @@
 
 package org.jacis.store;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -77,17 +78,15 @@ class StoreTxDemarcationExecutor {
             entryCommitted.lockedFor(txView);
           }
         }
-        for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+        for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getUpdatedEntriesForCommit()) {
           StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
-          if (entryTxView.isUpdated()) {
-            K key = entryTxView.getKey();
-            entryTxView.assertNotStale(txView);
-            entryCommitted.lockedFor(txView);
-            if (entryTxView.getValue() != null && store.getObjectTypeSpec().isSwitchToReadOnlyModeInPrepare()) {
-              ((JacisReadonlyModeSupport) entryTxView.getValue()).switchToReadOnlyMode();
-            }
-            trackPrepareModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
+          K key = entryTxView.getKey();
+          entryTxView.assertNotStale(txView);
+          entryCommitted.lockedFor(txView);
+          if (entryTxView.getValue() != null && store.getObjectTypeSpec().isSwitchToReadOnlyModeInPrepare()) {
+            ((JacisReadonlyModeSupport) entryTxView.getValue()).switchToReadOnlyMode();
           }
+          trackPrepareModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
         }
         store.getIndexRegistry().lockUniqueIndexKeysForTx(txView.getTransaction());
       } finally {
@@ -120,18 +119,12 @@ class StoreTxDemarcationExecutor {
     RuntimeException toThrow = null;
     try {
       if (txView.getNumberOfUpdatedEntries() > 0) {
+        Collection<StoreEntryTxView<K, TV, CV>> updatedEntries = txView.getUpdatedEntriesForCommit();
         try {
           storeAccessLock.writeLock().lock();
           store.getIndexRegistry().unlockUniqueIndexKeysForTx(txView.getTransaction());
-          for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+          for (StoreEntryTxView<K, TV, CV> entryTxView : updatedEntries) {
             K key = entryTxView.getKey();
-            boolean isUpdated = entryTxView.isUpdated();
-            if (!isUpdated) {
-              continue;
-            }
-            if (trace) {
-              logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
-            }
             try {
               trackModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
             } catch (JacisTrackedViewModificationException e) {
@@ -141,11 +134,17 @@ class StoreTxDemarcationExecutor {
                 toThrow.addSuppressed(e);
               }
             }
+          }
+          for (StoreEntryTxView<K, TV, CV> entryTxView : updatedEntries) {
+            K key = entryTxView.getKey();
+            if (trace) {
+              logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
+            }
             store.updateCommittedEntry(key, (k, entryCommitted) -> {
               entryCommitted.update(entryTxView, txView);
               entryCommitted.releaseLockedFor(txView);
               return entryCommitted;
-            });
+            });            
           }
         } finally {
           storeAccessLock.writeLock().unlock();
