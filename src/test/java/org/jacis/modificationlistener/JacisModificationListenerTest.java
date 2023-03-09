@@ -5,32 +5,17 @@
 package org.jacis.modificationlistener;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisModificationVetoException;
-import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.plugin.JacisModificationListener;
-import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.store.JacisStore;
-import org.jacis.store.JacisTransactionInfo;
 import org.jacis.testhelper.JacisTestHelper;
 import org.jacis.testhelper.TestObject;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("CodeBlock2Expr")
 public class JacisModificationListenerTest {
-
-  private static final Logger log = LoggerFactory.getLogger(JacisModificationListenerTest.class);
 
   static class TestModificationListener implements JacisModificationListener<String,TestObject> {
 
