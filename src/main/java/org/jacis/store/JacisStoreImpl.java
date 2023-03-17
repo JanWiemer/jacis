@@ -39,13 +39,13 @@ import org.jacis.util.ConcurrentWeakHashMap;
 
 /**
  * Storing a single type of objects.
- *
+ * <p>
  * All operations checking or returning entries of the store operate on the committed values merged with the
  * current transactional view (obtained with the currently active transaction handle from the map {@link #txViewMap}).
  * This means that first the transactional view is checked if it contains an entry for the desired key.
  * If so this entry is returned, otherwise the committed value from the core store (see {@link #store}) is returned.
  * Note that if an object is deleted in a transaction an entry with the value <code>null</code> remains in the transactional view.
- * Therefore also deletions are properly handled with respect to isolation.
+ * Therefore, also deletions are properly handled with respect to isolation.
  *
  * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
@@ -200,11 +200,6 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return txView != null && txView.getNumberOfUpdatedEntries() > 0;
   }
 
-  public boolean hasObjectsInCurrentTxView() {
-    JacisStoreTxView<K, TV, CV> txView = getTxView(false);
-    return txView != null && txView.getNumberOfEntries() > 0;
-  }
-
   @Override
   public boolean containsKey(K key) {
     JacisStoreTxView<K, TV, CV> txView = getTxView();
@@ -269,9 +264,9 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return projection.apply(getReadOnly(key));
   }
 
-  /** @return a stream of all keys currently stored in the store. Note that the keys added by any pending transactions are contained (with null values if not jet committed). */
+  /** @return a stream of all keys currently stored in the store. Note that the keys added by any pending transactions are contained (with null values if not yet committed). */
   private Stream<K> keyStream() {
-    return store.keySet().stream(); // store contains also new entries (with null value)! Therefore iterating the keys is usually enough
+    return store.keySet().stream(); // store contains also new entries (with null value)! Therefore, iterating the keys is usually enough
   }
 
   @Override
@@ -365,7 +360,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
 
   @Override
   public List<TV> getReadOnlySnapshot(Predicate<TV> filter) {
-    ArrayList<TV> res = new ArrayList<TV>(size());
+    ArrayList<TV> res = new ArrayList<>(size());
     if (filter == null) {
       return getReadOnlySnapshot();
     }
@@ -383,7 +378,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
 
   @Override
   public List<TV> getReadOnlySnapshot() {
-    ArrayList<TV> res = new ArrayList<TV>(size());
+    ArrayList<TV> res = new ArrayList<>(size());
     for (StoreEntry<K, TV, CV> storeEntry : store.values()) {
       CV cv = storeEntry.getValue();
       if (cv != null) {
@@ -411,7 +406,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
 
   @Override
   public List<TV> getReadOnlySnapshotAtomic() {
-    return computeAtomic(() -> getReadOnlySnapshot());
+    return computeAtomic(this::getReadOnlySnapshot);
   }
 
   @Override
@@ -490,15 +485,15 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
         for (ST entry : entries) {
           K key = keyExtractor.apply(entry);
           TV val = valueExtractor.apply(entry);
-          store.put(key, new StoreEntry<K, TV, CV>(this, key, val));
+          store.put(key, new StoreEntry<>(this, key, val));
           for (JacisModificationListener<K, TV> listener : modListeners) {
             listener.onModification(key, null, val, null);
           }
         }
       } else {
-        boolean allModificationListenersThreadSafe = modListeners.stream().allMatch(l -> l.isThreadSafe());
+        boolean allModificationListenersThreadSafe = modListeners.stream().allMatch(JacisModificationListener::isThreadSafe);
         int usedThreads = Math.min(nThreads, entries.size() / 100);
-        List<Thread> threads = new ArrayList<Thread>(usedThreads);
+        List<Thread> threads = new ArrayList<>(usedThreads);
         int perThread = (entries.size() - 1) / usedThreads + 1;
         for (int threadNr = 0; threadNr < usedThreads; threadNr++) {
           int from = threadNr * perThread;
@@ -511,7 +506,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
                   ST entry = entries.get(idx);
                   K key = keyExtractor.apply(entry);
                   TV val = valueExtractor.apply(entry);
-                  store.put(key, new StoreEntry<K, TV, CV>(JacisStoreImpl.this, key, val));
+                  store.put(key, new StoreEntry<>(JacisStoreImpl.this, key, val));
                   for (JacisModificationListener<K, TV> listener : modListeners) {
                     listener.onModification(key, null, val, null); // for performance reasons we skip synchronization if listener is thread safe
                   }
@@ -521,11 +516,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
                   ST entry = entries.get(idx);
                   K key = keyExtractor.apply(entry);
                   TV val = valueExtractor.apply(entry);
-                  store.put(key, new StoreEntry<K, TV, CV>(JacisStoreImpl.this, key, val));
+                  store.put(key, new StoreEntry<>(JacisStoreImpl.this, key, val));
                   for (JacisModificationListener<K, TV> listener : modListeners) {
                     if (listener.isThreadSafe()) {
                       listener.onModification(key, null, val, null); // for performance reasons we skip synchronization if listener is thread safe
                     } else {
+                      //noinspection SynchronizationOnLocalVariableOrMethodParameter
                       synchronized (listener) { // if listener is *not* thread safe we need to synchronize access on the listener (note: we are initializing the store with multiple threads)
                         listener.onModification(key, null, val, null);
                       }
@@ -536,7 +532,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
             } // end of run() method
           });
         }
-        threads.forEach(t -> t.start());
+        threads.forEach(Thread::start);
         try {
           for (Thread thread : threads) {
             thread.join();
@@ -556,7 +552,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
 
   @Override
   public void initStoreNonTransactional(List<KeyValuePair<K, TV>> entries, int nThreads) {
-    initStoreNonTransactional(entries, e -> e.getKey(), e -> e.getVal(), nThreads);
+    initStoreNonTransactional(entries, KeyValuePair::getKey, KeyValuePair::getVal, nThreads);
   }
 
   @Override
@@ -575,12 +571,12 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   @Override
-  public void executeGlobalAtomic(Runnable atomicOperation) { // Execute an global atomic operation. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
+  public void executeGlobalAtomic(Runnable atomicOperation) { // Execute a global atomic operation. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
     executeAtomic(() -> container.executeGlobalAtomic(atomicOperation));
   }
 
   @Override
-  public <R> R computeGlobalAtomic(Supplier<R> atomicOperation) { // Execute an global atomic operation for the current store. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
+  public <R> R computeGlobalAtomic(Supplier<R> atomicOperation) { // Execute a global atomic operation for the current store. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
     return computeAtomic(() -> container.computeGlobalAtomic(atomicOperation));
   }
 
@@ -703,7 +699,8 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   }
 
   private TV lockReadOnly(K key, JacisStoreTxView<K, TV, CV> txView) {
-    StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
+    assert txView != null;
+    StoreEntryTxView<K, TV, CV> entryTxView = txView.getEntryTxView(key);
     if (entryTxView != null) {
       txView.addOptimisticLock(key, entryTxView);
       return entryTxView.getValue();
@@ -772,6 +769,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   // synchronized execution
   // ======================================================================================
 
+  @SuppressWarnings("UnusedReturnValue")
   private <R> R withWriteLock(Supplier<R> task) {
     storeAccessLock.writeLock().lock(); // <======= **WRITE** LOCK =====
     try {
@@ -845,9 +843,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     Collection<JacisStoreTxView<K, TV, CV>> txs;
     txs = new ArrayList<>(txViewMap.size() + 5); // safety, size may vary
     try {
-      for (JacisStoreTxView<K, TV, CV> txView : txViewMap.values()) {
-        txs.add(txView);
-      }
+      txs.addAll(txViewMap.values());
     } catch (NoSuchElementException e) {
       // all entries still there have been visited
     }

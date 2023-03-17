@@ -16,6 +16,7 @@ import org.jacis.plugin.readonly.JacisStoreEntryReadOnlyModeAdapter;
  * @author Jan Wiemer
  */
 @JacisApi
+@SuppressWarnings({"unused", "UnusedReturnValue"}) // since this is an API of the library
 public class JacisCloningObjectAdapterUnsafe<V> extends JacisCloningObjectAdapter<V> {
 
   /**
@@ -26,7 +27,7 @@ public class JacisCloningObjectAdapterUnsafe<V> extends JacisCloningObjectAdapte
   public JacisCloningObjectAdapterUnsafe(JacisStoreEntryReadOnlyModeAdapter<V> readOnlyModeAdapters) {
     super(readOnlyModeAdapters);
     if (readOnlyModeAdapters == null) {
-      throw new IllegalArgumentException(this.getClass().getName() + " can only be initialized with a read onbly mode adapter!");
+      throw new IllegalArgumentException(this.getClass().getName() + " can only be initialized with a read only mode adapter!");
     }
   }
 

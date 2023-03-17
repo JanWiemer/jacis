@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Jan Wiemer
  */
+@SuppressWarnings({"unused", "UnusedReturnValue"}) // since this is an API of the library
 @JacisApi // because it is intended to be extended
 public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransactionAdapter {
 
@@ -56,10 +57,10 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
 
   /**
    * Compute a transaction ID for the transaction handle.
-   * The default implementation uses the passes sequence Id.
+   * The default implementation uses the passes sequence id.
    *
    * @param tx         The external JTA transaction.
-   * @param sequenceId The internally manager transaction sequence.
+   * @param sequenceId The internal manager transaction sequence.
    * @return a transaction ID for the transaction handle.
    */
   protected String computeJacisTxId(@SuppressWarnings("UnusedParameters") Transaction tx, long sequenceId) {
@@ -153,8 +154,8 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
       String txId = computeJacisTxId(tx, txNr);
       String txDescription = computeJacisTxDescription(tx, txId);
       JacisTransactionHandle txHandle = new JacisTransactionHandle(txId, txDescription, tx);
-      Synchronization jacisSyncronization = new JacisSync(container, txHandle);
-      registerJacisSynchronization(tx, jacisSyncronization);
+      Synchronization jacisSynchronization = new JacisSync(container, txHandle);
+      registerJacisSynchronization(tx, jacisSynchronization);
       transactionMap.put(tx, txHandle);
       if (log.isTraceEnabled()) {
         log.trace("{} created new handle [{}] for JTA-Tx=[{}]. Thread: {}", this, txHandle, tx, Thread.currentThread().getName());
@@ -165,8 +166,8 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
     }
   }
 
-  protected void registerJacisSynchronization(Transaction tx, Synchronization jacisSyncronization) throws RollbackException, SystemException {
-    tx.registerSynchronization(jacisSyncronization);
+  protected void registerJacisSynchronization(Transaction tx, Synchronization jacisSynchronization) throws RollbackException, SystemException {
+    tx.registerSynchronization(jacisSynchronization);
   }
 
   @Override
@@ -217,6 +218,7 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
         txInfo = container.getTransactionInfo(txHandle);
       }
       if (txInfo != null) {
+        //noinspection SpellCheckingInspection
         // b.append("#stores: ").append(txInfo.getStoreTxInfos().size()).append(":");
         for (JacisTransactionInfo.StoreTxInfo storeTxInfo : txInfo.getStoreTxInfos()) {
           b.append(storeTxInfo.getStoreIdentifier().getValueClass().getSimpleName());

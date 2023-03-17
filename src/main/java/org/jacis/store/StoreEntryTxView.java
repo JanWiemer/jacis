@@ -7,6 +7,8 @@ package org.jacis.store;
 import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
+import java.util.Objects;
+
 /**
  * Representing the view of a store entry the current transaction currently sees.
  *
@@ -191,7 +193,7 @@ class StoreEntryTxView<K, TV, CV> implements Comparable<StoreEntryTxView<K, TV, 
       return false;
     }
     StoreEntryTxView<?, ?, ?> that = (StoreEntryTxView<?, ?, ?>) obj;
-    return committedEntry == null ? that.committedEntry == null : committedEntry.equals(that.committedEntry);
+    return Objects.equals(committedEntry, that.committedEntry);
   }
 
   @Override

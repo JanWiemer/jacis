@@ -15,7 +15,7 @@ import org.jacis.store.JacisStore;
 class MicrostreamRoot {
 
   /** Map containing the root object for each JACIS store. */
-  private Map<StoreIdentifier, MicrostreamStoreRoot<?, ?>> storeRootMap = new HashMap<>();
+  private final Map<StoreIdentifier, MicrostreamStoreRoot<?, ?>> storeRootMap = new HashMap<>();
 
   @Override
   public String toString() {

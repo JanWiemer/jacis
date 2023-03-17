@@ -25,18 +25,19 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
  * Storing a single type of objects.
- * 
+ * </p>
  * All operations checking or returning entries of the store operate on the committed values merged with the
  * current transactional view (obtained with the currently active transaction handle from the map of transaction views).
  * This means that first the transactional view is checked if it contains an entry for the desired key.
  * If so this entry is returned, otherwise the committed value from the core store is returned.
  * Note that if an object is deleted in a transaction an entry with the value <code>null</code> remains in the transactional view.
- * Therefore also deletions are properly handled with respect to isolation.
+ * Therefore, also deletions are properly handled with respect to isolation.
  * 
  * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @author Jan Wiemer
  */
+@SuppressWarnings("unused") // since this is an API of the library
 @JacisApi
 public interface JacisStore<K, TV> {
 
@@ -87,7 +88,7 @@ public interface JacisStore<K, TV> {
   <IK> JacisNonUniqueIndex<IK, K, TV> getNonUniqueIndex(String indexName);
 
   /**
-   * Create and register an unique Index to access the values in the store by an index key.
+   * Create and register a unique Index to access the values in the store by an index key.
    * 
    * @param <IK>             The type of the index key.
    * @param indexName        The Name of the index (has to be unique).
@@ -150,7 +151,7 @@ public interface JacisStore<K, TV> {
    * Returns if the object for the passed key has been updated in the current transaction.
    * Note that an update has to be explicitly called for an object (by calling {@link #update(Object, Object)}).
    * The check returns true if there exists a transactional view
-   * and the updated flag of this entry (see {@link StoreEntryTxView#updated}) is set (set by the 'update' method).
+   * and the updated flag of this entry (see <code>StoreEntryTxView#updated</code>) is set (set by the 'update' method).
    * Note that this method does not cause the referred object to be copied to the transactional view.
    *
    * @param key The key of the entry to check.
@@ -193,9 +194,9 @@ public interface JacisStore<K, TV> {
   /**
    * Returns the value for the passed key.
    * If the object is already stored in the transactional view of the current transaction this value is returned.
-   * Otherwise the behavior depends on the object type:
+   * Otherwise, the behavior depends on the object type:
    * If the object adapter for the store supports a read only mode, then a read only view on the committed value is returned.
-   * Otherwise the committed entry for the key it is copied to the transactional view now.
+   * Otherwise, the committed entry for the key it is copied to the transactional view now.
    *
    * @param key The key of the desired entry.
    * @return the value for the passed key.
@@ -205,11 +206,11 @@ public interface JacisStore<K, TV> {
   /**
    * Returns the value for the passed key and ensures it is locked optimistically to the current version.
    * If the object is already stored in the transactional view of the current transaction this value is returned.
-   * Otherwise the behavior depends on the object type:
+   * Otherwise, the behavior depends on the object type:
    * If the object adapter for the store supports a read only mode, then a read only view on the committed value is returned.
-   * Additionally the current version of the object is stored.
+   * Additionally, the current version of the object is stored.
    * During commit this version is compared to the version of the object at commit time.
-   * If the commited object has been changed in the meantime a {@link JacisStaleObjectException} is thrown
+   * If the committed object has been changed in the meantime a {@link JacisStaleObjectException} is thrown
    * Otherwise the committed entry for the key it is copied to the transactional view now.
    *
    * @param key The key of the desired entry.
@@ -329,7 +330,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store.
-   * The method is independent from an active transaction and takes a read only snapshot of the objects committed in the store.
+   * The method is independent of an active transaction and takes a read only snapshot of the objects committed in the store.
    *
    * @return a list of read-only views for all committed objects (not <code>null</code>) currently stored in the store.
    */
@@ -337,7 +338,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
-   * The method is independent from an active transaction and takes a read only snapshot of the objects committed in the store.
+   * The method is independent of an active transaction and takes a read only snapshot of the objects committed in the store.
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting list (<code>null</code> means all objects should be contained)
    * @return a list of read-only views for all committed objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
@@ -347,7 +348,7 @@ public interface JacisStore<K, TV> {
   /**
    * Returns a list of all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    * The method executes the {@link #getAll(Predicate)} method as an atomic operations.
-   * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
+   * Therefore, this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
    * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting list (<code>null</code> means all objects should be contained)
@@ -358,7 +359,7 @@ public interface JacisStore<K, TV> {
   /**
    * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    * The method executes the {@link #getAllReadOnly(Predicate)} method as an atomic operations.
-   * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
+   * Therefore, this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
    * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting list (<code>null</code> means all objects should be contained)
@@ -370,7 +371,7 @@ public interface JacisStore<K, TV> {
    * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
    * Like the method {@link #lockReadOnly(Object)} it optimistically locks the returned objects to their current version.
    * The method executes the {@link #getAllReadOnly(Predicate)} method as an atomic operations.
-   * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
+   * Therefore, this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
    * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting list (<code>null</code> means all objects should be contained)
@@ -380,10 +381,10 @@ public interface JacisStore<K, TV> {
 
   /**
    * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store.
-   * The method is independent from an active transaction and takes a read only snapshot of the objects committed in the store.
+   * The method is independent of an active transaction and takes a read only snapshot of the objects committed in the store.
    * The method executes the {@link #getReadOnlySnapshot()} method as an atomic operations
    * (using this method it is possible to get a snapshot without 'phantom reads').
-   * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
+   * Therefore, this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
    * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
    * @return a list of read-only views for all objects (not <code>null</code>) currently stored in the store.
@@ -392,10 +393,10 @@ public interface JacisStore<K, TV> {
 
   /**
    * Returns a list of read-only views for all objects (not <code>null</code>) currently stored in the store filtered by the passed filter.
-   * The method is independent from an active transaction and takes a read only snapshot of the objects committed in the store.
+   * The method is independent of an active transaction and takes a read only snapshot of the objects committed in the store.
    * The method executes the {@link #getReadOnlySnapshot(Predicate)} method as an atomic operations
    * (using this method it is possible to get a snapshot without 'phantom reads').
-   * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
+   * Therefore, this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
    * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
    * @param filter a filter predicate deciding if an object should be contained in the resulting list (<code>null</code> means all objects should be contained)
@@ -437,8 +438,8 @@ public interface JacisStore<K, TV> {
    * Update the object for the passed key with the passed object value.
    * Note that the passed object instance may be the same (modified) instance obtained from the store before,
    * but also can be another instance.
-   * Internally the value of the transactional view (see {@link StoreEntryTxView#txValue}) for this object is replaced with the passed value
-   * and the transactional view is marked as updated (see {@link StoreEntryTxView#updated}).
+   * Internally the value of the transactional view (see <code>StoreEntryTxView#txValue</code>) for this object is replaced with the passed value
+   * and the transactional view is marked as updated (see <code>StoreEntryTxView#updated</code>).
    *
    * @param key   The key of the object to update.
    * @param value The updated object instance.
@@ -490,7 +491,7 @@ public interface JacisStore<K, TV> {
   /**
    * Initialize the store with the passed entries.
    * The actual key and value inserted into the store is computed by the passed extractor functions.
-   * Note that the method initializes the store in a non transactional manner.
+   * Note that the method initializes the store in a non-transactional manner.
    * The store has to be empty before. During initialization all commits are blocked.
    * By passing the number of threads that shall insert the passed values
    * 
@@ -498,31 +499,31 @@ public interface JacisStore<K, TV> {
    * @param keyExtractor   Method to extract the key from an entry.
    * @param valueExtractor Method to extract the value from an entry.
    * @param <ST>           The type of the entries
-   * @param nThreads       Number of threads to use for multythreaded inserts.
+   * @param nThreads       Number of threads to use for multithreaded inserts.
    */
   <ST> void initStoreNonTransactional(List<ST> entries, Function<ST, K> keyExtractor, Function<ST, TV> valueExtractor, int nThreads);
 
   /**
    * Initialize the store with the passed values.
    * The key is computed by the passed extractor function.
-   * Note that the method initializes the store in a non transactional manner.
+   * Note that the method initializes the store in a non-transactional manner.
    * The store has to be empty before. During initialization all commits are blocked.
    * By passing the number of threads that shall insert the passed values
    * 
    * @param values       The values the store is initialized with.
    * @param keyExtractor Method to extract the key from a value.
-   * @param nThreads     Number of threads to use for multythreaded inserts.
+   * @param nThreads     Number of threads to use for multithreaded inserts.
    */
   void initStoreNonTransactional(List<TV> values, Function<TV, K> keyExtractor, int nThreads);
 
   /**
    * Initialize the store with the passed key-value pairs.
-   * Note that the method initializes the store in a non transactional manner.
+   * Note that the method initializes the store in a non-transactional manner.
    * The store has to be empty before. During initialization all commits are blocked.
    * By passing the number of threads that shall insert the passed values
    * 
    * @param entries  The entries (key value pairs) from which the store is initialized.
-   * @param nThreads Number of threads to use for multythreaded inserts.
+   * @param nThreads Number of threads to use for multithreaded inserts.
    */
   void initStoreNonTransactional(List<KeyValuePair<K, TV>> entries, int nThreads);
 
@@ -566,7 +567,7 @@ public interface JacisStore<K, TV> {
   void executeGlobalAtomic(Runnable atomicOperation);
 
   /**
-   * Execute the passed operation (with return value) as an global atomic operation (atomic over all stores).
+   * Execute the passed operation (with return value) as a global atomic operation (atomic over all stores).
    * The execution of global atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap),
    * even if the commit is (currently) executed for any other store belonging to the same JACIS container.
    *
@@ -601,7 +602,7 @@ public interface JacisStore<K, TV> {
   /**
    * Accumulate a value from all objects with the passed accumulator function as an atomic operation.
    * The method executes the {@link #accumulate(Object, BiConsumer)} method as an atomic operations.
-   * Therefore this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
+   * Therefore, this method is passed as functional parameter to the {@link #computeAtomic(Supplier)} method.
    * The execution of atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap).
    *
    * @param target      The initial value for the target
@@ -621,8 +622,8 @@ public interface JacisStore<K, TV> {
 
   /**
    * Returns a read only version of the currently committed value of the object.
-   * The method can be called inside or outside of a transaction.
-   * 
+   * The method can be called inside or outside a transaction.
+   * </p>
    * Calling this method does not affect the current transaction view of the object.
    * If before the call the transaction has no own view of the object it will not have one after the call.
    * If before the call the transaction has an own view of the object this is ignored and a different instance
@@ -666,11 +667,11 @@ public interface JacisStore<K, TV> {
   long getCommittedVersion(K key);
 
   /**
-   * Returns a info object (type {@link StoreEntryInfo}) containing information regarding the current state of the object
+   * Returns an info object (type {@link StoreEntryInfo}) containing information regarding the current state of the object
    * (regarding the committed values and the current transactional view).
    *
    * @param key The key of the desired object.
-   * @return a info object (type {@link StoreEntryInfo}) containing information regarding the current state of the object.
+   * @return an info object (type {@link StoreEntryInfo}) containing information regarding the current state of the object.
    */
   StoreEntryInfo<K, TV> getObjectInfo(K key);
 

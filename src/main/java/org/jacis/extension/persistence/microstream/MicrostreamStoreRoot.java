@@ -31,11 +31,6 @@ class MicrostreamStoreRoot<K, V> {
   public String toString() {
     StringBuilder b = new StringBuilder();
     b.append("StorageRoot(").append(storeIdentifier.toShortString());
-//    if (firstElement == null) {
-//      b.append("->EMPTY");
-//    } else {
-//      b.append("->").append(firstElement).append("->...");
-//    }
     b.append(")");
     return b.toString();
   }

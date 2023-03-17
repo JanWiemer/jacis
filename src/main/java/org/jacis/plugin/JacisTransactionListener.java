@@ -10,7 +10,7 @@ import org.jacis.container.JacisTransactionHandle;
 
 /**
  * Listener that is informed on the lifecycle events of a transaction.
- *
+ * <p>
  * Listeners implementing this interface can be registered at a JACIS container
  * by passing it to the method {@link JacisContainer#registerTransactionListener(JacisTransactionListener)}.
  * Once registered on each lifecycle event of any transaction the container has joined causes the
@@ -24,7 +24,7 @@ public interface JacisTransactionListener {
   /**
    * @return if this transaction listener has to be executed synchronized together with the prepare / commit / rollback.
    */
-  default boolean isSynchronizedExceutionRequired() {
+  default boolean isSynchronizedExcecutionRequired() {
     return true;
   }
 

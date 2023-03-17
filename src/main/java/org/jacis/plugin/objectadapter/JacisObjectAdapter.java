@@ -8,18 +8,18 @@ import org.jacis.JacisApi;
 
 /**
  * The object adapter defines how to copy the objects to a transactional view and back.
- *
+ * <p>
  * This interface for an object adapter provides the methods how to transfer objects
  * from the store of committed objects to the transaction view and back.
  * The object adapter can be defined individually for each store, that is each object type.
  * The actual implementation is stored in the {@link org.jacis.container.JacisObjectTypeSpec} for a store
- * (see {@link org.jacis.container.JacisObjectTypeSpec#objectAdapter}).
- *
+ * (see <code>org.jacis.container.JacisObjectTypeSpec#objectAdapter</code>).
+ * <p>
  * The type parameters of this interface refer the type / class of the committed objects and the type / class
  * of the objects in the transactional view. The latter is the type the objects have for the outside world.
  * Depending on the implementation of the object adapter both types can be the same or different
  * (if e.g. the stored values are stored in a somehow compressed form).
- *
+ * <p>
  * There are two generic default implementations for an object that can be used:
  * * One default implementation copies the objects by cloning them using the Java 'clone' method
  * (see {@link org.jacis.plugin.objectadapter.cloning.JacisCloningObjectAdapter}).

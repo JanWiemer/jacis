@@ -27,11 +27,11 @@ public class MicrostreamStorage {
   private static final Logger log = LoggerFactory.getLogger(MicrostreamStorage.class);
 
   /** The Microstream storage manager used to persist entities. */
-  private StorageManager storageManager;
+  private final StorageManager storageManager;
   /** The root object stored by the Microstream storage manager. */
-  private MicrostreamRoot storageRoot;
+  private final MicrostreamRoot storageRoot;
   /** For each active transaction the set of modified (wrapper) objects to store */
-  private Map<JacisTransactionHandle, Set<Object>> objectsToStore = new HashMap<>();
+  private final Map<JacisTransactionHandle, Set<Object>> objectsToStore = new HashMap<>();
 
   public MicrostreamStorage(StorageManager storageManager) {
     this.storageManager = storageManager;

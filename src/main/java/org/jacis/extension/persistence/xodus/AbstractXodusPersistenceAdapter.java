@@ -25,10 +25,10 @@ import jetbrains.exodus.env.TransactionalComputable;
 /**
  * Abstract implementation of the JACIS persistence adapter based on JetBrains Xodus
  * (see <a href="https://github.com/JetBrains/xodus">https://github.com/JetBrains/xodus</a>).
- * 
+ * <p>
  * The Xodus store is a key value store.
  * Keys and values are represented as <code>ByteIterable</code> instances.
- * Therefore the keys and objects in the Jacis store have to be converted into this format
+ * Therefore, the keys and objects in the Jacis store have to be converted into this format
  * before they can be stored.
  * This implementation defines two abstract methods <code>encode</code> and <code>decode</code>
  * for this conversion and leaves the implementation up to the derived classes.
@@ -45,13 +45,13 @@ public abstract class AbstractXodusPersistenceAdapter<K, V> implements JacisPers
   /** Identifier of the JACIS store. */
   protected StoreIdentifier storeIdentifier;
   /** Flag that can be used to enable trace logging in the adapter implementation. */
-  protected boolean traceLogging;
+  protected final boolean traceLogging;
   /** Number of threads used to initialize the JACIS store with the initial (already stored) elements */
   private int initStoreThreads = 4;
   /** Set of objects modified during the transaction. */
   private List<KeyValuePair<ByteIterable, ByteIterable>> objectsToStore = null;
   /** The Xodus Environment providing methods to create stores and other helper methods. */
-  private Environment xodusEnv;
+  private final Environment xodusEnv;
   /** The Xodus store actually writing the objects to disk. */
   private Store xodusStore;
 
@@ -99,7 +99,7 @@ public abstract class AbstractXodusPersistenceAdapter<K, V> implements JacisPers
         }
       }
     });
-    store.initStoreNonTransactional(rootList, e -> e.getKey(), e -> e.getVal(), initStoreThreads);
+    store.initStoreNonTransactional(rootList, KeyValuePair::getKey, KeyValuePair::getVal, initStoreThreads);
     log.debug("{} init finished after {} (store: {}, xodusStore: {} (found {} persisted entries), initial store size: {})", //
         this, stopTime(t0), storeIdentifier.toShortString(), xodusStore, rootList.size(), store.size());
   }

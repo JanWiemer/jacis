@@ -12,7 +12,7 @@ import org.jacis.container.JacisTransactionHandle;
 
 /**
  * Transaction adapter that can be registered to bind the Jacis Store to externally managed transactions.
- *
+ * <p>
  * This interface declares the methods required by the Jacis Store to interact with externally managed transactions.
  * Basically the Jacis store
  *
@@ -45,6 +45,7 @@ public interface JacisTransactionAdapter {
   /**
    * Remove the association between the container and the external transaction (when the transaction is finished).
    */
+  @SuppressWarnings("SpellCheckingInspection")
   void disjoinCurrentTransaction();
 
   /**

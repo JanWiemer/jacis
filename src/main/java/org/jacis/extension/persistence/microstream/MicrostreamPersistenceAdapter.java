@@ -20,16 +20,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Implementation of the JACIS persistence adapter based on Microstream serialization
  * (see <a href="https://microstream.one/">https://microstream.one/</a>).
- * 
+ * <p>
  * Changes objects are passed to the Microstream storage manager on commit.
  * This way the data stored persistently is kept up to date.
  * If there is already persisted data on startup the JACIS store is initialized with this data.
- * 
+ * <p>
  * Implementation hint:
  * For performance reasons the actual entities stored by Microstream are held
  * in a custom implementation of a double-linked list.
  * Each list entry represents a store entry and contains the key and the value of the object.
- * We refer this objest as the Microstream entity object for the store entry.
+ * We refer this object as the Microstream entity object for the store entry.
  * For each key a (transient) map stores a reference to the list entry object.
  * This way modifying, adding and removing objects can be done in constant time independently of the store size.
  * 
@@ -45,13 +45,13 @@ public class MicrostreamPersistenceAdapter<K, V> implements JacisPersistenceAdap
   /** Identifier of the JACIS store. */
   private StoreIdentifier storeIdentifier;
   /** Flag that can be used to enable trace logging in the adapter implementation. */
-  private boolean traceLogging;
+  private final boolean traceLogging;
   /** The Microstream multistore persistence adapter used to persist entities. */
-  private MicrostreamStorage multistoreAdapter;
+  private final MicrostreamStorage multistoreAdapter;
   /** The root object stored by the Microstream storage manager. */
   private MicrostreamStoreRoot<K, V> storageRoot;
   /** A map storing the Microstream entity objects stored by the Microstream storage manager for each key in the store. */
-  private Map<K, MicrostreamStoreEntity<K, V>> key2entity;
+  private final Map<K, MicrostreamStoreEntity<K, V>> key2entity;
   /** Set of Microstream entity objects modified during the transaction. */
   private Set<Object> objectsToStore = null;
   /** Number of threads used to initialize the JACIS store with the initial (already stored) elements */
@@ -84,7 +84,7 @@ public class MicrostreamPersistenceAdapter<K, V> implements JacisPersistenceAdap
     long t0 = System.nanoTime();
     storageRoot = multistoreAdapter.getOrCreateStoreRoot(store);
     List<MicrostreamStoreEntity<K, V>> rootList = storageRoot.toList();
-    store.initStoreNonTransactional(rootList, e -> e.getKey(), e -> e.getValue(), initStoreThreads);
+    store.initStoreNonTransactional(rootList, MicrostreamStoreEntity::getKey, MicrostreamStoreEntity::getValue, initStoreThreads);
     log.debug("{} init finished after {} (store: {}, storage root: {} (found {} persisted entries), initial store size: {})", //
         this, stopTime(t0), storeIdentifier.toShortString(), storageRoot, rootList.size(), store.size());
     for (MicrostreamStoreEntity<K, V> entity : rootList) {

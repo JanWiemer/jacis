@@ -9,7 +9,7 @@ import org.jacis.plugin.JacisModificationListener;
 
 /**
  * Thrown when a {@link JacisModificationListener} has a veto against a tracked modification during the prepare phase.
- * In this case it can throw this exception to rollback the whole transaction
+ * In this case it can throw this exception to roll back the whole transaction
  *
  * @author Jan Wiemer
  */

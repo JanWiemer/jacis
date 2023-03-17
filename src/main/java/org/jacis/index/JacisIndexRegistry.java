@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
+import org.jacis.JacisApi;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisUniqueIndexViolationException;
 import org.jacis.plugin.JacisModificationListener;
@@ -23,13 +24,15 @@ import org.jacis.store.KeyValuePair;
  * The stored data contains the index definition (with the function to compute the index key for an object)
  * and the data maps for the indices.
  * For each index the data map contains the mapping from the index key to the primary key of the object in the store.
- * 
+ * <p>
  * Note that only modifications notified to the store via the update method are tracked at the indices.
  *
  * @author Jan Wiemer
  * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  */
+@JacisApi
+@SuppressWarnings({"unused", "UnusedReturnValue"}) // since this is an API of the library
 public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, TV> {
 
   /** Reference to the store this index registry belongs to */
@@ -58,8 +61,8 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
 
   public void clearIndices() {
     store.executeAtomic(() -> {
-      nonUniqueIndexDataMap.values().forEach(idxMap -> idxMap.clear());
-      uniqueIndexDataMap.values().forEach(idxMap -> idxMap.clear());
+      nonUniqueIndexDataMap.values().forEach(Map::clear);
+      uniqueIndexDataMap.values().forEach(Map::clear);
       uniqueIndexLockMap.clear();
     });
   }
@@ -245,6 +248,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     Map<Object, K> indexMap = uniqueIndexDataMap.get(indexName);
     if (regTxView != null) {
       Optional<K> txLocalResult = regTxView.getPrimaryKeyFromUniqueIndex(indexName, indexKey);
+      //noinspection OptionalAssignedToNull
       if (txLocalResult != null) {
         return txLocalResult.orElse(null);
       }

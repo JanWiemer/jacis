@@ -26,14 +26,14 @@ public class TransactionExecutor {
   /** Reference to the JACIS container used to create this transaction executor. */
   private final JacisContainer container;
 
-  /** The maximum number of retries if retriable exceptions (e.g. stale object exceptions) are thrown (default 6). */
+  /** The maximum number of retries if retry-able exceptions (e.g. stale object exceptions) are thrown (default 6). */
   private int maxRetries = 6;
   /** Predicate deciding if a retry is possible for an exception (default: true for JacisStaleObjectException). */
   private Predicate<Throwable> retryPossiblePredicate = t -> t instanceof JacisStaleObjectException;
   /** Handler performing additional actions on each failed attempt (default: only log the exception on WARN level). */
-  private FailedAttemptHandler failedAttemptHandler = (taskName, attempt, last, exception, hist) -> defaultHandleFailedAttempt(taskName, attempt, last, exception, hist);
+  private FailedAttemptHandler failedAttemptHandler = this::defaultHandleFailedAttempt;
   /** Function computing the delay in milliseconds before the task is retried (default: (attempt - 1) * 10) */
-  private RetryDelayFunction retryDelayFunction = (taskName, attempt, last, exceptionHist) -> (attempt - 1) * 10;
+  private RetryDelayFunction retryDelayFunction = (taskName, attempt, last, exceptionHist) -> (attempt - 1) * 10L;
 
   public TransactionExecutor(JacisContainer container) {
     this.container = container;
@@ -81,7 +81,7 @@ public class TransactionExecutor {
         }
       }
       try {
-        return executeSingleAtempt(task, taskName);
+        return executeSingleAttempt(task, taskName);
       } catch (Throwable e) {
         if (retryPossiblePredicate == null || !retryPossiblePredicate.test(e)) {
           throw wrap(e, taskName, attempt, exceptions);
@@ -100,7 +100,7 @@ public class TransactionExecutor {
     throw wrap(exceptions.get(exceptions.size() - 1), taskName, maxRetries + 1, exceptions);
   }
 
-  protected <R> R executeSingleAtempt(Supplier<R> task, String taskName) throws IllegalStateException {
+  protected <R> R executeSingleAttempt(Supplier<R> task, String taskName) throws IllegalStateException {
     JacisLocalTransaction tx = container.beginLocalTransaction(taskName);
     Throwable txException = null;
     try {
@@ -145,7 +145,7 @@ public class TransactionExecutor {
 
     public PreviousAttemptExceptions(List<Throwable> exceptions, String taskName) {
       super("Previously " + exceptions.size() + " attempts executing task >" + taskName + "< failed (see suppressed exceptions).");
-      exceptions.forEach(t -> addSuppressed(t));
+      exceptions.forEach(this::addSuppressed);
     }
 
     private static final long serialVersionUID = 1L;
@@ -154,13 +154,13 @@ public class TransactionExecutor {
 
   /** Functional interface for a handler executing some additional logic after each failed attempt. */
   @FunctionalInterface
-  public static interface FailedAttemptHandler {
-    public void handleFailedAttempt(String taskName, int attemptNr, boolean lastAttempt, Throwable exception, List<Throwable> prevExceptions);
+  public interface FailedAttemptHandler {
+    void handleFailedAttempt(String taskName, int attemptNr, boolean lastAttempt, Throwable exception, List<Throwable> prevExceptions);
   }
 
   /** Functional interface for a method computing the delay before executing a retry. */
   @FunctionalInterface
-  public static interface RetryDelayFunction {
-    public long computeDelayBeforeRetry(String taskName, int attempt, boolean lastAttempt, List<Throwable> exceptions);
+  public interface RetryDelayFunction {
+    long computeDelayBeforeRetry(String taskName, int attempt, boolean lastAttempt, List<Throwable> exceptions);
   }
 }

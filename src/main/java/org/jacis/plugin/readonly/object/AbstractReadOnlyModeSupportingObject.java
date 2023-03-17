@@ -9,11 +9,11 @@ import org.jacis.exception.ReadOnlyException;
 
 /**
  * Abstract base class for objects supporting switching them between the usual read-write mode and a read-only mode.
- * Therefore it implements the methods {@link #switchToReadOnlyMode()} and {@link #switchToReadWriteMode()} from
+ * Therefore, it implements the methods {@link #switchToReadOnlyMode()} and {@link #switchToReadWriteMode()} from
  * the {@link JacisReadonlyModeSupport} interface. Note that all the time only one single thread is allowed to
  * have write access to the object. When switching an object to read-write mode the current thread is stored
  * as thread with write access (see {@link #threadWithWriteAccess}).
- *
+ * <p>
  * For actual implementations the class provides the protected method {@link #checkWritable()}.
  * This method should be called prior to all modifying accesses to the object (e.g. in all setter-methods).
  * The method will throw a {@link ReadOnlyException} if the current thread has no write access to the object.
@@ -32,6 +32,7 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
     threadWithWriteAccess = Thread.currentThread(); // when creating the object its writable
   }
 
+  @SuppressWarnings("CloneDoesntDeclareCloneNotSupportedException")
   @Override
   protected Object clone() {
     try {
@@ -58,7 +59,7 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
 
   @Override
   public boolean isWritable() {
-    if (isSingleThreadedWriteAccessRequirred()) {
+    if (isSingleThreadedWriteAccessRequired()) {
       return Thread.currentThread().equals(threadWithWriteAccess);
     } else {
       return threadWithWriteAccess != null;
@@ -74,7 +75,7 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
   protected void checkWritable() throws ReadOnlyException {
     if (threadWithWriteAccess == null) {
       throw new ReadOnlyException("Object currently in read only mode! Accessing Thread: " + Thread.currentThread() + ". Object: " + this);
-    } else if (isSingleThreadedWriteAccessRequirred() && !threadWithWriteAccess.equals(Thread.currentThread())) {
+    } else if (isSingleThreadedWriteAccessRequired() && !threadWithWriteAccess.equals(Thread.currentThread())) {
       throw new ReadOnlyException("Object currently only writable for thread " + threadWithWriteAccess + "! Accessing Thread: " + Thread.currentThread() + ". Object: " + this);
     }
   }
@@ -84,7 +85,7 @@ public abstract class AbstractReadOnlyModeSupportingObject implements JacisReado
    * 
    * @return if single threaded write access is required (default: true)
    */
-  protected boolean isSingleThreadedWriteAccessRequirred() {
+  protected boolean isSingleThreadedWriteAccessRequired() {
     return WRITE_ACCESS_MODE_SINGLE_THREAD;
   }
 

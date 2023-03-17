@@ -4,6 +4,8 @@
 
 package org.jacis.store;
 
+import java.util.Objects;
+
 /**
  * Representing a committed version of an entry in the store.
  *
@@ -146,7 +148,7 @@ class StoreEntry<K, TV, CV> {
       return false;
     }
     StoreEntry<?, ?, ?> that = (StoreEntry<?, ?, ?>) obj;
-    return key == null ? that.key == null : key.equals(that.key);
+    return Objects.equals(key, that.key);
   }
 
   @Override

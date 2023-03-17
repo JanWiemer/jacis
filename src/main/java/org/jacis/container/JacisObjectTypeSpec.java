@@ -16,18 +16,18 @@ import org.jacis.plugin.readonly.object.JacisReadonlyModeSupport;
 
 /**
  * Specification of the Objects in a Store
- *
+ * <p>
  * Specification of an object type that shall be stored in a transactional store.
  * The pain purpose of the specification is to define the types (classes) for the keys and the values.
- *
- * Furthermore some configuration is defined in this class how the object store should deal with objects of this type.
+ * <p>
+ * Furthermore, some configuration is defined in this class how the object store should deal with objects of this type.
  * The basic concept how the transactional store works is that it stores an internal representation
  * of the committed versions of all objects. This representation is not visible to the outside.
  * Each read access from the outside gets back a copy (clone) of the internal representation
  * only visible for the current transaction. If an object should be updated inside a transaction the external
  * representation has to be modified and the store explicitly has to be notified about the change
  * by calling an update method (there is no automatic) dirty checking.
- *
+ * <p>
  * The mechanism how the objects are copied from the internal representation and back can be customized
  * (e.g. by cloning or by serialization and deserialization).
  * The object specification stores an {@link #objectAdapter} (type {@link JacisObjectAdapter}) implementing this mechanism.
@@ -37,6 +37,7 @@ import org.jacis.plugin.readonly.object.JacisReadonlyModeSupport;
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
+@SuppressWarnings({"unused", "UnusedReturnValue"}) // since this is an API of the library
 @JacisApi
 public class JacisObjectTypeSpec<K, TV, CV> {
 
@@ -48,7 +49,7 @@ public class JacisObjectTypeSpec<K, TV, CV> {
   private final boolean readOnlyModeSupport;
   /** The object adapter defining how to copy the committed values to the transactional view and back. */
   private JacisObjectAdapter<TV, CV> objectAdapter;
-  /** The dirty check used to automatically set an transactional view to updated if it has changed */
+  /** The dirty check used to automatically set a transactional view to updated if it has changed */
   private JacisDirtyCheck<K, TV> dirtyCheck;
   /** Optional adapter to a persistence framework to store the entries of the store persistently / durable */
   private JacisPersistenceAdapter<K, TV> persistenceAdapter;
@@ -104,7 +105,7 @@ public class JacisObjectTypeSpec<K, TV, CV> {
     return this;
   }
 
-  /** @return The dirty check used to automatically set an transactional view to updated if it has changed. */
+  /** @return The dirty check used to automatically set a transactional view to updated if it has changed. */
   public JacisDirtyCheck<K, TV> getDirtyCheck() {
     return dirtyCheck;
   }

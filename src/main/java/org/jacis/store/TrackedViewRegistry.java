@@ -58,9 +58,9 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
   @Override
   public boolean isThreadSafe() {
     if (threadSafe == null) {
-      threadSafe = viewMap.values().stream().allMatch(v -> v.isThreadSafe());
+      threadSafe = viewMap.values().stream().allMatch(TrackedView::isThreadSafe);
     }
-    return threadSafe.booleanValue(); // the tracked view registry is thread safe when all views are thread safe.
+    return threadSafe; // the tracked view registry is thread safe when all views are thread safe.
   }
 
   private void clearThreadSafeCache() {
@@ -132,12 +132,12 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
   }
 
   public <VT extends TrackedView<TV>> VT getView(String viewName) {
-    JacisStoreTxView<K, TV, ?> internelTxView = store.getTxView();
-    if (internelTxView == null) { // view is created outside a transaction -> we can not and do not need to track any modification in any transaction
+    JacisStoreTxView<K, TV, ?> internalTxView = store.getTxView();
+    if (internalTxView == null) { // view is created outside a transaction -> we can not and do not need to track any modification in any transaction
       return store.computeAtomic(() -> getAndCloneView(viewName));
     }
     Supplier<VT> viewSupplier = () -> store.computeAtomic(() -> getAndCloneView(viewName));
-    return internelTxView.getTrackedView(viewName, viewSupplier);
+    return internalTxView.getTrackedView(viewName, viewSupplier);
   }
 
   @SuppressWarnings("unchecked")
@@ -154,7 +154,6 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
     return (VT) viewMap.get(viewName);
   }
 
-  @SuppressWarnings("unchecked")
   public <SVK> Collection<SVK> getSubViewKeys(String viewName) {
     return store.computeAtomic(() -> {
       TrackedView<TV> view = viewMap.get(viewName);

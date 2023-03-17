@@ -4,12 +4,8 @@
 
 package org.jacis.container;
 
-import java.util.AbstractMap;
+import java.util.*;
 import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -45,7 +41,7 @@ import org.jacis.util.TransactionExecutor;
 
 /**
  * The Jacis container holding the stores for the different object types.
- * 
+ * <p>
  * The <em>JacisContainer</em> is the main class of the Java ACI Store.
  * The container stores a number of individual stores for different object types.
  * Transactions are managed by the container and are valid for all stores in the container.
@@ -53,6 +49,7 @@ import org.jacis.util.TransactionExecutor;
  *
  * @author Jan Wiemer
  */
+@SuppressWarnings("unused") // since this is an API of the library
 @JacisApi
 public class JacisContainer {
 
@@ -63,7 +60,7 @@ public class JacisContainer {
   /** List of transaction listeners / observers (type {@link JacisTransactionListener}) providing call-backs before / after prepare / internalCommit / rollback. */
   private final List<JacisTransactionListener> txListeners = new CopyOnWriteArrayList<>();
   /** ThreadLocal storing the transaction info object for the last finished transaction */
-  private ThreadLocal<JacisTransactionInfo> lastFinishedTransactionInfo = new ThreadLocal<>();
+  private final ThreadLocal<JacisTransactionInfo> lastFinishedTransactionInfo = new ThreadLocal<>();
   /** Lock object to synchronize the TX demarcation operations (prepare / commit / rollback) over all threads and stores. */
   private final ReadWriteLock transactionDemarcationLock = new ReentrantReadWriteLock(true);
 
@@ -206,7 +203,7 @@ public class JacisContainer {
    * The transaction is valid for all stores in the container.
    * Note that a locally managed transaction can only be started if the container
    * has been initialized with a transaction adapter for locally managed transactions
-   * (calling the constructor {@link #JacisContainer()}. Otherwise an {@link IllegalStateException} is thrown.
+   * (calling the constructor {@link #JacisContainer()}. Otherwise, an {@link IllegalStateException} is thrown.
    * The returned object represents the started transaction and provides method to internalCommit or rollback the transaction.
    * Note that each transaction is started with a description for logging and monitoring.
    * It is recommended to pass an explicit description by calling the method {@link #beginLocalTransaction(String)} ).
@@ -224,7 +221,8 @@ public class JacisContainer {
    * The transaction is valid for all stores in the container.
    * Note that a locally managed transaction can only be started if the container
    * has been initialized with a transaction adapter for locally managed transactions
-   * (calling the constructor {@link #JacisContainer()}. Otherwise an {@link IllegalStateException} is thrown.
+   * (calling the constructor {@link #JacisContainer()}).
+   * Otherwise, an {@link IllegalStateException} is thrown.
    * The returned object represents the started transaction and provides method to internalCommit or rollback the transaction.
    *
    * @param description a description of the transaction for logging and monitoring
@@ -343,7 +341,7 @@ public class JacisContainer {
   /**
    * This method returns a handle for the (local or global) transaction currently associated with the store for the current thread.
    * The passed flag determines if a {@link JacisNoTransactionException} is thrown when no transaction is active for the current thread.
-   * Otherwise the method simply returns null in case of a missing transaction.
+   * Otherwise, the method simply returns null in case of a missing transaction.
    * If the container has not yet joined the transaction represented by the handle it is registered now.
    *
    * @param createIfAbsent A flag indicating if a new transaction should be started if no transaction is active
@@ -372,6 +370,7 @@ public class JacisContainer {
     return handle;
   }
 
+  @SuppressWarnings("SpellCheckingInspection")
   public List<JacisTransactionInfo> getTransactionInfos() {
     Collection<JacisTransactionHandle> handles = txAdapter.getAllTransactionHandles();
     List<JacisTransactionInfo> res = new ArrayList<>(handles.size());
@@ -446,7 +445,7 @@ public class JacisContainer {
 
   protected boolean hasAnyTransactionListenersNeedingSynchronousExecution() {
     for (JacisTransactionListener txListener : txListeners) {
-      if (txListener.isSynchronizedExceutionRequired()) {
+      if (txListener.isSynchronizedExcecutionRequired()) {
         return true;
       }
     }
@@ -463,10 +462,10 @@ public class JacisContainer {
    * @param transaction The transaction handle representing the transaction to prepare.
    */
   public void internalPrepare(JacisTransactionHandle transaction) {
-    boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize
+    boolean executeSynchronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize
         || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
         || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
-    if (executeSyncronized) {
+    if (executeSynchronized) {
       transactionDemarcationLock.writeLock().lock();
     }
     try {
@@ -476,7 +475,7 @@ public class JacisContainer {
       }
       txListeners.forEach(l -> l.afterPrepare(this, transaction));
     } finally {
-      if (executeSyncronized) {
+      if (executeSynchronized) {
         transactionDemarcationLock.writeLock().unlock();
       }
     }
@@ -513,12 +512,12 @@ public class JacisContainer {
    *
    * @param atomicOperation The operation to execute atomically
    */
-  public void executeGlobalAtomic(Runnable atomicOperation) { // Execute an global atomic operation. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
+  public void executeGlobalAtomic(Runnable atomicOperation) { // Execute a global atomic operation. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
     withReadLock(runnableWrapper(atomicOperation));
   }
 
   /**
-   * Execute the passed operation (with return value) as an global atomic operation (atomic over all stores).
+   * Execute the passed operation (with return value) as a global atomic operation (atomic over all stores).
    * The execution of global atomic operations can not overlap with the execution of a commit (changing the visible data) of another transaction (but normal operations on other transactions may overlap),
    * even if the commit is (currently) executed for any other store belonging to the same JACIS container.
    *
@@ -526,7 +525,7 @@ public class JacisContainer {
    * @param <R>             The return type of the operation
    * @return The return value of the operation
    */
-  public <R> R computeGlobalAtomic(Supplier<R> atomicOperation) { // Execute an global atomic operation for the current store. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
+  public <R> R computeGlobalAtomic(Supplier<R> atomicOperation) { // Execute a global atomic operation for the current store. No prepare / commit / rollback of any other TX and no other global atomic action for any store will interleave.
     return withReadLock(atomicOperation);
   }
 
@@ -540,10 +539,10 @@ public class JacisContainer {
    * @param transaction The transaction handle representing the transaction to internalCommit.
    */
   public void internalCommit(JacisTransactionHandle transaction) { // NO-API
-    boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize
+    boolean executeSynchronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize
         || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
         || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
-    if (executeSyncronized) {
+    if (executeSynchronized) {
       transactionDemarcationLock.writeLock().lock();
     }
     try {
@@ -575,7 +574,7 @@ public class JacisContainer {
         buildAndThrowException(transaction, true, exceptions);
       }
     } finally {
-      if (executeSyncronized) {
+      if (executeSynchronized) {
         transactionDemarcationLock.writeLock().unlock();
       }
     }
@@ -591,9 +590,9 @@ public class JacisContainer {
    * @param transaction The transaction handle representing the transaction to rollback.
    */
   public void internalRollback(JacisTransactionHandle transaction) { // NO-API
-    boolean executeSyncronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize (dirty check can be ignored here)
+    boolean executeSynchronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize (dirty check can be ignored here)
         || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
-    if (executeSyncronized) {
+    if (executeSynchronized) {
       transactionDemarcationLock.writeLock().lock();
     }
     try {
@@ -617,10 +616,10 @@ public class JacisContainer {
       txListeners.forEach(l -> l.afterRollback(this, transaction));
       txAdapter.disjoinCurrentTransaction();
       if (exceptions != null && !exceptions.isEmpty()) {
-        buildAndThrowException(transaction, true, exceptions);
+        buildAndThrowException(transaction, false, exceptions);
       }
     } finally {
-      if (executeSyncronized) {
+      if (executeSynchronized) {
         transactionDemarcationLock.writeLock().unlock();
       }
     }
@@ -632,12 +631,12 @@ public class JacisContainer {
     if (firstException instanceof RuntimeException) {
       masterException = (RuntimeException) firstException;
       if (commit) {
-        masterException.addSuppressed(new JacisTxCommitException("Commiting TX " + transaction.getTxId() + " caused " + exceptions.size() + " exceptions (committing " + storeMap.size() + " stores)."));
+        masterException.addSuppressed(new JacisTxCommitException("Committing TX " + transaction.getTxId() + " caused " + exceptions.size() + " exceptions (committing " + storeMap.size() + " stores)."));
       } else {
         masterException.addSuppressed(new JacisTxRollbackException("Rollback TX " + transaction.getTxId() + " caused " + exceptions.size() + " exceptions (rolling " + storeMap.size() + " stores back)"));
       }
     } else if (commit) {
-      masterException = new JacisTxCommitException("Commiting TX " + transaction.getTxId() + " caused " + exceptions.size() + " exceptions (committing " + storeMap.size() + " stores).", firstException);
+      masterException = new JacisTxCommitException("Committing TX " + transaction.getTxId() + " caused " + exceptions.size() + " exceptions (committing " + storeMap.size() + " stores).", firstException);
     } else {
       masterException = new JacisTxRollbackException("Rollback TX " + transaction.getTxId() + " caused " + exceptions.size() + " exceptions (rolling" + storeMap.size() + " stores back).", firstException);
     }
@@ -708,10 +707,8 @@ public class JacisContainer {
         return false;
       }
       StoreIdentifier that = (StoreIdentifier) obj;
-      if (keyClass == null ? that.keyClass == null : keyClass.equals(that.keyClass)) {
-        if (valueClass == null ? that.valueClass == null : valueClass.equals(that.valueClass)) {
-          return true;
-        }
+      if (Objects.equals(keyClass, that.keyClass)) {
+        return Objects.equals(valueClass, that.valueClass);
       }
       return false;
     }

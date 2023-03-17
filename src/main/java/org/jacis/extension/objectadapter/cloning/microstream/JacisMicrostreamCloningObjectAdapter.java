@@ -19,7 +19,7 @@ import org.jacis.plugin.readonly.JacisStoreEntryReadOnlyModeAdapter;
  */
 public class JacisMicrostreamCloningObjectAdapter<V extends Serializable> extends AbstractJacisCloningObjectAdapter<V> {
 
-  private MicrostreamObjectCopier copier = MicrostreamObjectCopier.New();
+  private final MicrostreamObjectCopier copier = MicrostreamObjectCopier.New();
 
   /**
    * Create a cloning object adapter with the passed read only mode adapter.

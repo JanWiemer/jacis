@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  */
 class StoreTxDemarcationExecutor {
 
-  private Logger logger = LoggerFactory.getLogger(StoreTxDemarcationExecutor.class);
+  private final Logger logger = LoggerFactory.getLogger(StoreTxDemarcationExecutor.class);
 
   private <K, TV, CV> void executeDirtyCheck(JacisStoreAdminInterface<K, TV, CV> store, JacisStoreTxView<K, TV, CV> txView) {
     JacisDirtyCheck<K, TV> dirtyChecker = store.getObjectTypeSpec().getDirtyCheck();
@@ -210,7 +210,7 @@ class StoreTxDemarcationExecutor {
   }
 
   private <K, TV, CV> void trackPrepareModification(JacisStoreImpl<K, TV, CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
-    assert store.getObjectTypeSpec().isTrackOriginalValueEnabled() : "Tracking prepaired modification is only possible if original value is tracked";
+    assert store.getObjectTypeSpec().isTrackOriginalValueEnabled() : "Tracking prepared modification is only possible if original value is tracked";
     for (JacisModificationListener<K, TV> listener : store.getModificationListeners()) {
       listener.onPrepareModification(key, oldValue, newValue, tx);
     }

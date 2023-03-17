@@ -15,6 +15,7 @@ import org.jacis.store.JacisStore;
  *
  * @author Jan Wiemer
  */
+@SuppressWarnings({"unused", "UnusedReturnValue"}) // since this is an API of the library
 @JacisApi
 public class JacisModificationListenerException extends RuntimeException {
 

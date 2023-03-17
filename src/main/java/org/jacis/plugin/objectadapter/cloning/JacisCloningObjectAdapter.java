@@ -15,7 +15,7 @@ import org.jacis.plugin.readonly.JacisStoreEntryReadOnlyModeAdapter;
  * Implementation of the {@link AbstractJacisCloningObjectAdapter} cloning the objects based on Java serialization.
  * If the object is an instance of the {@link JacisCloneable} interface the {@link JacisCloneable#clone()} method
  * declared in this interface is used to clone the object.
- * Otherwise the object may be cloneable (overwrites the {@link Object#clone()} methods)
+ * Otherwise, the object may be cloneable (overwrites the {@link Object#clone()} methods)
  * but does not implement the {@link JacisCloneable} interface.
  * In this case the {@link Object#clone()} method is called by reflection.
  *

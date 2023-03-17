@@ -11,7 +11,7 @@ import java.util.function.Function;
 /**
  * Representing the transactional view on the indexes registered at the store for one transaction.
  * The transactional view stores the mapping of the index keys to the primary keys of the store
- * modified (due to modifications on the objects) inside of the corresponding transaction.
+ * modified (due to modifications on the objects) inside the corresponding transaction.
  * Note that only modifications notified to the store via the update method are tracked at the indices.
  *
  * @author Jan Wiemer
@@ -23,11 +23,11 @@ public class JacisIndexRegistryTxView<K, TV> {
   /** Reference to the index registry storing all indices registered for a store. */
   private final JacisIndexRegistry<K, TV> indexRegistry;
   /** Map containing the primary keys added for each index key inside the transaction for each non-unique index. */
-  private Map<String, Map<Object, Set<K>>> nonUniqueIndexAddMap = new HashMap<>();
+  private final Map<String, Map<Object, Set<K>>> nonUniqueIndexAddMap = new HashMap<>();
   /** Map containing the primary keys removed for each index key inside the transaction for each non-unique index. */
-  private Map<String, Map<Object, Set<K>>> nonUniqueIndexDelMap = new HashMap<>();
+  private final Map<String, Map<Object, Set<K>>> nonUniqueIndexDelMap = new HashMap<>();
   /** Map containing the unique index data for each unique index. */
-  private Map<String, Map<Object, Optional<K>>> uniqueIndexDataMap = new HashMap<>();
+  private final Map<String, Map<Object, Optional<K>>> uniqueIndexDataMap = new HashMap<>();
 
   public JacisIndexRegistryTxView(JacisIndexRegistry<K, TV> indexRegistry) {
     this.indexRegistry = indexRegistry;

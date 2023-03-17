@@ -20,20 +20,20 @@ import one.microstream.reference.Reference;
 
 interface MicrostreamObjectCopier extends Closeable {
 
-  public <T> T copy(T source);
+  <T> T copy(T source);
 
   @Override
-  public void close();
+  void close();
 
-  public static MicrostreamObjectCopier New() {
+  static MicrostreamObjectCopier New() {
     return new Default(BinaryPersistence.Foundation());
   }
 
-  public static MicrostreamObjectCopier New(final BinaryPersistenceFoundation<?> foundation) {
+  static MicrostreamObjectCopier New(final BinaryPersistenceFoundation<?> foundation) {
     return new Default(notNull(foundation));
   }
 
-  public static class Default implements MicrostreamObjectCopier {
+  class Default implements MicrostreamObjectCopier {
     private final BinaryPersistenceFoundation<?> foundation;
     private PersistenceManager<Binary> persistenceManager;
 
@@ -63,7 +63,7 @@ interface MicrostreamObjectCopier extends Closeable {
       if (this.persistenceManager == null) {
         final Reference<Binary> buffer = X.Reference(null);
         final CopySource source = () -> X.Constant(buffer.get());
-        final CopyTarget target = data -> buffer.set(data);
+        final CopyTarget target = buffer::set;
 
         final BinaryPersistenceFoundation<?> foundation = this.foundation
             .setPersistenceSource(source)
@@ -80,7 +80,8 @@ interface MicrostreamObjectCopier extends Closeable {
       }
     }
 
-    static interface CopySource extends PersistenceSource<Binary> {
+    interface CopySource extends PersistenceSource<Binary> {
+      @SuppressWarnings("SpellCheckingInspection")
       @Override
       default XGettingCollection<? extends Binary> readByObjectIds(final PersistenceIdSet[] oids)
           throws PersistenceExceptionTransfer {
@@ -88,7 +89,7 @@ interface MicrostreamObjectCopier extends Closeable {
       }
     }
 
-    static interface CopyTarget extends PersistenceTarget<Binary> {
+    interface CopyTarget extends PersistenceTarget<Binary> {
       @Override
       default boolean isWritable() {
         return true;

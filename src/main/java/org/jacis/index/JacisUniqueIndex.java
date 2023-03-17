@@ -11,7 +11,7 @@ import org.jacis.store.JacisStore;
  * The class represents a unique index, therefore for each index key only one value of the original store is returned.
  * Note that if a unique index is registered at a store a commit changing a value in a way that the unique index is violated
  * an {{@link JacisUniqueIndexViolationException}} is thrown.
- * 
+ * <p>
  * Note that modifications inside the active transactions will be reflected by the index
  * if (and only if) the modification is notified to the store by the update method.
  * 

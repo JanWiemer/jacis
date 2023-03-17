@@ -21,8 +21,9 @@ import org.jacis.plugin.readonly.JacisStoreEntryReadOnlyModeAdapter;
  * In this case the committed values are always stored in read-only mode. When cloned to a transactional view
  * the cloned values are switched to read-write mode. When the objects are cloned back to the committed view
  * they are switched back to the read only mode. With this feature it is possible to access a read only view
- * of an object from the outside. This read only view is *not* cloned from the committed value. Instead the committed
- * value itself is returned to the caller. This is possible since the object is in read only mode.
+ * of an object from the outside. This read only view is *not* cloned from the committed value.
+ * Instead, the committed value itself is returned to the caller.
+ * This is possible since the object is in read only mode.
  * <p>
  * If the read only mode is not supported accessing a read only value returns an ordinary cloned object.
  *

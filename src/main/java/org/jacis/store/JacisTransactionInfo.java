@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
@@ -31,6 +32,7 @@ public class JacisTransactionInfo implements Serializable {
   /** A reference to the external (global) transaction (e.g. a JTA transaction) */
   private final Object externalTransaction;
   /** For each store participating in the transaction some monitoring data */
+  @SuppressWarnings("SpellCheckingInspection")
   private final List<StoreTxInfo> storeTxInfos;
   /** Creation timestamp of the transaction in milliseconds (System.currentTimeMillis()) */
   private final long creationTimestampMs;
@@ -70,6 +72,7 @@ public class JacisTransactionInfo implements Serializable {
   }
 
   /** @return for each store participating in the transaction some monitoring data */
+  @SuppressWarnings("SpellCheckingInspection")
   public List<StoreTxInfo> getStoreTxInfos() {
     return storeTxInfos;
   }
@@ -101,7 +104,7 @@ public class JacisTransactionInfo implements Serializable {
       return false;
     }
     JacisTransactionInfo that = (JacisTransactionInfo) obj;
-    return externalTransaction == null ? that.externalTransaction == null : externalTransaction.equals(that.externalTransaction);
+    return Objects.equals(externalTransaction, that.externalTransaction);
   }
 
   @Override

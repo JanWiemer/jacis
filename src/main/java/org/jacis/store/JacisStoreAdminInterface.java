@@ -11,7 +11,7 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
  * Administration interface for a JACIS store.
- *
+ * <p>
  * This interface provides methods to add or remove transaction listeners or maintain the registered tracked views.
  *
  * @param <K>  Key type of the store entry

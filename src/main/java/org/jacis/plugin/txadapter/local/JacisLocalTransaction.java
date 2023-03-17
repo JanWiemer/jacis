@@ -9,6 +9,8 @@ import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisNoTransactionException;
 
+import java.util.Objects;
+
 /**
  * Representing a local transaction.
  * If local transactions are used (the {@link JacisTransactionAdapterLocal} is registered with the container)
@@ -115,7 +117,7 @@ public class JacisLocalTransaction {
       return false;
     }
     JacisLocalTransaction that = (JacisLocalTransaction) obj;
-    return txId == null ? that.txId == null : txId.equals(that.txId);
+    return Objects.equals(txId, that.txId);
   }
 
   @Override

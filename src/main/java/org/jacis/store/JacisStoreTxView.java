@@ -41,7 +41,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   /** the name of the TX if this is a read only snapshot (null <-> writable) */
   private final String readOnlyTxId;
   /** reference to the main store */
-  private JacisStoreImpl<K, TV, CV> store;
+  private final JacisStoreImpl<K, TV, CV> store;
   /** flag indicating if for the transaction a commit is pending, that means a prepare has already been called */
   private boolean commitPending = false;
   /** flag indicating if the transaction is already committed */
@@ -59,7 +59,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   /** tracked views by this transaction view. The tracked views in this map are kept up-to-date during the current TX */
   private final Map<String, TrackedViewTransactionLocal<K, TV>> trackedViews;
   /** transaction view of the index values */
-  private JacisIndexRegistryTxView<K, TV> indexRegistryTxView;
+  private final JacisIndexRegistryTxView<K, TV> indexRegistryTxView;
   /** cached list of updated entries that have to be committed */
   private List<StoreEntryTxView<K, TV, CV>> updatedEntries;
 
@@ -85,7 +85,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
       readOnlyCache.put(mapEntry.getKey(), cacheEntry);
     }
     storeTxView = readOnlyCache;
-    trackedViews = threadsafe ? new ConcurrentHashMap<>(orig.trackedViews) : new HashMap<>(orig.trackedViews); // Enable multithreaded access to read only context. See iaaue #30
+    trackedViews = threadsafe ? new ConcurrentHashMap<>(orig.trackedViews) : new HashMap<>(orig.trackedViews); // Enable multithreaded access to read only context. See issue #30
     this.indexRegistryTxView = orig.indexRegistryTxView;
     numberOfEntries = storeTxView.size();
   }

@@ -10,7 +10,7 @@ import org.jacis.store.JacisStore;
 /**
  * Represents an index providing access to the values stored in the JACIS store by an index key.
  * The class represents a non-unique index, therefore for each index one or more value of the original store may be returned.
- * 
+ * <p>
  * Note that modifications inside the active transactions will be reflected by the index
  * if (and only if) the modification is notified to the store by the update method.
  * 

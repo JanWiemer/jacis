@@ -6,9 +6,11 @@ package org.jacis.container;
 
 import org.jacis.JacisApi;
 
+import java.util.Objects;
+
 /**
  * Jacis handle for an external transaction.
- *
+ * <p>
  * This class is used by the Jacis store to reference an external transaction the Jacis container is bound to.
  *
  * @author Jan Wiemer
@@ -74,7 +76,7 @@ public class JacisTransactionHandle {
       return false;
     }
     JacisTransactionHandle that = (JacisTransactionHandle) obj;
-    return externalTransaction == null ? that.externalTransaction == null : externalTransaction.equals(that.externalTransaction);
+    return Objects.equals(externalTransaction, that.externalTransaction);
   }
 
   @Override
