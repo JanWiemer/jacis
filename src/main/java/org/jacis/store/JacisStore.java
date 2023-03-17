@@ -25,7 +25,7 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
 /**
  * Storing a single type of objects.
- * </p>
+ * <p>
  * All operations checking or returning entries of the store operate on the committed values merged with the
  * current transactional view (obtained with the currently active transaction handle from the map of transaction views).
  * This means that first the transactional view is checked if it contains an entry for the desired key.
@@ -586,7 +586,7 @@ public interface JacisStore<K, TV> {
    * The objects are collected by calling the {@link #getAllReadOnly(Predicate)} with <code>null</code> as predicate.
    * <p>
    * Example (simply counting the objects):
-   * </p>
+   * <p>
    * 
    * <pre>
    * int objectCount = store.accumulate(new AtomicInteger(), (i, o) -&gt; i.incrementAndGet()).get();
@@ -623,7 +623,7 @@ public interface JacisStore<K, TV> {
   /**
    * Returns a read only version of the currently committed value of the object.
    * The method can be called inside or outside a transaction.
-   * </p>
+   * <p>
    * Calling this method does not affect the current transaction view of the object.
    * If before the call the transaction has no own view of the object it will not have one after the call.
    * If before the call the transaction has an own view of the object this is ignored and a different instance
