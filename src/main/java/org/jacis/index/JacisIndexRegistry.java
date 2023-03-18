@@ -1,23 +1,15 @@
 package org.jacis.index;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-
 import org.jacis.JacisApi;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisUniqueIndexViolationException;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.store.JacisStoreImpl;
 import org.jacis.store.KeyValuePair;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /**
  * The index registry stores all indices registered for the corresponding store.
@@ -27,9 +19,9 @@ import org.jacis.store.KeyValuePair;
  * <p>
  * Note that only modifications notified to the store via the update method are tracked at the indices.
  *
- * @author Jan Wiemer
  * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
+ * @author Jan Wiemer
  */
 @JacisApi
 @SuppressWarnings({"unused", "UnusedReturnValue"}) // since this is an API of the library
@@ -197,13 +189,12 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
       oldPrimaryKeyForIdxKey = indexMap.get(newIndexKey);
     }
     if (oldPrimaryKeyForIdxKey != null && !oldPrimaryKeyForIdxKey.equals(primaryKey)) {
-      StringBuilder errorMsg = new StringBuilder();
-      errorMsg.append("Update object ").append(primaryKey);
-      errorMsg.append(" would cause it to have index key ").append(newIndexKey);
-      errorMsg.append(" for index ").append(idx.getIndexName());
-      errorMsg.append(" but there is already another object ").append(oldPrimaryKeyForIdxKey);
-      errorMsg.append(" with this index key. Therefore the update would cause an unique index violation!");
-      throw new JacisUniqueIndexViolationException(errorMsg.toString());
+      String errorMsg = "Update object " + primaryKey +
+          " would cause it to have index key " + newIndexKey +
+          " for index " + idx.getIndexName() +
+          " but there is already another object " + oldPrimaryKeyForIdxKey +
+          " with this index key. Therefore the update would cause an unique index violation!";
+      throw new JacisUniqueIndexViolationException(errorMsg);
     }
   }
 
@@ -282,15 +273,14 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
           if (existingLock != null && !existingLock.equals(newLock)) {
             K lockingObjectPrimaryKey = existingLock.getKey();
             String lockingTx = existingLock.getVal();
-            StringBuilder errorMsg = new StringBuilder();
-            errorMsg.append("Preparing commit of updated object ").append(primaryKey);
-            errorMsg.append(" in TX ").append(newIndexKey);
-            errorMsg.append(" would cause it to have index key ").append(newIndexKey);
-            errorMsg.append(" for index ").append(idx.getIndexName());
-            errorMsg.append(" but there is already another object ").append(lockingObjectPrimaryKey);
-            errorMsg.append(" updated and prepared in TX ").append(lockingTx);
-            errorMsg.append(" locking this index key. Therefore committing the update would cause an unique index violation!");
-            throw new JacisUniqueIndexViolationException(errorMsg.toString());
+            String errorMsg = "Preparing commit of updated object " + primaryKey +
+                " in TX " + newIndexKey +
+                " would cause it to have index key " + newIndexKey +
+                " for index " + idx.getIndexName() +
+                " but there is already another object " + lockingObjectPrimaryKey +
+                " updated and prepared in TX " + lockingTx +
+                " locking this index key. Therefore committing the update would cause an unique index violation!";
+            throw new JacisUniqueIndexViolationException(errorMsg);
           }
           locksForIndex.put(newIndexKey, newLock);
         });
@@ -323,10 +313,9 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
    * Contains the lock information for a unique index key.
    * The object contains the locked primary key of the object locking the index key ({@link KeyValuePair#getKey()})
    * and the transaction ID of the object modifying this object ({@link KeyValuePair#getVal()}).
-   * 
-   * @author Jan Wiemer
    *
    * @param <K> Type of the primary key.
+   * @author Jan Wiemer
    */
   private final static class IndexLock<K> extends KeyValuePair<K, String> {
 

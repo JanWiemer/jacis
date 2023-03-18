@@ -1,8 +1,8 @@
 package org.jacis.store;
 
-import java.io.Serializable;
-
 import org.jacis.JacisApi;
+
+import java.io.Serializable;
 
 @JacisApi
 public class KeyValuePair<K, TV> implements Serializable {
@@ -64,13 +64,10 @@ public class KeyValuePair<K, TV> implements Serializable {
       return false;
     }
     if (val == null) {
-      if (other.val != null) {
-        return false;
-      }
-    } else if (!val.equals(other.val)) {
-      return false;
+      return other.val == null;
+    } else {
+      return val.equals(other.val);
     }
-    return true;
   }
 
 }

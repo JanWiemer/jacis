@@ -3,12 +3,11 @@
  */
 package org.jacis.persistence.xodus;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import jetbrains.exodus.env.Environment;
+import jetbrains.exodus.env.Environments;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.extension.persistence.xodus.XodusPersistenceAdapter;
@@ -23,12 +22,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-import jetbrains.exodus.env.Environment;
-import jetbrains.exodus.env.Environments;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class JacisXodusAdapterTest {
 
@@ -36,7 +34,7 @@ public class JacisXodusAdapterTest {
 
   protected static Path getStorageDir(String suffix) {
     Path path = suffix == null ? Paths.get("var", JacisXodusAdapterTest.class.getName()) : Paths.get("var", JacisXodusAdapterTest.class.getName(), suffix);
-    log.info("use storage path: {}", path.toString());
+    log.info("use storage path: {}", path);
     return path;
   }
 

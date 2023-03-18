@@ -4,15 +4,6 @@
 
 package org.jacis.store;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
-
 import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
@@ -22,10 +13,14 @@ import org.jacis.plugin.JacisTransactionListener;
 import org.jacis.trackedviews.TrackedView;
 import org.jacis.trackedviews.TrackedViewClustered;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
+
 /**
  * Registry where tracked views can be registered for an object store.
  *
- * @param <K> Key type of the store entry
+ * @param <K>  Key type of the store entry
  * @param <TV> Value type of the store entry
  * @author Jan Wiemer
  */
@@ -159,7 +154,7 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
       TrackedView<TV> view = viewMap.get(viewName);
       if (view == null) {
         throw new IllegalArgumentException("No tracked view with name " + viewName + " registered! All registered views: " + viewMap.keySet());
-      } else if (!TrackedViewClustered.class.isInstance(view)) {
+      } else if (!(view instanceof TrackedViewClustered)) {
         throw new IllegalArgumentException("The view registered for the name " + viewName + " is no instance of " + TrackedViewClustered.class + "! view: " + view);
       }
       TrackedViewClustered<TV, SVK, ? extends TrackedView<TV>> clusteredView = (TrackedViewClustered<TV, SVK, ? extends TrackedView<TV>>) view;
@@ -175,7 +170,7 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
     }
     if (internalTxView.containsTrackedView(viewName)) { // whole view already tracked at the TX view -> we do not need to clone the sub-view again
       TrackedView<TV> view = internalTxView.getTrackedView(viewName, null);
-      if (!TrackedViewClustered.class.isInstance(view)) {
+      if (!(view instanceof TrackedViewClustered)) {
         throw new IllegalArgumentException("The view registered for the name " + viewName + " is no instance of " + TrackedViewClustered.class + "! view: " + view);
       }
       TrackedViewClustered<TV, VK, TrackedView<TV>> clusteredView = (TrackedViewClustered<TV, VK, TrackedView<TV>>) view;
@@ -191,7 +186,7 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
     TrackedView<TV> view = viewMap.get(viewName);
     if (view == null) {
       throw new IllegalArgumentException("No tracked view with name " + viewName + " registered! All registered views: " + viewMap.keySet());
-    } else if (!TrackedViewClustered.class.isInstance(view)) {
+    } else if (!(view instanceof TrackedViewClustered)) {
       throw new IllegalArgumentException("The view registered for the name " + viewName + " is no instance of " + TrackedViewClustered.class + "! view: " + view);
     }
     TrackedViewClustered<TV, VK, TrackedView<TV>> clusteredView = (TrackedViewClustered<TV, VK, TrackedView<TV>>) view;

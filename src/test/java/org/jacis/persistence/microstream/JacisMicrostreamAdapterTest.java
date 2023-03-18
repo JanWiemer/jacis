@@ -3,12 +3,8 @@
  */
 package org.jacis.persistence.microstream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
+import one.microstream.storage.embedded.configuration.types.EmbeddedStorageConfigurationBuilder;
+import one.microstream.storage.embedded.types.EmbeddedStorageManager;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.extension.persistence.microstream.MicrostreamPersistenceAdapter;
@@ -24,8 +20,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import one.microstream.storage.embedded.configuration.types.EmbeddedStorageConfigurationBuilder;
-import one.microstream.storage.embedded.types.EmbeddedStorageManager;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class JacisMicrostreamAdapterTest {
 
@@ -33,7 +32,7 @@ public class JacisMicrostreamAdapterTest {
 
   protected static Path getStorageDir(String suffix) {
     Path path = suffix == null ? Paths.get("var", JacisMicrostreamAdapterTest.class.getName()) : Paths.get("var", JacisMicrostreamAdapterTest.class.getName(), suffix);
-    log.info("use storage path: {}", path.toString());
+    log.info("use storage path: {}", path);
     return path;
   }
 

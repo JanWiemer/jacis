@@ -4,9 +4,14 @@
 
 package org.jacis.persistence.microstream.microstreamframework;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import one.microstream.storage.embedded.configuration.types.EmbeddedStorageConfigurationBuilder;
+import one.microstream.storage.embedded.types.EmbeddedStorage;
+import one.microstream.storage.embedded.types.EmbeddedStorageManager;
+import org.jacis.testhelper.FileUtils;
+import org.junit.AfterClass;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,15 +20,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.jacis.testhelper.FileUtils;
-import org.junit.AfterClass;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import one.microstream.storage.embedded.configuration.types.EmbeddedStorageConfigurationBuilder;
-import one.microstream.storage.embedded.types.EmbeddedStorage;
-import one.microstream.storage.embedded.types.EmbeddedStorageManager;
+import static org.junit.Assert.*;
 
 public class BasicMicrostreamTest {
 
@@ -31,7 +28,7 @@ public class BasicMicrostreamTest {
 
   protected static Path getStorageDir(String suffix) {
     Path path = suffix == null ? Paths.get("var", BasicMicrostreamTest.class.getName()) : Paths.get("var", BasicMicrostreamTest.class.getName(), suffix);
-    log.info("use storage path: {}", path.toString());
+    log.info("use storage path: {}", path);
     return path;
   }
 

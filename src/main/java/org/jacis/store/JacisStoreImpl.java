@@ -4,25 +4,6 @@
 
 package org.jacis.store;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.container.JacisObjectTypeSpec;
@@ -36,6 +17,15 @@ import org.jacis.index.JacisUniqueIndex;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 import org.jacis.util.ConcurrentWeakHashMap;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Storing a single type of objects.
@@ -501,7 +491,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
           threads.add(new Thread("initStoreThread" + threadNr + "[" + from + "-" + to + " for " + JacisStoreImpl.this + "]") {
             @Override
             public void run() {
-              if (allModificationListenersThreadSafe) { // THREADSAFE
+              if (allModificationListenersThreadSafe) { // THREAD-SAFE
                 for (int idx = from; idx < to; idx++) {
                   ST entry = entries.get(idx);
                   K key = keyExtractor.apply(entry);
@@ -511,7 +501,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
                     listener.onModification(key, null, val, null); // for performance reasons we skip synchronization if listener is thread safe
                   }
                 } // end of for loop
-              } else { // NOT THREADSAFE
+              } else { // NOT THREAD-SAFE
                 for (int idx = from; idx < to; idx++) {
                   ST entry = entries.get(idx);
                   K key = keyExtractor.apply(entry);
@@ -528,7 +518,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
                     }
                   }
                 } // end of for loop
-              } // end of THREADSAFE if ... else ... block
+              } // end of THREAD-SAFE if ... else ... block
             } // end of run() method
           });
         }

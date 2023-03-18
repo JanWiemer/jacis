@@ -4,12 +4,6 @@
 
 package org.jacis.objectadapter.serialization;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.plugin.JacisTransactionListener;
@@ -21,6 +15,12 @@ import org.jacis.testhelper.TrackedTestView;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class JacisStoreWithSerializationAndTrackedViewMultithreadedTest {
 
@@ -156,10 +156,10 @@ public class JacisStoreWithSerializationAndTrackedViewMultithreadedTest {
 
   public static class TestJacisTransactionListenerAdapter implements JacisTransactionListener {
 
-    private final AtomicLong sum = new AtomicLong(0l);
-    private JacisStore<String, TestObject> store;
-    private ThreadLocal<Long> totalInc = new ThreadLocal<>();
-    private ThreadLocal<String> updateTxt = new ThreadLocal<>();
+    private final AtomicLong sum = new AtomicLong(0L);
+    private final JacisStore<String, TestObject> store;
+    private final ThreadLocal<Long> totalInc = new ThreadLocal<>();
+    private final ThreadLocal<String> updateTxt = new ThreadLocal<>();
 
     public TestJacisTransactionListenerAdapter(JacisStore<String, TestObject> store) {
       this.store = store;
@@ -192,13 +192,13 @@ public class JacisStoreWithSerializationAndTrackedViewMultithreadedTest {
         store.streamReadOnly().forEach(v -> log.info(" core value: {}", v));
         throw new IllegalStateException("View sum differs! View sum = " + viewSum + " expected = " + expectedSum);
       }
-      this.totalInc.set(0l);
+      this.totalInc.set(0L);
       this.updateTxt.set("-");
     }
 
     @Override
     public void afterRollback(JacisContainer container, JacisTransactionHandle tx) {
-      this.totalInc.set(0l);
+      this.totalInc.set(0L);
       this.updateTxt.set("-");
     }
 

@@ -4,15 +4,6 @@
 
 package org.jacis.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisStaleObjectException;
@@ -24,6 +15,11 @@ import org.jacis.testhelper.TestObject;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("CodeBlock2Expr")
 public class JacisStoreIntegrationTest {
@@ -183,7 +179,7 @@ public class JacisStoreIntegrationTest {
     assertEquals(1, info.getStoreTxInfos().size());
     assertEquals(1, info.getStoreTxInfos().get(0).getNumberOfTxViewEntries());
     assertEquals(1, info.getStoreTxInfos().get(0).getNumberOfUpdatedTxViewEntries());
-    assertEquals(false, info.getStoreTxInfos().get(0).isCommitPending());
+    assertFalse(info.getStoreTxInfos().get(0).isCommitPending());
     log.info("TX1-after-update:  {}", info);
     // --------------------
     tx.prepare(); // <--------------------
@@ -191,7 +187,7 @@ public class JacisStoreIntegrationTest {
     assertEquals(1, info.getStoreTxInfos().size());
     assertEquals(1, info.getStoreTxInfos().get(0).getNumberOfTxViewEntries());
     assertEquals(1, info.getStoreTxInfos().get(0).getNumberOfUpdatedTxViewEntries());
-    assertEquals(true, info.getStoreTxInfos().get(0).isCommitPending());
+    assertTrue(info.getStoreTxInfos().get(0).isCommitPending());
     log.info("TX1-after-prepare: {}", info);
     // --------------------
     tx.commit(); // <--------------------
@@ -212,7 +208,7 @@ public class JacisStoreIntegrationTest {
     assertEquals(1, info.getStoreTxInfos().size());
     assertEquals(1, info.getStoreTxInfos().get(0).getNumberOfTxViewEntries());
     assertEquals(0, info.getStoreTxInfos().get(0).getNumberOfUpdatedTxViewEntries());
-    assertEquals(false, info.getStoreTxInfos().get(0).isCommitPending());
+    assertFalse(info.getStoreTxInfos().get(0).isCommitPending());
     log.info("TX2-after-read:  {}", info);
     // --------------------
     sleep(10);
@@ -221,7 +217,7 @@ public class JacisStoreIntegrationTest {
     assertEquals(1, info.getStoreTxInfos().size());
     assertEquals(1, info.getStoreTxInfos().get(0).getNumberOfTxViewEntries());
     assertEquals(1, info.getStoreTxInfos().get(0).getNumberOfUpdatedTxViewEntries());
-    assertEquals(false, info.getStoreTxInfos().get(0).isCommitPending());
+    assertFalse(info.getStoreTxInfos().get(0).isCommitPending());
     log.info("TX2-after-update:  {}", info);
     // --------------------
     sleep(10);
@@ -234,7 +230,7 @@ public class JacisStoreIntegrationTest {
     assertEquals(1, info.getStoreTxInfos().size());
     assertEquals(1, info.getStoreTxInfos().get(0).getNumberOfTxViewEntries());
     assertEquals(1, info.getStoreTxInfos().get(0).getNumberOfUpdatedTxViewEntries());
-    assertEquals(false, info.getStoreTxInfos().get(0).isCommitPending());
+    assertFalse(info.getStoreTxInfos().get(0).isCommitPending());
     log.info("TX2-last-after-commit:  {}", info);
   }
 

@@ -1,20 +1,19 @@
 package org.jacis.extension.persistence.microstream;
 
+import org.jacis.container.JacisContainer;
+import org.jacis.container.JacisContainer.StoreIdentifier;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.jacis.container.JacisContainer;
-import org.jacis.container.JacisContainer.StoreIdentifier;
-
 /**
  * The root object stored by the Microstream storage manager.
  * Basically it stores (the head of) the linked list of Microstream entity objects representing the store entries.
- * 
- * @author Jan Wiemer
  *
  * @param <K> Key type of the store entry
  * @param <V> Value type of the store entry
+ * @author Jan Wiemer
  */
 class MicrostreamStoreRoot<K, V> {
 
@@ -29,10 +28,8 @@ class MicrostreamStoreRoot<K, V> {
 
   @Override
   public String toString() {
-    StringBuilder b = new StringBuilder();
-    b.append("StorageRoot(").append(storeIdentifier.toShortString());
-    b.append(")");
-    return b.toString();
+    String b = "StorageRoot(" + storeIdentifier.toShortString() + ")";
+    return b;
   }
 
   public void add(MicrostreamStoreEntity<K, V> entity, Set<Object> objectsToStore) {

@@ -4,18 +4,6 @@
 
 package org.jacis.plugin.txadapter.jta;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.transaction.RollbackException;
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
-
 import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
@@ -25,6 +13,12 @@ import org.jacis.plugin.txadapter.JacisTransactionAdapter;
 import org.jacis.store.JacisTransactionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.transaction.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Default implementation of the transaction adapter using JTA transactions.
@@ -76,7 +70,7 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
    * @return a transaction ID for the transaction handle.
    */
   protected String computeJacisTxDescription(Transaction tx, String txId) {
-    return txId + "(" + String.valueOf(tx) + ")";
+    return txId + "(" + tx + ")";
   }
 
   @Override
@@ -101,12 +95,12 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
       int status = tx.getStatus();
       status = Status.STATUS_UNKNOWN == status ? tx.getStatus() : status; // if status unknown (transient state) -> call again
       switch (status) {
-      case Status.STATUS_NO_TRANSACTION:
-        return false;
-      case Status.STATUS_COMMITTED:
-        return transactionMap.get(tx) != null; // if state is committed we consider the Jacis TX to be still active (if there is one) since the sync committing the Jacis changes may still stand out
-      case Status.STATUS_ROLLEDBACK:
-        return transactionMap.get(tx) != null;
+        case Status.STATUS_NO_TRANSACTION:
+          return false;
+        case Status.STATUS_COMMITTED:
+          return transactionMap.get(tx) != null; // if state is committed we consider the Jacis TX to be still active (if there is one) since the sync committing the Jacis changes may still stand out
+        case Status.STATUS_ROLLEDBACK:
+          return transactionMap.get(tx) != null;
       }
       return true;
     } catch (SystemException e) {
@@ -196,14 +190,14 @@ public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransac
     @Override
     public void afterCompletion(int status) {
       switch (status) {
-      case Status.STATUS_COMMITTED:
-        container.internalCommit(txHandle);
-        break;
-      case Status.STATUS_ROLLEDBACK:
-        container.internalRollback(txHandle);
-        break;
-      default:
-        throw new IllegalArgumentException("Illegal transaction state " + status + " after completion!");
+        case Status.STATUS_COMMITTED:
+          container.internalCommit(txHandle);
+          break;
+        case Status.STATUS_ROLLEDBACK:
+          container.internalRollback(txHandle);
+          break;
+        default:
+          throw new IllegalArgumentException("Illegal transaction state " + status + " after completion!");
       }
     }
 
