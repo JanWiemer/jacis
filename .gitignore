@@ -23,3 +23,5 @@ log
 test-output
 ivysettings-local.xml
 /bin/
+.classpath
+.project

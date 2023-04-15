@@ -1,0 +1,13 @@
+
+tasks:
+  - init: ./gradlew build
+
+
+
+vscode:
+  extensions:
+    - vscjava.vscode-java-packneeds (see https://www.gitpod.io/docs/introduction/learn-gitpod/gitpod-yaml)
+    - mhutchie.git-graph# and commit this file to your remote git repository to share the goodness with others.
+    - vscjava.vscode-java-debug# Learn more from ready-to-use templates: https://www.gitpod.io/docs/introduction/getting-started/quickstart
+tasks:
+  - init: ./gradlew build
