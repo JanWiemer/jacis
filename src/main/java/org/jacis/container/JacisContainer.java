@@ -4,23 +4,8 @@
 
 package org.jacis.container;
 
-import java.util.*;
-import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.jacis.JacisApi;
-import org.jacis.exception.JacisInternalException;
-import org.jacis.exception.JacisNoTransactionException;
-import org.jacis.exception.JacisStaleObjectException;
-import org.jacis.exception.JacisTxCommitException;
-import org.jacis.exception.JacisTxRollbackException;
+import org.jacis.exception.*;
 import org.jacis.plugin.JacisTransactionListener;
 import org.jacis.plugin.persistence.JacisPersistenceAdapter;
 import org.jacis.plugin.txadapter.JacisTransactionAdapter;
@@ -31,6 +16,17 @@ import org.jacis.store.JacisStoreAdminInterface;
 import org.jacis.store.JacisStoreImpl;
 import org.jacis.store.JacisTransactionInfo;
 import org.jacis.util.TransactionExecutor;
+
+import java.util.*;
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 //       _   _    ____ ___ ____
 //      | | / \  / ___|_ _/ ___|
@@ -53,14 +49,15 @@ import org.jacis.util.TransactionExecutor;
 @JacisApi
 public class JacisContainer {
 
+  /** ThreadLocal storing the transaction info object for the last finished transaction */
+  private final static ThreadLocal<JacisTransactionInfo> lastFinishedTransactionInfo = new ThreadLocal<>();
+
   /** {@link JacisTransactionAdapter} to bind the Jacis Store to externally managed transactions. */
   private final JacisTransactionAdapter txAdapter;
   /** Map assigning the stores (values of type {@link JacisStoreImpl}) to the store identifiers (keys of type {@link StoreIdentifier}). */
   private final Map<StoreIdentifier, JacisStore<?, ?>> storeMap = new ConcurrentHashMap<>();
   /** List of transaction listeners / observers (type {@link JacisTransactionListener}) providing call-backs before / after prepare / internalCommit / rollback. */
   private final List<JacisTransactionListener> txListeners = new CopyOnWriteArrayList<>();
-  /** ThreadLocal storing the transaction info object for the last finished transaction */
-  private final ThreadLocal<JacisTransactionInfo> lastFinishedTransactionInfo = new ThreadLocal<>();
   /** Lock object to synchronize the TX demarcation operations (prepare / commit / rollback) over all threads and stores. */
   private final ReadWriteLock transactionDemarcationLock = new ReentrantReadWriteLock(true);
 
@@ -105,10 +102,10 @@ public class JacisContainer {
    * The passed specification determines the type of the keys and the type of the values stored in the created store.
    *
    * @param objectTypeSpec object type specification describing the objects to be stored.
+   * @param <K>            Key type of the store entry
+   * @param <TV>           Type of the objects in the transaction view. This is the type visible from the outside.
+   * @param <CV>           Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    * @return A reference to the created store (type {@link JacisStoreImpl})
-   * @param <K>  Key type of the store entry
-   * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
-   * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    */
   public <K, TV, CV> JacisStoreAdminInterface<K, TV, CV> createStore(JacisObjectTypeSpec<K, TV, CV> objectTypeSpec) {
     StoreIdentifier storeIdentifier = new StoreIdentifier(objectTypeSpec.getKeyClass(), objectTypeSpec.getValueClass());
@@ -128,10 +125,10 @@ public class JacisContainer {
    *
    * @param keyClass   Class of the keys that should be stored in the searched store
    * @param valueClass Class of the values that should be stored in the searched store
+   * @param <K>        Key type of the store entry
+   * @param <TV>       Type of the objects in the transaction view. This is the type visible from the outside.
+   * @param <CV>       Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    * @return A reference to the found store (type {@link JacisStore}) (null if not found)
-   * @param <K>  Key type of the store entry
-   * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
-   * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    */
   @SuppressWarnings("unchecked")
   public <K, TV, CV> JacisStore<K, TV> getStore(Class<K> keyClass, Class<TV> valueClass) {
@@ -167,10 +164,10 @@ public class JacisContainer {
    *
    * @param keyClass   Class of the keys that should be stored in the searched store
    * @param valueClass Class of the values that should be stored in the searched store
+   * @param <K>        Key type of the store entry
+   * @param <TV>       Type of the objects in the transaction view. This is the type visible from the outside.
+   * @param <CV>       Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    * @return A reference to the found store (type {@link JacisStoreAdminInterface}) (null if not found)
-   * @param <K>  Key type of the store entry
-   * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
-   * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    */
   @SuppressWarnings("unchecked")
   public <K, TV, CV> JacisStoreAdminInterface<K, TV, CV> getStoreAdminInterface(Class<K> keyClass, Class<TV> valueClass) {
