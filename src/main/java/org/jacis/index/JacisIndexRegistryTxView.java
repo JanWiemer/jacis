@@ -1,11 +1,6 @@
 package org.jacis.index;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -14,9 +9,9 @@ import java.util.function.Function;
  * modified (due to modifications on the objects) inside the corresponding transaction.
  * Note that only modifications notified to the store via the update method are tracked at the indices.
  *
- * @author Jan Wiemer
  * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
+ * @author Jan Wiemer
  */
 public class JacisIndexRegistryTxView<K, TV> {
 
@@ -82,6 +77,7 @@ public class JacisIndexRegistryTxView<K, TV> {
     }
   }
 
+  @java.lang.SuppressWarnings("java:S2789")
   public <IK> Optional<K> getPrimaryKeyFromUniqueIndex(String indexName, IK indexKey) {
     Map<Object, Optional<K>> indexMap = uniqueIndexDataMap.get(indexName);
     return indexMap == null ? null : indexMap.get(indexKey);

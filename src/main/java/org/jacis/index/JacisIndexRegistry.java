@@ -233,6 +233,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     return res;
   }
 
+  @java.lang.SuppressWarnings("java:S2789")
   <IK> K getFromUniqueIndexPrimaryKey(JacisUniqueIndex<IK, K, TV> index, IK indexKey) {
     JacisIndexRegistryTxView<K, TV> regTxView = store.getIndexRegistryTransactionView(); // null if no TX
     String indexName = index.getIndexName();

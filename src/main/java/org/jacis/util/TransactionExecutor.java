@@ -1,15 +1,15 @@
 package org.jacis.util;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-
 import org.jacis.container.JacisContainer;
 import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class TransactionExecutor {
 
@@ -100,6 +100,7 @@ public class TransactionExecutor {
     throw wrap(exceptions.get(exceptions.size() - 1), taskName, maxRetries + 1, exceptions);
   }
 
+  @java.lang.SuppressWarnings("java:S1143")
   protected <R> R executeSingleAttempt(Supplier<R> task, String taskName) throws IllegalStateException {
     JacisLocalTransaction tx = container.beginLocalTransaction(taskName);
     Throwable txException = null;
