@@ -16,8 +16,6 @@ import org.jacis.plugin.objectadapter.serialization.JacisSerializationObjectAdap
 import org.jacis.plugin.txadapter.local.JacisTransactionAdapterLocal;
 import org.jacis.store.JacisStore;
 
-import java.security.SecureRandom;
-
 @SuppressWarnings("WeakerAccess")
 public class JacisTestHelper {
 
@@ -95,8 +93,9 @@ public class JacisTestHelper {
     testTxAdapter.resumeTx(tx);
   }
 
+  @java.lang.SuppressWarnings("java:S2245") // used only for test data generation
   public long getRandBetween(long min, long max) {
-    return max <= min ? min : min + new SecureRandom().nextLong(max - min + 1);
+    return max <= min ? min : min + Math.round((max - min) * Math.random());
   }
 
   public void sleep(int ms) {
