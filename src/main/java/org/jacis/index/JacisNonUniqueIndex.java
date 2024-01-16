@@ -1,11 +1,11 @@
 package org.jacis.index;
 
+import org.jacis.JacisApi;
+import org.jacis.store.JacisStore;
+
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
-
-import org.jacis.JacisApi;
-import org.jacis.store.JacisStore;
 
 /**
  * Represents an index providing access to the values stored in the JACIS store by an index key.
@@ -13,7 +13,7 @@ import org.jacis.store.JacisStore;
  * <p>
  * Note that modifications inside the active transactions will be reflected by the index
  * if (and only if) the modification is notified to the store by the update method.
- * 
+ *
  * @param <IK> Index key type for this unique index
  * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
@@ -42,7 +42,7 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
    * For details see the {@link JacisStore#get(Object)} method.
    *
    * @param indexKey The index key of the desired entry.
-   * @return the unique value for the passed index key.
+   * @return the values for the passed index key.
    */
   public Collection<TV> get(IK indexKey) {
     return indexRegistry.getFromNonUniqueIndex(this, indexKey);
@@ -57,6 +57,28 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
    */
   public Collection<TV> getReadOnly(IK indexKey) {
     return indexRegistry.getFromNonUniqueIndexReadOnly(this, indexKey);
+  }
+
+  /**
+   * Returns the values for the passed index keys.
+   * For details see the {@link JacisStore#get(Object)} method.
+   *
+   * @param indexKeys The index keys of the desired entries.
+   * @return the values for the passed index keys.
+   */
+  public Collection<TV> multiGet(Collection<IK> indexKeys) {
+    return indexRegistry.multiGetFromNonUniqueIndex(this, indexKeys);
+  }
+
+  /**
+   * Returns the read only values for the passed index keys.
+   * For details see the {@link JacisStore#getReadOnly(Object)} method.
+   *
+   * @param indexKeys The index keys of the desired entries.
+   * @return the read only values for the passed keys.
+   */
+  public Collection<TV> multiGetReadOnly(Collection<IK> indexKeys) {
+    return indexRegistry.multiGetFromNonUniqueIndexReadOnly(this, indexKeys);
   }
 
 }

@@ -1,10 +1,11 @@
 package org.jacis.index;
 
-import java.util.function.Function;
-
 import org.jacis.JacisApi;
 import org.jacis.exception.JacisUniqueIndexViolationException;
 import org.jacis.store.JacisStore;
+
+import java.util.Collection;
+import java.util.function.Function;
 
 /**
  * Represents an index providing access to the values stored in the JACIS store by an index key.
@@ -14,7 +15,7 @@ import org.jacis.store.JacisStore;
  * <p>
  * Note that modifications inside the active transactions will be reflected by the index
  * if (and only if) the modification is notified to the store by the update method.
- * 
+ *
  * @param <IK> Index key type for this unique index
  * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
@@ -58,5 +59,27 @@ public class JacisUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV> {
    */
   public TV getReadOnly(IK indexKey) {
     return indexRegistry.getFromUniqueIndexReadOnly(this, indexKey);
+  }
+
+  /**
+   * Returns the unique values for the passed index keys.
+   * For details see the {@link JacisStore#get(Object)} method.
+   *
+   * @param indexKeys The index keys of the desired entrys.
+   * @return the collection of unique values for the passed index keys.
+   */
+  public Collection<TV> multiGet(Collection<IK> indexKeys) {
+    return indexRegistry.multiGetFromUniqueIndex(this, indexKeys);
+  }
+
+  /**
+   * Returns the unique read only values for the passed index keys.
+   * For details see the {@link JacisStore#getReadOnly(Object)} method.
+   *
+   * @param indexKeys The index keys of the desired entries.
+   * @return the collection of unique read only values for the passed keys.
+   */
+  public Collection<TV> multiGetReadOnly(Collection<IK> indexKeys) {
+    return indexRegistry.multiGetFromUniqueIndexReadOnly(this, indexKeys);
   }
 }

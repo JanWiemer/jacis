@@ -205,7 +205,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     if (regTxView != null) {
       Set<K> add = regTxView.getPrimaryKeysAddedForNonUniqueIndex(indexName, indexKey);
       Set<K> del = regTxView.getPrimaryKeysDeletedForNonUniqueIndex(indexName, indexKey);
-      if (add.size() > 0 || del.size() > 0) {
+      if (!add.isEmpty() || !del.isEmpty()) {
         Set<K> res = indexMap.getOrDefault(indexKey, new HashSet<>());
         res.removeAll(del);
         res.addAll(add);
@@ -213,6 +213,17 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
       }
     }
     return indexMap.getOrDefault(indexKey, Collections.emptySet());
+  }
+
+  <IK> Set<K> multiGetFromNonUniqueIndexPrimaryKeys(JacisNonUniqueIndex<IK, K, TV> index, Collection<IK> indexKeys) {
+    if (indexKeys == null || indexKeys.isEmpty()) {
+      return Collections.emptySet();
+    }
+    Set<K> res = new HashSet<>();
+    for (IK indexKey : indexKeys) {
+      res.addAll(getFromNonUniqueIndexPrimaryKeys(index, indexKey));
+    }
+    return res;
   }
 
   <IK> Collection<TV> getFromNonUniqueIndex(JacisNonUniqueIndex<IK, K, TV> index, IK indexKey) {
@@ -224,8 +235,26 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     return res;
   }
 
+  <IK> Collection<TV> multiGetFromNonUniqueIndex(JacisNonUniqueIndex<IK, K, TV> index, Collection<IK> indexKeys) {
+    Set<K> primaryKeys = multiGetFromNonUniqueIndexPrimaryKeys(index, indexKeys);
+    Collection<TV> res = new ArrayList<>(primaryKeys.size());
+    for (K primaryKey : primaryKeys) {
+      res.add(store.get(primaryKey));
+    }
+    return res;
+  }
+
   <IK> Collection<TV> getFromNonUniqueIndexReadOnly(JacisNonUniqueIndex<IK, K, TV> index, IK indexKey) {
     Set<K> primaryKeys = getFromNonUniqueIndexPrimaryKeys(index, indexKey);
+    Collection<TV> res = new ArrayList<>(primaryKeys.size());
+    for (K primaryKey : primaryKeys) {
+      res.add(store.getReadOnly(primaryKey));
+    }
+    return res;
+  }
+
+  <IK> Collection<TV> multiGetFromNonUniqueIndexReadOnly(JacisNonUniqueIndex<IK, K, TV> index, Collection<IK> indexKeys) {
+    Set<K> primaryKeys = multiGetFromNonUniqueIndexPrimaryKeys(index, indexKeys);
     Collection<TV> res = new ArrayList<>(primaryKeys.size());
     for (K primaryKey : primaryKeys) {
       res.add(store.getReadOnly(primaryKey));
@@ -248,14 +277,43 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     return indexMap.get(indexKey);
   }
 
+  <IK> Set<K> multiGetFromUniqueIndexPrimaryKeys(JacisUniqueIndex<IK, K, TV> index, Collection<IK> indexKeys) {
+    if (indexKeys == null || indexKeys.isEmpty()) {
+      return Collections.emptySet();
+    }
+    Set<K> res = new HashSet<>();
+    for (IK indexKey : indexKeys) {
+      res.add(getFromUniqueIndexPrimaryKey(index, indexKey));
+    }
+    return res;
+  }
+
   <IK> TV getFromUniqueIndex(JacisUniqueIndex<IK, K, TV> index, IK indexKey) {
     K primaryKey = getFromUniqueIndexPrimaryKey(index, indexKey);
     return primaryKey == null ? null : store.get(primaryKey);
   }
 
+  <IK> Collection<TV> multiGetFromUniqueIndex(JacisUniqueIndex<IK, K, TV> index, Collection<IK> indexKeys) {
+    Set<K> primaryKeys = multiGetFromUniqueIndexPrimaryKeys(index, indexKeys);
+    Collection<TV> res = new ArrayList<>(primaryKeys.size());
+    for (K primaryKey : primaryKeys) {
+      res.add(store.get(primaryKey));
+    }
+    return res;
+  }
+
   <IK> TV getFromUniqueIndexReadOnly(JacisUniqueIndex<IK, K, TV> index, IK indexKey) {
     K primaryKey = getFromUniqueIndexPrimaryKey(index, indexKey);
     return primaryKey == null ? null : store.getReadOnly(primaryKey);
+  }
+
+  <IK> Collection<TV> multiGetFromUniqueIndexReadOnly(JacisUniqueIndex<IK, K, TV> index, Collection<IK> indexKeys) {
+    Set<K> primaryKeys = multiGetFromUniqueIndexPrimaryKeys(index, indexKeys);
+    Collection<TV> res = new ArrayList<>(primaryKeys.size());
+    for (K primaryKey : primaryKeys) {
+      res.add(store.getReadOnly(primaryKey));
+    }
+    return res;
   }
 
   public void lockUniqueIndexKeysForTx(JacisTransactionHandle txHandle) {
