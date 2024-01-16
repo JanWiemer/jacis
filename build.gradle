@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2017. Jan Wiemer
  */
- 
+
 plugins {
     id 'java'
     id 'maven-publish'
@@ -9,26 +9,26 @@ plugins {
 }
 
 group = "org.jacis"
-version = Boolean.getBoolean("releasebuild") ? "$version" : Boolean.getBoolean("usedateversion") ? "$version" + "-build" + getDate()+"-SNAPSHOT" : "$version-SNAPSHOT"
+version = Boolean.getBoolean("releasebuild") ? "$version" : Boolean.getBoolean("usedateversion") ? "$version" + "-build" + getDate() + "-SNAPSHOT" : "$version-SNAPSHOT"
 
 def getDate() {
     return new Date().format('yyyyMMdd') // .format('yyyyMMddHHmmss')
 }
 
 ext {
-    projectName            = "jacis"
-    projectDescription     = "Java ACS Store - Transient and transactional store for Java objects."
-    projectURL             = "https://github.com/JanWiemer/jacis"
-    author                 = "Jan Wiemer"
-    authorId               = "JanWiemer"
-    authorMail             = "jan.wiemer@online.de"
-    licenseName            = "Apache-2.0 License"
-    licenseURL             = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
-    isReleaseVersion       = Boolean.getBoolean("releasebuild")
-    deploy_user            = System.properties.get("deploy_user")
-    deploy_pw              = System.properties.get("deploy_pw")
-    deploy_repo_release    = System.properties.get("deploy_repo_release")
-    deploy_repo_snapshot   = System.properties.get("deploy_repo_snapshot")
+    projectName = "jacis"
+    projectDescription = "Java ACS Store - Transient and transactional store for Java objects."
+    projectURL = "https://github.com/JanWiemer/jacis"
+    author = "Jan Wiemer"
+    authorId = "JanWiemer"
+    authorMail = "jan@wiemer.nrw"
+    licenseName = "Apache-2.0 License"
+    licenseURL = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
+    isReleaseVersion = Boolean.getBoolean("releasebuild")
+    deploy_user = System.properties.get("deploy_user")
+    deploy_pw = System.properties.get("deploy_pw")
+    deploy_repo_release = System.properties.get("deploy_repo_release")
+    deploy_repo_snapshot = System.properties.get("deploy_repo_snapshot")
 }
 
 print '---------- JACIS BUILD -------- '
@@ -46,25 +46,25 @@ println '------------------------------- '
 
 dependencies {
     // --- logging
-    implementation     group: 'org.slf4j',           name: 'slf4j-api', version: version_slf4j
-    testRuntimeOnly    group: 'ch.qos.logback',      name: 'logback-core', version: version_logback
-    testRuntimeOnly    group: 'ch.qos.logback',      name: 'logback-classic', version: version_logback
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: version_slf4j
+    testRuntimeOnly group: 'ch.qos.logback', name: 'logback-core', version: version_logback
+    testRuntimeOnly group: 'ch.qos.logback', name: 'logback-classic', version: version_logback
     // --- transaction
-    implementation     group: 'javax.transaction',   name: 'jta', version: '1.1'
+    implementation group: 'javax.transaction', name: 'jta', version: '1.1'
     // --- EXTENSION microstream persistence
-    compileOnly        group: 'one.microstream',     name: 'microstream-storage-embedded', version: version_microstream
-    testImplementation group: 'one.microstream',     name: 'microstream-storage-embedded', version: version_microstream
-    testImplementation group: 'one.microstream',     name: 'microstream-storage-embedded-configuration', version: version_microstream
+    compileOnly group: 'one.microstream', name: 'microstream-storage-embedded', version: version_microstream
+    testImplementation group: 'one.microstream', name: 'microstream-storage-embedded', version: version_microstream
+    testImplementation group: 'one.microstream', name: 'microstream-storage-embedded-configuration', version: version_microstream
     // --- EXTENSION JetBrains Xodus
-    compileOnly        group: 'org.jetbrains.xodus', name: 'xodus-openAPI', version: version_xodus
-    compileOnly        group: 'org.jetbrains.xodus', name: 'xodus-environment', version: version_xodus
+    compileOnly group: 'org.jetbrains.xodus', name: 'xodus-openAPI', version: version_xodus
+    compileOnly group: 'org.jetbrains.xodus', name: 'xodus-environment', version: version_xodus
     testImplementation group: 'org.jetbrains.xodus', name: 'xodus-openAPI', version: version_xodus
     testImplementation group: 'org.jetbrains.xodus', name: 'xodus-environment', version: version_xodus
     // --- UTILITIES
-    compileOnly        group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version_jackson
+    compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version_jackson
     testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version_jackson
     // --- junit
-    testImplementation group: 'junit',               name: 'junit', version: version_junit
+    testImplementation group: 'junit', name: 'junit', version: version_junit
 }
 
 clean.doFirst {
@@ -89,63 +89,63 @@ jar {
 
 jar.doFirst {
     manifest {
-        attributes 'Implementation-Title'     : projectName,
-                   'Implementation-Version'   : archiveVersion,
-                   'Specification-Title'      : new Date(),
-                   'Implementation-Vendor'    : author
+        attributes 'Implementation-Title': projectName,
+                'Implementation-Version': archiveVersion,
+                'Specification-Title': new Date(),
+                'Implementation-Vendor': author
     }
 }
 
 test {
     afterSuite { desc, result ->
-      if (!desc.parent)
-        println("${result.resultType} " +
-            "(${result.testCount} tests, " +
-            "${result.successfulTestCount} successes, " +
-            "${result.failedTestCount} failures, " +
-            "${result.skippedTestCount} skipped)")
+        if (!desc.parent)
+            println("${result.resultType} " +
+                    "(${result.testCount} tests, " +
+                    "${result.successfulTestCount} successes, " +
+                    "${result.failedTestCount} failures, " +
+                    "${result.skippedTestCount} skipped)")
     }
 }
 
 publishing {
-  publications {
-    jacisPublication(MavenPublication) {
-        groupId "$group"
-        artifactId "$projectName"
-        version "$version"
-      from components.java
-      pom { 
-        name = projectName
-        description = projectDescription
-        url = projectURL
-        licenses {
-          license {
-            name = licenseName
-            url = licenseURL 
-          }
+    publications {
+        jacisPublication(MavenPublication) {
+            groupId "$group"
+            artifactId "$projectName"
+            version "$version"
+            from components.java
+            pom {
+                name = projectName
+                description = projectDescription
+                url = projectURL
+                licenses {
+                    license {
+                        name = licenseName
+                        url = licenseURL
+                    }
+                }
+                developers {
+                    developer {
+                        id = authorId
+                        name = author
+                        email = authorMail
+                    }
+                }
+            }
         }
-        developers {
-          developer {
-            id = authorId
-            name = author
-            email = authorMail
-          }
-        }
-      } 
-    } 
-  }
-  repositories {
-    maven {
-      credentials {
-        username deploy_user
-        password deploy_pw
-      }
-      if (isReleaseVersion) {
-        url deploy_repo_release
-      } else {
-        url deploy_repo_snapshot
-      }
-      allowInsecureProtocol = true
     }
-  }  
+    repositories {
+        maven {
+            credentials {
+                username deploy_user
+                password deploy_pw
+            }
+            if (isReleaseVersion) {
+                url deploy_repo_release
+            } else {
+                url deploy_repo_snapshot
+            }
+            allowInsecureProtocol = true
+        }
+    }
 }
