@@ -35,10 +35,16 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
   /** The data maps for the non-unique indices. For each index the data map contains the mapping from the index key to the primary key of the object in the store. */
   private final Map<String, Map<Object, Set<K>>> nonUniqueIndexDataMap = new HashMap<>();
 
+  /** Map containing the non-unique multi-index definitions for each registered unique index */
+  private final ConcurrentHashMap<String, JacisNonUniqueMultiIndex<?, K, TV>> nonUniqueMultiIndexDefinitionMap = new ConcurrentHashMap<>();
+  /** The data maps for the non-unique multi-indices. For each index the data map contains the mapping from the index key to the primary key of the object in the store. */
+  private final Map<String, Map<Object, Set<K>>> nonUniqueMultiIndexDataMap = new HashMap<>();
+
   /** Map containing the unique index definitions for each registered unique index */
   private final ConcurrentHashMap<String, JacisUniqueIndex<?, K, TV>> uniqueIndexDefinitionMap = new ConcurrentHashMap<>();
   /** The data maps for the unique indices. For each index the data map contains the mapping from the index key to the primary keys of the objects in the store. */
   private final Map<String, Map<Object, K>> uniqueIndexDataMap = new HashMap<>();
+
   /**
    * The lock maps for the unique indices. For each index the lock map contains the mapping from the index key to the lock information for this index.
    * The lock information (see {@link IndexLock}) indicates if the index value is locked for another prepared transaction,
@@ -54,13 +60,16 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
   public void clearIndices() {
     store.executeAtomic(() -> {
       nonUniqueIndexDataMap.values().forEach(Map::clear);
+      nonUniqueMultiIndexDataMap.values().forEach(Map::clear);
       uniqueIndexDataMap.values().forEach(Map::clear);
       uniqueIndexLockMap.clear();
     });
   }
 
   public boolean hasAnyRegisteredIndex() {
-    boolean isEmpty = uniqueIndexDefinitionMap.isEmpty() && nonUniqueIndexDefinitionMap.isEmpty();
+    boolean isEmpty = uniqueIndexDefinitionMap.isEmpty() //
+        && nonUniqueIndexDefinitionMap.isEmpty() //
+        && nonUniqueMultiIndexDefinitionMap.isEmpty();
     return !isEmpty;
   }
 
@@ -68,9 +77,29 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     return nonUniqueIndexDefinitionMap.values();
   }
 
+  public Collection<JacisNonUniqueMultiIndex<?, K, TV>> getNonUniqueMultiIndexDefinitions() {
+    return nonUniqueMultiIndexDefinitionMap.values();
+  }
+
   public Collection<JacisUniqueIndex<?, K, TV>> getUniqueIndexDefinitions() {
     return uniqueIndexDefinitionMap.values();
   }
+
+  @SuppressWarnings("unchecked")
+  public <IK> JacisNonUniqueIndex<IK, K, TV> getNonUniqueIndex(String indexName) {
+    return (JacisNonUniqueIndex<IK, K, TV>) nonUniqueIndexDefinitionMap.get(indexName);
+  }
+
+  @SuppressWarnings("unchecked")
+  public <IK> JacisNonUniqueMultiIndex<IK, K, TV> getNonUniqueMultiIndex(String indexName) {
+    return (JacisNonUniqueMultiIndex<IK, K, TV>) nonUniqueMultiIndexDefinitionMap.get(indexName);
+  }
+
+  @SuppressWarnings("unchecked")
+  public <IK> JacisUniqueIndex<IK, K, TV> getUniqueIndex(String indexName) {
+    return (JacisUniqueIndex<IK, K, TV>) uniqueIndexDefinitionMap.get(indexName);
+  }
+
 
   @SuppressWarnings("unchecked")
   public <IK> JacisNonUniqueIndex<IK, K, TV> createNonUniqueIndex(String indexName, Function<TV, IK> indexKeyFunction) {
@@ -86,17 +115,16 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
   }
 
   @SuppressWarnings("unchecked")
-  public <IK> JacisNonUniqueIndex<IK, K, TV> getNonUniqueIndex(String indexName) {
-    return (JacisNonUniqueIndex<IK, K, TV>) nonUniqueIndexDefinitionMap.get(indexName);
-  }
-
-  private <IK> void initializeNonUniqueIndex(JacisNonUniqueIndex<IK, K, TV> idx) {
-    String indexName = idx.getIndexName();
-    store.executeAtomic(() -> {
-      checkRegisterModificationListener();
-      nonUniqueIndexDataMap.put(indexName, new ConcurrentHashMap<>());
-      store.streamKeyValuePairsReadOnly(null).forEach(pair -> trackModificationAtNonUniqueIndex(idx, pair.getKey(), null, pair.getVal()));
+  public <IK> JacisNonUniqueMultiIndex<IK, K, TV> createNonUniqueMultiIndex(String indexName, Function<TV, Set<IK>> indexKeyFunction) {
+    JacisNonUniqueMultiIndex<IK, K, TV> idx = (JacisNonUniqueMultiIndex<IK, K, TV>) nonUniqueMultiIndexDefinitionMap.compute(indexName, (k, v) -> {
+      if (v != null) {
+        throw new IllegalStateException("An index with the name " + k + " is already registered at the store " + store);
+      } else {
+        return new JacisNonUniqueMultiIndex<>(indexName, indexKeyFunction, this);
+      }
     });
+    initializeNonUniqueMultiIndex(idx);
+    return Objects.requireNonNull(idx);
   }
 
   @SuppressWarnings("unchecked")
@@ -112,9 +140,22 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     return Objects.requireNonNull(idx);
   }
 
-  @SuppressWarnings("unchecked")
-  public <IK> JacisUniqueIndex<IK, K, TV> getUniqueIndex(String indexName) {
-    return (JacisUniqueIndex<IK, K, TV>) uniqueIndexDefinitionMap.get(indexName);
+  private <IK> void initializeNonUniqueMultiIndex(JacisNonUniqueMultiIndex<IK, K, TV> idx) {
+    String indexName = idx.getIndexName();
+    store.executeAtomic(() -> {
+      checkRegisterModificationListener();
+      nonUniqueMultiIndexDataMap.put(indexName, new ConcurrentHashMap<>());
+      store.streamKeyValuePairsReadOnly(null).forEach(pair -> trackModificationAtNonUniqueMultiIndex(idx, pair.getKey(), null, pair.getVal()));
+    });
+  }
+
+  private <IK> void initializeNonUniqueIndex(JacisNonUniqueIndex<IK, K, TV> idx) {
+    String indexName = idx.getIndexName();
+    store.executeAtomic(() -> {
+      checkRegisterModificationListener();
+      nonUniqueIndexDataMap.put(indexName, new ConcurrentHashMap<>());
+      store.streamKeyValuePairsReadOnly(null).forEach(pair -> trackModificationAtNonUniqueIndex(idx, pair.getKey(), null, pair.getVal()));
+    });
   }
 
   private <IK> void initializeUniqueIndex(JacisUniqueIndex<IK, K, TV> idx) {
@@ -128,7 +169,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
   }
 
   private void checkRegisterModificationListener() {
-    if (nonUniqueIndexDataMap.isEmpty() && uniqueIndexDataMap.isEmpty()) {
+    if (nonUniqueIndexDataMap.isEmpty() && nonUniqueMultiIndexDataMap.isEmpty() && uniqueIndexDataMap.isEmpty()) {
       store.registerModificationListener(this); // first index created -> register at store
     }
   }
@@ -140,6 +181,9 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     }
     for (JacisNonUniqueIndex<?, K, TV> idx : nonUniqueIndexDefinitionMap.values()) {
       trackModificationAtNonUniqueIndex(idx, key, oldValue, newValue);
+    }
+    for (JacisNonUniqueMultiIndex<?, K, TV> idx : nonUniqueMultiIndexDefinitionMap.values()) {
+      trackModificationAtNonUniqueMultiIndex(idx, key, oldValue, newValue);
     }
   }
 
@@ -179,6 +223,29 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     }
   }
 
+  private void trackModificationAtNonUniqueMultiIndex(JacisNonUniqueMultiIndex<?, K, TV> idx, K key, TV oldValue, TV newValue) {
+    Function<TV, ?> indexKeyFunction = idx.getIndexKeyFunction();
+    Map<Object, Set<K>> indexMap = nonUniqueMultiIndexDataMap.get(idx.getIndexName());
+    Object oldIndexKeyObject = oldValue == null ? null : indexKeyFunction.apply(oldValue);
+    Object newIndexKeyObject = newValue == null ? null : indexKeyFunction.apply(newValue);
+    Set<?> oldIndexKeySet = oldIndexKeyObject == null ? Collections.emptySet() : (Set<?>) oldIndexKeyObject;
+    Set<?> newIndexKeySet = newIndexKeyObject == null ? Collections.emptySet() : (Set<?>) newIndexKeyObject;
+    for (Object oldIndexKey : oldIndexKeySet) {
+      if (oldIndexKey != null) {
+        Set<K> primaryKeySet = indexMap.get(oldIndexKey);
+        if (primaryKeySet != null) {
+          primaryKeySet.remove(key);
+        }
+      }
+    }
+    for (Object newIndexKey : newIndexKeySet) {
+      if (newIndexKey != null) {
+        Set<K> primaryKeySet = indexMap.computeIfAbsent(newIndexKey, k -> new HashSet<>());
+        primaryKeySet.add(key);
+      }
+    }
+  }
+
   @SuppressWarnings("unchecked")
   void checkUniqueIndexProperty(JacisUniqueIndex<?, K, TV> idx, Object newIndexKey, K primaryKey, boolean considerTx) {
     K oldPrimaryKeyForIdxKey;
@@ -197,6 +264,10 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
       throw new JacisUniqueIndexViolationException(errorMsg);
     }
   }
+
+  //----------------------------------------------------------------------------------------------------------
+  //----- Access methods for NON-UNIQUE INDEX
+  //----------------------------------------------------------------------------------------------------------
 
   <IK> Set<K> getFromNonUniqueIndexPrimaryKeys(JacisNonUniqueIndex<IK, K, TV> index, IK indexKey) {
     JacisIndexRegistryTxView<K, TV> regTxView = store.getIndexRegistryTransactionView(); // null if no TX
@@ -262,6 +333,78 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     return res;
   }
 
+  //----------------------------------------------------------------------------------------------------------
+  //----- Access methods for NON-UNIQUE MULTI-INDEX
+  //----------------------------------------------------------------------------------------------------------
+
+  <IK> Set<K> getFromNonUniqueMultiIndexPrimaryKeys(JacisNonUniqueMultiIndex<IK, K, TV> index, IK indexKey) {
+    JacisIndexRegistryTxView<K, TV> regTxView = store.getIndexRegistryTransactionView(); // null if no TX
+    String indexName = index.getIndexName();
+    Map<Object, Set<K>> indexMap = nonUniqueMultiIndexDataMap.get(indexName);
+    if (regTxView != null) {
+      Set<K> add = regTxView.getPrimaryKeysAddedForNonUniqueIndex(indexName, indexKey);
+      Set<K> del = regTxView.getPrimaryKeysDeletedForNonUniqueIndex(indexName, indexKey);
+      if (!add.isEmpty() || !del.isEmpty()) {
+        Set<K> res = indexMap.getOrDefault(indexKey, new HashSet<>());
+        res.removeAll(del);
+        res.addAll(add);
+        return res;
+      }
+    }
+    return indexMap.getOrDefault(indexKey, Collections.emptySet());
+  }
+
+  <IK> Set<K> multiGetFromNonUniqueMultiIndexPrimaryKeys(JacisNonUniqueMultiIndex<IK, K, TV> index, Collection<IK> indexKeys) {
+    if (indexKeys == null || indexKeys.isEmpty()) {
+      return Collections.emptySet();
+    }
+    Set<K> res = new HashSet<>();
+    for (IK indexKey : indexKeys) {
+      res.addAll(getFromNonUniqueMultiIndexPrimaryKeys(index, indexKey));
+    }
+    return res;
+  }
+
+  <IK> Collection<TV> getFromNonUniqueMultiIndex(JacisNonUniqueMultiIndex<IK, K, TV> index, IK indexKey) {
+    Set<K> primaryKeys = getFromNonUniqueMultiIndexPrimaryKeys(index, indexKey);
+    Collection<TV> res = new ArrayList<>(primaryKeys.size());
+    for (K primaryKey : primaryKeys) {
+      res.add(store.get(primaryKey));
+    }
+    return res;
+  }
+
+  <IK> Collection<TV> multiGetFromNonUniqueMultiIndex(JacisNonUniqueMultiIndex<IK, K, TV> index, Collection<IK> indexKeys) {
+    Set<K> primaryKeys = multiGetFromNonUniqueMultiIndexPrimaryKeys(index, indexKeys);
+    Collection<TV> res = new ArrayList<>(primaryKeys.size());
+    for (K primaryKey : primaryKeys) {
+      res.add(store.get(primaryKey));
+    }
+    return res;
+  }
+
+  <IK> Collection<TV> getFromNonUniqueMultiIndexReadOnly(JacisNonUniqueMultiIndex<IK, K, TV> index, IK indexKey) {
+    Set<K> primaryKeys = getFromNonUniqueMultiIndexPrimaryKeys(index, indexKey);
+    Collection<TV> res = new ArrayList<>(primaryKeys.size());
+    for (K primaryKey : primaryKeys) {
+      res.add(store.getReadOnly(primaryKey));
+    }
+    return res;
+  }
+
+  <IK> Collection<TV> multiGetFromNonUniqueMultiIndexReadOnly(JacisNonUniqueMultiIndex<IK, K, TV> index, Collection<IK> indexKeys) {
+    Set<K> primaryKeys = multiGetFromNonUniqueMultiIndexPrimaryKeys(index, indexKeys);
+    Collection<TV> res = new ArrayList<>(primaryKeys.size());
+    for (K primaryKey : primaryKeys) {
+      res.add(store.getReadOnly(primaryKey));
+    }
+    return res;
+  }
+
+  //----------------------------------------------------------------------------------------------------------
+  //----- Access methods for UNIQUE INDEX
+  //----------------------------------------------------------------------------------------------------------
+
   @java.lang.SuppressWarnings("java:S2789")
   <IK> K getFromUniqueIndexPrimaryKey(JacisUniqueIndex<IK, K, TV> index, IK indexKey) {
     JacisIndexRegistryTxView<K, TV> regTxView = store.getIndexRegistryTransactionView(); // null if no TX
@@ -315,6 +458,10 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     }
     return res;
   }
+
+  //----------------------------------------------------------------------------------------------------------
+  //----- Lock methods for UNIQUE INDEX
+  //----------------------------------------------------------------------------------------------------------
 
   public void lockUniqueIndexKeysForTx(JacisTransactionHandle txHandle) {
     if (!uniqueIndexDefinitionMap.isEmpty()) {

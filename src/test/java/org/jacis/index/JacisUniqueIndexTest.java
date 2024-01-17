@@ -4,12 +4,6 @@
 
 package org.jacis.index;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
-
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisUniqueIndexViolationException;
@@ -22,6 +16,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.junit.Assert.*;
+
 public class JacisUniqueIndexTest {
 
   private static final Logger log = LoggerFactory.getLogger(JacisStoreIntegrationTest.class);
@@ -30,19 +26,19 @@ public class JacisUniqueIndexTest {
   public void testUniqueIndexAccessorMethods() {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
-    JacisUniqueIndex<String, String, TestObject> index = store.createUniqueIndex("IDX-NAME", o -> o.getStrValue());
-    JacisUniqueIndex<String, String, TestObject> sameindex = store.getUniqueIndex("IDX-NAME");
+    JacisUniqueIndex<String, String, TestObject> index = store.createUniqueIndex("IDX-NAME", TestObject::getStrValue);
+    JacisUniqueIndex<String, String, TestObject> sameIndex = store.getUniqueIndex("IDX-NAME");
     log.info("index1: {} ", index);
-    log.info("index2: {} ", sameindex);
-    assertSame(index, sameindex);
+    log.info("index2: {} ", sameIndex);
+    assertSame(index, sameIndex);
   }
 
   @Test(expected = IllegalStateException.class)
   public void testUniqueIndexCreateIndexTwoTimes() {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
-    store.createUniqueIndex("IDX-NAME", o -> o.getStrValue());
-    store.createUniqueIndex("IDX-NAME", o -> o.getValue());
+    store.createUniqueIndex("IDX-NAME", TestObject::getStrValue);
+    store.createUniqueIndex("IDX-NAME", TestObject::getValue);
   }
 
   @Test
@@ -50,7 +46,7 @@ public class JacisUniqueIndexTest {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisContainer container = store.getContainer();
-    JacisUniqueIndex<Object, String, TestObject> index = store.createUniqueIndex("IDX-NAME", o -> o.getStrValue());
+    JacisUniqueIndex<Object, String, TestObject> index = store.createUniqueIndex("IDX-NAME", TestObject::getStrValue);
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-1"));
       store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-2"));
@@ -78,7 +74,7 @@ public class JacisUniqueIndexTest {
       store.update("3", new TestObject("A3").setValue(5).setStrValue("IDX-3"));
       store.update("4", new TestObject("A4").setValue(5).setStrValue("IDX-4"));
     });
-    JacisUniqueIndex<Object, String, TestObject> index = store.createUniqueIndex("IDX-NAME", o -> o.getStrValue());
+    JacisUniqueIndex<Object, String, TestObject> index = store.createUniqueIndex("IDX-NAME", TestObject::getStrValue);
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-1"));
       store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-2"));
@@ -96,7 +92,7 @@ public class JacisUniqueIndexTest {
   }
 
   @Test
-  public void testUniqueIndexWhileModifyedInTransaction() {
+  public void testUniqueIndexWhileModifiedInTransaction() {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisContainer container = store.getContainer();
@@ -104,7 +100,7 @@ public class JacisUniqueIndexTest {
       store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-1a"));
       store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-2a"));
     });
-    JacisUniqueIndex<Object, String, TestObject> index = store.createUniqueIndex("IDX-NAME", o -> o.getStrValue());
+    JacisUniqueIndex<Object, String, TestObject> index = store.createUniqueIndex("IDX-NAME", TestObject::getStrValue);
     container.withLocalTx(() -> {
       assertEquals("A1", index.getReadOnly("IDX-1a").getName());
       assertNull(index.getReadOnly("IDX-1b"));
@@ -138,7 +134,7 @@ public class JacisUniqueIndexTest {
       store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-1"));
       store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-1"));
     });
-    store.createUniqueIndex("IDX-NAME", o -> o.getStrValue());
+    store.createUniqueIndex("IDX-NAME", TestObject::getStrValue);
   }
 
   @Test(expected = JacisUniqueIndexViolationException.class)
@@ -146,7 +142,7 @@ public class JacisUniqueIndexTest {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisContainer container = store.getContainer();
-    store.createUniqueIndex("IDX-NAME", o -> o.getStrValue());
+    store.createUniqueIndex("IDX-NAME", TestObject::getStrValue);
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-1"));
       store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-1"));
@@ -158,14 +154,12 @@ public class JacisUniqueIndexTest {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisContainer container = store.getContainer();
-    store.createUniqueIndex("IDX-NAME", o -> o.getStrValue());
+    store.createUniqueIndex("IDX-NAME", TestObject::getStrValue);
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-1"));
       store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-2"));
     });
-    container.withLocalTx(() -> {
-      store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-1"));
-    });
+    container.withLocalTx(() -> store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-1")));
   }
 
   @Test()
@@ -173,7 +167,7 @@ public class JacisUniqueIndexTest {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisContainer container = store.getContainer();
-    store.createUniqueIndex("IDX-NAME", o -> o.getStrValue());
+    store.createUniqueIndex("IDX-NAME", TestObject::getStrValue);
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-1"));
       store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-2"));
@@ -199,7 +193,7 @@ public class JacisUniqueIndexTest {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisContainer container = store.getContainer();
-    store.createUniqueIndex("IDX-NAME", o -> o.getStrValue());
+    store.createUniqueIndex("IDX-NAME", TestObject::getStrValue);
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-1"));
       store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-2"));
@@ -228,11 +222,107 @@ public class JacisUniqueIndexTest {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisContainer container = store.getContainer();
-    JacisUniqueIndex<Object, String, TestObject> idx = store.createUniqueIndex("IDX-NAME", o -> o.getStrValue());
+    JacisUniqueIndex<Object, String, TestObject> idx = store.createUniqueIndex("IDX-NAME", TestObject::getStrValue);
     container.withLocalTx(() -> store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-1")));
     assertNotNull(idx.getReadOnly("IDX-1"));
-    container.withLocalTx(() -> store.clear());
+    container.withLocalTx(store::clear);
     assertNull(idx.getReadOnly("IDX-1"));
   }
+
+  @Test
+  public void testUniqueIndexAddDuringTx() {
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisContainer container = store.getContainer();
+    container.withLocalTx(() -> {
+      store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-0"));
+      store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-0"));
+    });
+    JacisNonUniqueIndex<Object, String, TestObject> index = store.createNonUniqueIndex("IDX-NAME", TestObject::getStrValue);
+    container.withLocalTx(() -> {
+      store.update("3", new TestObject("A3").setValue(5).setStrValue("IDX-0"));
+      assertEquals(3, index.getReadOnly("IDX-0").size());
+    });
+    assertEquals(3, index.getReadOnly("IDX-0").size());
+  }
+
+  @Test
+  public void testUniqueIndexRemoveDuringTx() {
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisContainer container = store.getContainer();
+    container.withLocalTx(() -> {
+      store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-0"));
+      store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-0"));
+    });
+    JacisNonUniqueIndex<Object, String, TestObject> index = store.createNonUniqueIndex("IDX-NAME", TestObject::getStrValue);
+    container.withLocalTx(() -> {
+      store.remove("2");
+      log.info("index.getReadOnly(IDX-0)={} after remove", index.getReadOnly("IDX-0"));
+      assertEquals(1, index.getReadOnly("IDX-0").size());
+    });
+    assertEquals(1, index.getReadOnly("IDX-0").size());
+  }
+
+  @Test
+  public void testUniqueIndexRemoveByChangeDuringTx() {
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisContainer container = store.getContainer();
+    container.withLocalTx(() -> {
+      store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-0"));
+      store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-0"));
+    });
+    JacisNonUniqueIndex<Object, String, TestObject> index = store.createNonUniqueIndex("IDX-NAME", TestObject::getStrValue);
+    container.withLocalTx(() -> {
+      TestObject obj = store.get("2").setStrValue("OTHER");
+      assertEquals(2, index.getReadOnly("IDX-0").size());
+      store.update("2", obj);
+      assertEquals(1, index.getReadOnly("IDX-0").size());
+    });
+    assertEquals(1, index.getReadOnly("IDX-0").size());
+  }
+
+  @Test
+  public void testUniqueIndexAddByChangeDuringTx() {
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisContainer container = store.getContainer();
+    container.withLocalTx(() -> {
+      store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-0"));
+      store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-0"));
+      store.update("3", new TestObject("A2").setValue(5).setStrValue("OTHER"));
+    });
+    JacisNonUniqueIndex<Object, String, TestObject> index = store.createNonUniqueIndex("IDX-NAME", TestObject::getStrValue);
+    container.withLocalTx(() -> {
+      TestObject obj = store.get("3").setStrValue("IDX-0");
+      assertEquals(2, index.getReadOnly("IDX-0").size());
+      store.update("3", obj);
+      assertEquals(3, index.getReadOnly("IDX-0").size());
+    });
+    assertEquals(3, index.getReadOnly("IDX-0").size());
+  }
+
+  @Test
+  public void testUniqueIndexAddAndDelDuringTx() {
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisContainer container = store.getContainer();
+    container.withLocalTx(() -> {
+      store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-0"));
+      store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-0"));
+    });
+    JacisNonUniqueIndex<Object, String, TestObject> index = store.createNonUniqueIndex("IDX-NAME", TestObject::getStrValue);
+    container.withLocalTx(() -> {
+      store.update("3", new TestObject("A3").setValue(5).setStrValue("IDX-0"));
+      assertEquals(3, index.getReadOnly("IDX-0").size());
+      store.update("3", new TestObject("A3").setValue(5).setStrValue("OTHER"));
+      assertEquals(2, index.getReadOnly("IDX-0").size());
+      store.update("3", new TestObject("A3").setValue(5).setStrValue("IDX-0"));
+      assertEquals(3, index.getReadOnly("IDX-0").size());
+    });
+    assertEquals(3, index.getReadOnly("IDX-0").size());
+  }
+
 
 }

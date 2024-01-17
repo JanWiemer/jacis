@@ -4,24 +4,26 @@
 
 package org.jacis.store;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
 import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.exception.JacisTransactionAlreadyPreparedForCommitException;
 import org.jacis.index.JacisNonUniqueIndex;
+import org.jacis.index.JacisNonUniqueMultiIndex;
 import org.jacis.index.JacisUniqueIndex;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
+
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Storing a single type of objects.
@@ -32,7 +34,7 @@ import org.jacis.plugin.objectadapter.JacisObjectAdapter;
  * If so this entry is returned, otherwise the committed value from the core store is returned.
  * Note that if an object is deleted in a transaction an entry with the value <code>null</code> remains in the transactional view.
  * Therefore, also deletions are properly handled with respect to isolation.
- * 
+ *
  * @param <K>  Key type of the store entry
  * @param <TV> Type of the objects in the transaction view. This is the type visible from the outside.
  * @author Jan Wiemer
@@ -70,7 +72,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Create and register a non-unique Index to access the values in the store by an index key.
-   * 
+   *
    * @param <IK>             The type of the index key.
    * @param indexName        The Name of the index (has to be unique).
    * @param indexKeyFunction The function to extract the index key from a value.
@@ -80,7 +82,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Get a registered non-unique Index to access the values in the store by an index key.
-   * 
+   *
    * @param <IK>      The type of the index key.
    * @param indexName The Name of the index (an index has to be registered with this name).
    * @return An object representing the index and providing methods to access objects by the index key.
@@ -88,8 +90,29 @@ public interface JacisStore<K, TV> {
   <IK> JacisNonUniqueIndex<IK, K, TV> getNonUniqueIndex(String indexName);
 
   /**
+   * Create and register a non-unique Multi-Index to access the values in the store by an index key.
+   * A multi index can define multiple index keys for a single value.
+   *
+   * @param <IK>             The type of the index key.
+   * @param indexName        The Name of the index (has to be unique).
+   * @param indexKeyFunction The function to extract the set of index keys from a value.
+   * @return An object representing the index and providing methods to access objects by the index key.
+   */
+  <IK> JacisNonUniqueMultiIndex<IK, K, TV> createNonUniqueMultiIndex(String indexName, Function<TV, Set<IK>> indexKeyFunction);
+
+  /**
+   * Get a registered non-unique Multi-Index to access the values in the store by an index key.
+   * A multi index can define multiple index keys for a single value.
+   *
+   * @param <IK>      The type of the index key.
+   * @param indexName The Name of the index (an index has to be registered with this name).
+   * @return An object representing the index and providing methods to access objects by the index key.
+   */
+  <IK> JacisNonUniqueMultiIndex<IK, K, TV> getNonUniqueMultiIndex(String indexName);
+
+  /**
    * Create and register a unique Index to access the values in the store by an index key.
-   * 
+   *
    * @param <IK>             The type of the index key.
    * @param indexName        The Name of the index (has to be unique).
    * @param indexKeyFunction The function to extract the index key from a value.
@@ -99,7 +122,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Get a registered unique Index to access the values in the store by an index key.
-   * 
+   *
    * @param <IK>      The type of the index key.
    * @param indexName The Name of the index (an index has to be registered with this name).
    * @return An object representing the index and providing methods to access objects by the index key.
@@ -220,7 +243,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Removes a stored version for the passed key optimistically locking it to this version.
-   * 
+   *
    * @param key The key of the desired entry.
    */
   void unlock(K key);
@@ -280,7 +303,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Stream all store entries updated in the current transaction (update method has been called).
-   * 
+   *
    * @param filter an optional filter on the updated values (null means all updated entries are included in the result).
    * @return a stream of key value pairs for all updated objects (the value may be null if the object has been deleted in this transaction).
    */
@@ -451,7 +474,7 @@ public interface JacisStore<K, TV> {
    * This method updates or inserts all passed values as a bulk update / insert.
    * The keys for the objects is computed using the mandatory keyExtractor function.
    * The functionality is similar to the update method for a single object (see {@link #update(Object, Object)}).
-   * 
+   *
    * @param values       The set of objects to update or insert.
    * @param keyExtractor The function computing the key for each object to update or insert.
    * @throws JacisTransactionAlreadyPreparedForCommitException if the current transaction has already been prepared for commit
@@ -494,7 +517,7 @@ public interface JacisStore<K, TV> {
    * Note that the method initializes the store in a non-transactional manner.
    * The store has to be empty before. During initialization all commits are blocked.
    * By passing the number of threads that shall insert the passed values
-   * 
+   *
    * @param entries        The entries from which the store is initialized.
    * @param keyExtractor   Method to extract the key from an entry.
    * @param valueExtractor Method to extract the value from an entry.
@@ -509,7 +532,7 @@ public interface JacisStore<K, TV> {
    * Note that the method initializes the store in a non-transactional manner.
    * The store has to be empty before. During initialization all commits are blocked.
    * By passing the number of threads that shall insert the passed values
-   * 
+   *
    * @param values       The values the store is initialized with.
    * @param keyExtractor Method to extract the key from a value.
    * @param nThreads     Number of threads to use for multithreaded inserts.
@@ -521,7 +544,7 @@ public interface JacisStore<K, TV> {
    * Note that the method initializes the store in a non-transactional manner.
    * The store has to be empty before. During initialization all commits are blocked.
    * By passing the number of threads that shall insert the passed values
-   * 
+   *
    * @param entries  The entries (key value pairs) from which the store is initialized.
    * @param nThreads Number of threads to use for multithreaded inserts.
    */
@@ -587,7 +610,7 @@ public interface JacisStore<K, TV> {
    * <p>
    * Example (simply counting the objects):
    * <p>
-   * 
+   *
    * <pre>
    * int objectCount = store.accumulate(new AtomicInteger(), (i, o) -&gt; i.incrementAndGet()).get();
    * </pre>
@@ -636,7 +659,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Returns if there is a transaction local view existing for the passed key in the current transaction.
-   * 
+   *
    * @param key The key of the desired object.
    * @return if there is a transaction local view existing for the passed key in the current transaction.
    */
@@ -644,7 +667,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Returns the original version of the object at the point of time it was cloned to the transactional view of the object.
-   * 
+   *
    * @param key The key of the desired object.
    * @return the original version of the object at the point of time it was cloned to the transactional view of the object.
    */
@@ -652,7 +675,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Returns the version of an optimistic lock if one has been created (<code>null</code> if not).
-   * 
+   *
    * @param key The key of the desired object.
    * @return the version of an optimistic lock if one has been created (<code>null</code> if not).
    */
@@ -660,7 +683,7 @@ public interface JacisStore<K, TV> {
 
   /**
    * Returns the version of the currently committed object.
-   * 
+   *
    * @param key The key of the desired object.
    * @return the version of the currently committed object.
    */

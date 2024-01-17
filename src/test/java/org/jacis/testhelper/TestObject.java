@@ -4,19 +4,21 @@
 
 package org.jacis.testhelper;
 
-import java.io.Serializable;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.jacis.plugin.dirtycheck.object.AbstractReadOnlyModeAndDirtyCheckSupportingObject;
 import org.jacis.plugin.objectadapter.cloning.JacisCloneable;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.io.Serializable;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A JACIS cloneable test object that also provides a read only mode.
  *
  * @author Jan Wiemer
  */
-@JsonIgnoreProperties({ "readOnly", "writable" })
+@JsonIgnoreProperties({"readOnly", "writable"})
 public class TestObject extends AbstractReadOnlyModeAndDirtyCheckSupportingObject implements JacisCloneable<TestObject>, Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -71,6 +73,10 @@ public class TestObject extends AbstractReadOnlyModeAndDirtyCheckSupportingObjec
   public TestObject setStrValue(String strValue) {
     this.strValue = strValue;
     return this;
+  }
+
+  public Set<String> getAllStrValue() {
+    return Stream.of(strValue, name).filter(s -> s != null).collect(Collectors.toSet());
   }
 
   @Override

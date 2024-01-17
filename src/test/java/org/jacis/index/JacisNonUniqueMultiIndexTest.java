@@ -18,35 +18,35 @@ import java.util.Arrays;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
-public class JacisNonUniqueIndexTest {
+public class JacisNonUniqueMultiIndexTest {
 
   private static final Logger log = LoggerFactory.getLogger(JacisStoreIntegrationTest.class);
 
   @Test
-  public void testNonUniqueIndexAccessorMethods() {
+  public void testNonUniqueMultiIndexAccessorMethods() {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
-    JacisNonUniqueIndex<String, String, TestObject> index = store.createNonUniqueIndex("IDX-NAME", TestObject::getStrValue);
-    JacisNonUniqueIndex<String, String, TestObject> sameIndex = store.getNonUniqueIndex("IDX-NAME");
+    JacisNonUniqueMultiIndex<String, String, TestObject> index = store.createNonUniqueMultiIndex("IDX-NAME", TestObject::getAllStrValue);
+    JacisNonUniqueMultiIndex<String, String, TestObject> sameIndex = store.getNonUniqueMultiIndex("IDX-NAME");
     log.info("index1: {} ", index);
     log.info("index2: {} ", sameIndex);
     assertSame(index, sameIndex);
   }
 
   @Test(expected = IllegalStateException.class)
-  public void testNonUniqueIndexCreateIndexTwoTimes() {
+  public void testNonUniqueMultiIndexCreateIndexTwoTimes() {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
-    store.createNonUniqueIndex("IDX-NAME", TestObject::getStrValue);
-    store.createNonUniqueIndex("IDX-NAME", TestObject::getValue);
+    store.createNonUniqueMultiIndex("IDX-NAME", TestObject::getAllStrValue);
+    store.createNonUniqueMultiIndex("IDX-NAME", TestObject::getAllStrValue);
   }
 
   @Test
-  public void testNonUniqueIndexSimpleAccess() {
+  public void testNonUniqueMultiIndexSimpleAccess() {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisContainer container = store.getContainer();
-    JacisNonUniqueIndex<Object, String, TestObject> index = store.createNonUniqueIndex("IDX-NAME", TestObject::getStrValue);
+    JacisNonUniqueMultiIndex<String, String, TestObject> index = store.createNonUniqueMultiIndex("IDX-NAME", TestObject::getAllStrValue);
     container.withLocalTx(() -> {
       store.update("1", new TestObject("A1a").setValue(5).setStrValue("IDX-1"));
       store.update("2", new TestObject("A1b").setValue(5).setStrValue("IDX-1"));
@@ -56,6 +56,10 @@ public class JacisNonUniqueIndexTest {
     assertEquals(2, index.getReadOnly("IDX-1").size());
     assertEquals(1, index.getReadOnly("IDX-2").size());
     assertEquals(1, index.getReadOnly("IDX-3").size());
+    assertEquals(1, index.getReadOnly("A1a").size());
+    assertEquals(1, index.getReadOnly("A1b").size());
+    assertEquals(1, index.getReadOnly("A2").size());
+    assertEquals(1, index.getReadOnly("A3").size());
     assertEquals("A2", index.getReadOnly("IDX-2").iterator().next().getName());
     assertEquals("A3", index.getReadOnly("IDX-3").iterator().next().getName());
     assertEquals(3, index.multiGetReadOnly(Arrays.asList("IDX-1", "IDX-2")).size());
@@ -66,6 +70,10 @@ public class JacisNonUniqueIndexTest {
       assertEquals(2, index.get("IDX-1").size());
       assertEquals(1, index.get("IDX-2").size());
       assertEquals(1, index.get("IDX-3").size());
+      assertEquals(1, index.get("A1a").size());
+      assertEquals(1, index.get("A1b").size());
+      assertEquals(1, index.get("A2").size());
+      assertEquals(1, index.get("A3").size());
       assertEquals("A2", index.get("IDX-2").iterator().next().getName());
       assertEquals("A3", index.get("IDX-3").iterator().next().getName());
       assertEquals(3, index.multiGet(Arrays.asList("IDX-1", "IDX-2")).size());
@@ -73,11 +81,11 @@ public class JacisNonUniqueIndexTest {
   }
 
   @Test
-  public void testNonUniqueIndexClearedDuringClear() {
+  public void testNonUniqueMultiIndexClearedDuringClear() {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
     JacisContainer container = store.getContainer();
-    JacisNonUniqueIndex<Object, String, TestObject> idx = store.createNonUniqueIndex("IDX-NAME", TestObject::getStrValue);
+    JacisNonUniqueMultiIndex<String, String, TestObject> idx = store.createNonUniqueMultiIndex("IDX-NAME", TestObject::getAllStrValue);
     assertEquals(0, idx.getReadOnly("IDX-1").size());
     container.withLocalTx(() -> store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-1")));
     assertEquals(1, idx.getReadOnly("IDX-1").size());

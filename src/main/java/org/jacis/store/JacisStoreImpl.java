@@ -10,10 +10,7 @@ import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.exception.JacisTransactionAlreadyPreparedForCommitException;
-import org.jacis.index.JacisIndexRegistry;
-import org.jacis.index.JacisIndexRegistryTxView;
-import org.jacis.index.JacisNonUniqueIndex;
-import org.jacis.index.JacisUniqueIndex;
+import org.jacis.index.*;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 import org.jacis.util.ConcurrentWeakHashMap;
@@ -134,9 +131,19 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return indexRegistry.createNonUniqueIndex(indexName, indexKeyFunction);
   }
 
+
   @Override
   public <IK> JacisNonUniqueIndex<IK, K, TV> getNonUniqueIndex(String indexName) {
     return indexRegistry.getNonUniqueIndex(indexName);
+  }
+
+  @Override
+  public <IK> JacisNonUniqueMultiIndex<IK, K, TV> createNonUniqueMultiIndex(String indexName, Function<TV, Set<IK>> indexKeyFunction) {
+    return indexRegistry.createNonUniqueMultiIndex(indexName, indexKeyFunction);
+  }
+
+  public <IK> JacisNonUniqueMultiIndex<IK, K, TV> getNonUniqueMultiIndex(String indexName) {
+    return indexRegistry.getNonUniqueMultiIndex(indexName);
   }
 
   @Override
