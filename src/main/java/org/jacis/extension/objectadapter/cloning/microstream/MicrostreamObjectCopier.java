@@ -1,22 +1,18 @@
 package org.jacis.extension.objectadapter.cloning.microstream;
 
-import static one.microstream.X.notNull;
+import org.eclipse.serializer.collections.types.XGettingCollection;
+import org.eclipse.serializer.persistence.binary.types.Binary;
+import org.eclipse.serializer.persistence.binary.types.BinaryPersistence;
+import org.eclipse.serializer.persistence.binary.types.BinaryPersistenceFoundation;
+import org.eclipse.serializer.persistence.exceptions.PersistenceExceptionTransfer;
+import org.eclipse.serializer.persistence.types.*;
+import org.eclipse.serializer.reference.Reference;
+import org.eclipse.serializer.util.X;
 
 import java.io.Closeable;
 
-import one.microstream.X;
-import one.microstream.collections.types.XGettingCollection;
-import one.microstream.persistence.binary.types.Binary;
-import one.microstream.persistence.binary.types.BinaryPersistence;
-import one.microstream.persistence.binary.types.BinaryPersistenceFoundation;
-import one.microstream.persistence.exceptions.PersistenceExceptionTransfer;
-import one.microstream.persistence.types.PersistenceContextDispatcher;
-import one.microstream.persistence.types.PersistenceIdSet;
-import one.microstream.persistence.types.PersistenceManager;
-import one.microstream.persistence.types.PersistenceSource;
-import one.microstream.persistence.types.PersistenceTarget;
-import one.microstream.persistence.types.PersistenceTypeDictionaryManager;
-import one.microstream.reference.Reference;
+import static org.eclipse.serializer.util.X.notNull;
+
 
 interface MicrostreamObjectCopier extends Closeable {
 

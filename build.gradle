@@ -52,9 +52,9 @@ dependencies {
     // --- transaction
     implementation group: 'javax.transaction', name: 'jta', version: '1.1'
     // --- EXTENSION microstream persistence
-    compileOnly group: 'one.microstream', name: 'microstream-storage-embedded', version: version_microstream
-    testImplementation group: 'one.microstream', name: 'microstream-storage-embedded', version: version_microstream
-    testImplementation group: 'one.microstream', name: 'microstream-storage-embedded-configuration', version: version_microstream
+    compileOnly group: 'org.eclipse.store', name: 'storage-embedded', version: version_eclipse_store
+    testImplementation group: 'org.eclipse.store', name: 'storage-embedded', version: version_eclipse_store
+    testImplementation group: 'org.eclipse.store', name: 'storage-embedded-configuration', version: version_eclipse_store
     // --- EXTENSION JetBrains Xodus
     compileOnly group: 'org.jetbrains.xodus', name: 'xodus-openAPI', version: version_xodus
     compileOnly group: 'org.jetbrains.xodus', name: 'xodus-environment', version: version_xodus

@@ -3,14 +3,14 @@
  */
 package org.jacis.persistence.microstream.microstreamframework.typehandler.arraylist;
 
+import org.eclipse.serializer.persistence.binary.types.AbstractBinaryHandlerCustom;
+import org.eclipse.serializer.persistence.binary.types.Binary;
+import org.eclipse.serializer.persistence.types.PersistenceLoadHandler;
+import org.eclipse.serializer.persistence.types.PersistenceReferenceLoader;
+import org.eclipse.serializer.persistence.types.PersistenceStoreHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import one.microstream.persistence.binary.internal.AbstractBinaryHandlerCustom;
-import one.microstream.persistence.binary.types.Binary;
-import one.microstream.persistence.types.PersistenceLoadHandler;
-import one.microstream.persistence.types.PersistenceReferenceLoader;
-import one.microstream.persistence.types.PersistenceStoreHandler;
 
 public class TestListObjectHandler extends AbstractBinaryHandlerCustom<TestListObject> {
 

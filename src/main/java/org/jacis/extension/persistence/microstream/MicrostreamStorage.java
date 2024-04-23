@@ -3,23 +3,22 @@
  */
 package org.jacis.extension.persistence.microstream;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
+import org.eclipse.store.storage.types.StorageManager;
 import org.jacis.container.JacisContainer.StoreIdentifier;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.store.JacisStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import one.microstream.storage.types.StorageManager;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Representing a single microstream storage manager storing to one storage directory.
  * A single instance of this class can be set for multiple JACIS stores managed by the same JACIs container.
  * In this the store operation for all committed objects of all stores is done in an atomic call after the commit.
- * 
+ *
  * @author Jan Wiemer
  */
 public class MicrostreamStorage {

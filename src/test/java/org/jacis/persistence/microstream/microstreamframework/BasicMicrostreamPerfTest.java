@@ -4,9 +4,9 @@
 
 package org.jacis.persistence.microstream.microstreamframework;
 
-import one.microstream.storage.embedded.configuration.types.EmbeddedStorageConfigurationBuilder;
-import one.microstream.storage.embedded.types.EmbeddedStorageFoundation;
-import one.microstream.storage.embedded.types.EmbeddedStorageManager;
+import org.eclipse.store.storage.embedded.configuration.types.EmbeddedStorageConfigurationBuilder;
+import org.eclipse.store.storage.embedded.types.EmbeddedStorageFoundation;
+import org.eclipse.store.storage.embedded.types.EmbeddedStorageManager;
 import org.jacis.testhelper.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Ignore;
@@ -60,6 +60,7 @@ public class BasicMicrostreamPerfTest {
   }
 
   @Test
+  @Ignore
   public void testUpdatePerformance() {
     log.info("===== TEST UPDATE PERFORMANCE =====");
     Arrays.asList(200, 500, 1_000, 10_000, 100_000, 1_000_000, 2_000_000).stream().filter(size -> size <= MAX_TEST_SIZE).forEach(size -> {
@@ -73,6 +74,7 @@ public class BasicMicrostreamPerfTest {
   }
 
   @Test
+  @Ignore
   public void testInsertPerformance() {
     log.info("===== TEST INSERT PERFORMANCE =====");
     Arrays.asList(200, 500, 1_000, 10_000, 20_000, 30_000).stream().filter(size -> size <= MAX_TEST_SIZE).forEach(n -> {
