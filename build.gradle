@@ -51,15 +51,13 @@ dependencies {
     testRuntimeOnly group: 'ch.qos.logback', name: 'logback-classic', version: version_logback
     // --- transaction
     implementation group: 'javax.transaction', name: 'jta', version: '1.1'
-    // --- EXTENSION microstream persistence
-    compileOnly group: 'org.eclipse.store', name: 'storage-embedded', version: version_eclipse_store
-    testImplementation group: 'org.eclipse.store', name: 'storage-embedded', version: version_eclipse_store
-    testImplementation group: 'org.eclipse.store', name: 'storage-embedded-configuration', version: version_eclipse_store
     // --- EXTENSION JetBrains Xodus
     compileOnly group: 'org.jetbrains.xodus', name: 'xodus-openAPI', version: version_xodus
     compileOnly group: 'org.jetbrains.xodus', name: 'xodus-environment', version: version_xodus
     testImplementation group: 'org.jetbrains.xodus', name: 'xodus-openAPI', version: version_xodus
     testImplementation group: 'org.jetbrains.xodus', name: 'xodus-environment', version: version_xodus
+    // --- EXTENSION microstream persistence
+    compileOnly group: 'org.eclipse.store', name: 'storage-embedded', version: version_eclipse_store
     // --- UTILITIES
     compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version_jackson
     testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version_jackson
