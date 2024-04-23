@@ -242,7 +242,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   public TV getReadOnly(K key) {
     return getReadOnly(key, getTxView());
   }
-
+  
   @Override
   public TV lockReadOnly(K key) {
     return lockReadOnly(key, getOrCreateTxView());
