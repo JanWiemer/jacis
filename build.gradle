@@ -25,10 +25,10 @@ ext {
     licenseName = "Apache-2.0 License"
     licenseURL = "https://github.com/JanWiemer/jacis/blob/master/LICENSE"
     isReleaseVersion = Boolean.getBoolean("releasebuild")
-    deployUser = System.properties.get("deployUser")
-    deployPw = System.properties.get("deployPw")
-    deploy_repo_release = System.properties.get("deploy_repo_release")
-    deploy_repo_snapshot = System.properties.get("deploy_repo_snapshot")
+    deploy_user = System.properties.get("deployUser")
+    deploy_pw = System.properties.get("deployPw")
+    deploy_repo_release = System.properties.get("deployRepoRelease")
+    deploy_repo_snapshot = System.properties.get("deployRepoSnapshot")
 }
 
 print '---------- JACIS BUILD -------- '
@@ -135,8 +135,8 @@ publishing {
     repositories {
         maven {
             credentials {
-                username deployUser
-                password deployPw
+                username deploy_user
+                password deploy_pw
             }
             if (isReleaseVersion) {
                 url deploy_repo_release

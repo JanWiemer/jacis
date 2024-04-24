@@ -54,7 +54,7 @@ jobs:
       - name: Deploy ( to https://maven.pkg.github.com/janwiemer/jacis )
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: publish --scan -Dreleasebuild=${{ github.event.inputs.release }} -Dusedateversion=true -DdeployUser=JanWiemer -DdeployPw=${{secrets.GITHUB_TOKEN}} -Ddeploy_repo_release=https://maven.pkg.github.com/janwiemer/jacis -Ddeploy_repo_snapshot=https://maven.pkg.github.com/janwiemer/jacis
+          arguments: publish --scan -Dreleasebuild=${{ github.event.inputs.release }} -Dusedateversion=true -DdeployUser=JanWiemer -DdeployPw=${{secrets.GITHUB_TOKEN}} -DdeployRepoRelease=https://maven.pkg.github.com/janwiemer/jacis -DdeployRepoSnapshot=https://maven.pkg.github.com/janwiemer/jacis
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Determine Release versions
