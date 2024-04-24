@@ -138,7 +138,6 @@ publishing {
                 username deploy_user
                 password deploy_pw
             }
-            credentials(PasswordCredentials)
             if (isReleaseVersion) {
                 url deploy_repo_release
             } else {
