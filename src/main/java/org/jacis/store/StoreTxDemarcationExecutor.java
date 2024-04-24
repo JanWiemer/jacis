@@ -4,11 +4,6 @@
 
 package org.jacis.store;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.locks.ReadWriteLock;
-
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisModificationListenerException;
 import org.jacis.exception.JacisTrackedViewModificationException;
@@ -18,6 +13,11 @@ import org.jacis.plugin.persistence.JacisPersistenceAdapter;
 import org.jacis.plugin.readonly.object.JacisReadonlyModeSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * This class contains the code for actual transaction demarcation.
@@ -33,22 +33,34 @@ class StoreTxDemarcationExecutor {
     if (dirtyChecker == null) {
       return;
     }
-    logger.trace("dirty check {} on {} by Thread {}", txView, this, Thread.currentThread().getName());
-    for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
-      if (!entryTxView.isUpdated()) {
-        K key = entryTxView.getKey();
-        TV value = entryTxView.getValue();
-        TV origValue = entryTxView.getOrigValue();
-        boolean dirty = dirtyChecker.isDirty(key, origValue, value);
-        if (dirty) {
-          logger.debug("detected dirty object not marked as updated {}", key);
-          if (logger.isTraceEnabled()) {
-            logger.debug(" ... orig value: {}", origValue);
-            logger.debug(" ... new value : {}", value);
+    EventsJfr.JacisDirtyCheckJfrEvent jfrEvent = new EventsJfr.JacisDirtyCheckJfrEvent().begin(store, txView, txView.getTransaction());
+    Throwable exception = null;
+    try {
+      int foundDirty = 0;
+      logger.trace("dirty check {} on {} by Thread {}", txView, this, Thread.currentThread().getName());
+      for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+        if (!entryTxView.isUpdated()) {
+          K key = entryTxView.getKey();
+          TV value = entryTxView.getValue();
+          TV origValue = entryTxView.getOrigValue();
+          boolean dirty = dirtyChecker.isDirty(key, origValue, value);
+          if (dirty) {
+            logger.debug("detected dirty object not marked as updated {}", key);
+            if (logger.isTraceEnabled()) {
+              logger.debug(" ... orig value: {}", origValue);
+              logger.debug(" ... new value : {}", value);
+            }
+            foundDirty++;
+            txView.updateValue(entryTxView, value);
           }
-          txView.updateValue(entryTxView, value);
         }
       }
+      jfrEvent.setFoundDirty(foundDirty);
+    } catch (Exception e) {
+      exception = e;
+      throw e;
+    } finally {
+      jfrEvent.setException(exception).commit();
     }
   }
 
@@ -62,40 +74,49 @@ class StoreTxDemarcationExecutor {
       logger.warn("ignored prepare invalidated {} on {} (invalidated because {}) by Thread {}", txView, store, txView.getInvalidationReason(), Thread.currentThread().getName());
       return;
     }
-    executeDirtyCheck(store, txView);
-    logger.trace("prepare {} on {} by Thread {}", txView, this, Thread.currentThread().getName());
-    txView.startCommitPhase();
-    Map<K, Long> optimisticLockVersionMap = txView.getOptimisticLockVersionMap();
-    if (txView.getNumberOfUpdatedEntries() > 0 || optimisticLockVersionMap != null) {
-      try {
-        storeAccessLock.writeLock().lock();
-        if (optimisticLockVersionMap != null) {
-          for (Entry<K, Long> optLock : optimisticLockVersionMap.entrySet()) {
-            Long lockedVersion = optLock.getValue();
-            StoreEntry<K, TV, CV> entryCommitted = store.getCommittedEntry(optLock.getKey());
-            StoreEntryTxView<K, TV, CV> entryTxView = new StoreEntryTxView<>(entryCommitted, lockedVersion);
+    EventsJfr.JacisTxJfrEvent jfrEvent = new EventsJfr.JacisTxJfrEvent().begin(EventsJfr.OperationType.PREPARE, store, txView, transaction);
+    Throwable exception = null;
+    try {
+      executeDirtyCheck(store, txView);
+      logger.trace("prepare {} on {} by Thread {}", txView, this, Thread.currentThread().getName());
+      txView.startCommitPhase();
+      Map<K, Long> optimisticLockVersionMap = txView.getOptimisticLockVersionMap();
+      if (txView.getNumberOfUpdatedEntries() > 0 || optimisticLockVersionMap != null) {
+        try {
+          storeAccessLock.writeLock().lock();
+          if (optimisticLockVersionMap != null) {
+            for (Entry<K, Long> optLock : optimisticLockVersionMap.entrySet()) {
+              Long lockedVersion = optLock.getValue();
+              StoreEntry<K, TV, CV> entryCommitted = store.getCommittedEntry(optLock.getKey());
+              StoreEntryTxView<K, TV, CV> entryTxView = new StoreEntryTxView<>(entryCommitted, lockedVersion);
+              entryTxView.assertNotStale(txView);
+              entryCommitted.lockedFor(txView);
+            }
+          }
+          for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getUpdatedEntriesForCommit()) {
+            StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
+            K key = entryTxView.getKey();
             entryTxView.assertNotStale(txView);
             entryCommitted.lockedFor(txView);
+            if (entryTxView.getValue() != null && store.getObjectTypeSpec().isSwitchToReadOnlyModeInPrepare()) {
+              ((JacisReadonlyModeSupport) entryTxView.getValue()).switchToReadOnlyMode();
+            }
+            trackPrepareModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
           }
+          store.getIndexRegistry().lockUniqueIndexKeysForTx(txView.getTransaction());
+        } finally {
+          storeAccessLock.writeLock().unlock();
         }
-        for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getUpdatedEntriesForCommit()) {
-          StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
-          K key = entryTxView.getKey();
-          entryTxView.assertNotStale(txView);
-          entryCommitted.lockedFor(txView);
-          if (entryTxView.getValue() != null && store.getObjectTypeSpec().isSwitchToReadOnlyModeInPrepare()) {
-            ((JacisReadonlyModeSupport) entryTxView.getValue()).switchToReadOnlyMode();
-          }
-          trackPrepareModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
-        }
-        store.getIndexRegistry().lockUniqueIndexKeysForTx(txView.getTransaction());
-      } finally {
-        storeAccessLock.writeLock().unlock();
       }
-    }
-    JacisPersistenceAdapter<K, TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
-    if (persistenceAdapter != null) {
-      persistenceAdapter.afterPrepareForStore(store, transaction);
+      JacisPersistenceAdapter<K, TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
+      if (persistenceAdapter != null) {
+        EventsJfr.withPersistentAdapterEvent(jfrEvent, () -> persistenceAdapter.afterPrepareForStore(store, transaction));
+      }
+    } catch (Exception e) {
+      exception = e;
+      throw e;
+    } finally {
+      jfrEvent.setException(exception).commit();
     }
   }
 
@@ -116,6 +137,7 @@ class StoreTxDemarcationExecutor {
     if (trace) {
       logger.trace("internalCommit {} on {} by Thread {}", txView, store, Thread.currentThread().getName());
     }
+    EventsJfr.JacisTxJfrEvent jfrEvent = new EventsJfr.JacisTxJfrEvent().begin(EventsJfr.OperationType.COMMIT, store, txView, transaction);
     RuntimeException toThrow = null;
     try {
       if (txView.getNumberOfUpdatedEntries() > 0) {
@@ -144,7 +166,7 @@ class StoreTxDemarcationExecutor {
               entryCommitted.update(entryTxView, txView);
               entryCommitted.releaseLockedFor(txView);
               return entryCommitted;
-            });            
+            });
           }
         } finally {
           storeAccessLock.writeLock().unlock();
@@ -155,8 +177,9 @@ class StoreTxDemarcationExecutor {
       txView.afterCommit();
       JacisPersistenceAdapter<K, TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
       if (persistenceAdapter != null) {
-        persistenceAdapter.afterCommitForStore(store, transaction);
+        EventsJfr.withPersistentAdapterEvent(jfrEvent, () -> persistenceAdapter.afterCommitForStore(store, transaction));
       }
+      jfrEvent.setException(toThrow).commit();
     }
     if (toThrow != null) {
       throw toThrow;
@@ -176,29 +199,38 @@ class StoreTxDemarcationExecutor {
     if (trace) {
       logger.trace("rollback {} on {} by Thread {}", txView, store, Thread.currentThread().getName());
     }
-    if (txView.getNumberOfUpdatedEntries() > 0) {
-      try {
-        storeAccessLock.writeLock().lock();
-        store.getIndexRegistry().unlockUniqueIndexKeysForTx(txView.getTransaction());
-        for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
-          K key = entryTxView.getKey();
-          if (trace) {
-            logger.trace("... rollback {}, Store: {}", store.getObjectInfo(key), this);
+    EventsJfr.JacisTxJfrEvent jfrEvent = new EventsJfr.JacisTxJfrEvent().begin(EventsJfr.OperationType.ROLLBACK, store, txView, transaction);
+    Throwable exception = null;
+    try {
+      if (txView.getNumberOfUpdatedEntries() > 0) {
+        try {
+          storeAccessLock.writeLock().lock();
+          store.getIndexRegistry().unlockUniqueIndexKeysForTx(txView.getTransaction());
+          for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getAllEntryTxViews()) {
+            K key = entryTxView.getKey();
+            if (trace) {
+              logger.trace("... rollback {}, Store: {}", store.getObjectInfo(key), this);
+            }
+            store.updateCommittedEntry(key, (k, entryCommitted) -> {
+              entryCommitted.releaseLockedFor(txView);
+              return entryCommitted;
+            });
           }
-          store.updateCommittedEntry(key, (k, entryCommitted) -> {
-            entryCommitted.releaseLockedFor(txView);
-            return entryCommitted;
-          });
+        } finally {
+          storeAccessLock.writeLock().unlock();
         }
-      } finally {
-        storeAccessLock.writeLock().unlock();
       }
-    }
-    store.checkRemoveCommittedEntries(txView);
-    txView.afterRollback();
-    JacisPersistenceAdapter<K, TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
-    if (persistenceAdapter != null) {
-      persistenceAdapter.afterRollbackForStore(store, transaction);
+      store.checkRemoveCommittedEntries(txView);
+      txView.afterRollback();
+      JacisPersistenceAdapter<K, TV> persistenceAdapter = store.getObjectTypeSpec().getPersistenceAdapter();
+      if (persistenceAdapter != null) {
+        EventsJfr.withPersistentAdapterEvent(jfrEvent, () -> persistenceAdapter.afterRollbackForStore(store, transaction));
+      }
+    } catch (Exception e) {
+      exception = e;
+      throw e;
+    } finally {
+      jfrEvent.setException(exception).commit();
     }
   }
 
@@ -207,6 +239,7 @@ class StoreTxDemarcationExecutor {
     if (txView != null) {
       txView.destroy();
     }
+    new EventsJfr.JacisStoreStatisticJfrEvent().track(store);
   }
 
   private <K, TV, CV> void trackPrepareModification(JacisStoreImpl<K, TV, CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {

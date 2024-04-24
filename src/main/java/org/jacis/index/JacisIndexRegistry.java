@@ -57,6 +57,18 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     this.store = store;
   }
 
+  public int getNumberOfUniqueIndices() {
+    return uniqueIndexDefinitionMap.size();
+  }
+
+  public int getNumberOfNonUniqueIndices() {
+    return nonUniqueIndexDefinitionMap.size();
+  }
+
+  public int getNumberOfNonUniqueMultiIndices() {
+    return nonUniqueMultiIndexDefinitionMap.size();
+  }
+
   public void clearIndices() {
     store.executeAtomic(() -> {
       nonUniqueIndexDataMap.values().forEach(Map::clear);

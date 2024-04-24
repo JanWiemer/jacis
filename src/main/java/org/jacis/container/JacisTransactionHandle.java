@@ -5,6 +5,7 @@
 package org.jacis.container;
 
 import org.jacis.JacisApi;
+import org.jacis.store.EventsJfr;
 
 import java.util.Objects;
 
@@ -26,6 +27,8 @@ public class JacisTransactionHandle {
   private final Object externalTransaction;
   /** Creation timestamp in milliseconds (<code>System.currentTimeMillis()</code>) */
   private final long creationTimestampMs;
+  /** JFR event to monitor the transaction in Java flight recorder. */
+  private final EventsJfr.JacisContainerTxJfrEvent jfrEvent;
 
   /**
    * Creates a transaction handle with the passed parameters.
@@ -39,6 +42,7 @@ public class JacisTransactionHandle {
     this.txDescription = txDescription;
     this.externalTransaction = externalTransaction;
     this.creationTimestampMs = System.currentTimeMillis();
+    jfrEvent = new EventsJfr.JacisContainerTxJfrEvent(txId, txDescription);
   }
 
   /** @return The id of the transaction */
@@ -59,6 +63,11 @@ public class JacisTransactionHandle {
   /** @return Creation timestamp in milliseconds (System.currentTimeMillis()) */
   public long getCreationTimestampMs() {
     return creationTimestampMs;
+  }
+
+  
+  public EventsJfr.JacisContainerTxJfrEvent getJfrEvent() {
+    return jfrEvent;
   }
 
   @Override

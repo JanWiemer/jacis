@@ -574,6 +574,7 @@ public class JacisContainer {
       if (executeSynchronized) {
         transactionDemarcationLock.writeLock().unlock();
       }
+      transaction.getJfrEvent().trackCommit(storeMap.size());
     }
   }
 
@@ -619,6 +620,7 @@ public class JacisContainer {
       if (executeSynchronized) {
         transactionDemarcationLock.writeLock().unlock();
       }
+      transaction.getJfrEvent().trackRollback(storeMap.size());
     }
   }
 
