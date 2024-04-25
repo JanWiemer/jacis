@@ -3,11 +3,13 @@ package org.jacis.store;
 import jdk.jfr.*;
 import org.jacis.container.JacisTransactionHandle;
 
+import static jdk.jfr.Timespan.MILLISECONDS;
+
 
 public interface EventsJfr {
 
   @Name("org.jacis.StoreStatistic")
-  @Label("Store Statistic")
+  @Label("JACIS Store Statistic")
   @Category({"JACIS"})
   @Description("Statistic regarding a JACIS store")
   @Period("10 s")
@@ -50,7 +52,7 @@ public interface EventsJfr {
   //===========================================================================================================================
 
   @Name("org.jacis.Transaction")
-  @Label("Transaction")
+  @Label("JACIS Transaction")
   @Category({"JACIS"})
   @Description("Transaction on a JACIS container")
   @StackTrace(false)
@@ -102,7 +104,7 @@ public interface EventsJfr {
     @BooleanFlag
     @Label("ReadOnly")
     boolean readOnly;
-    @Timespan
+    @Timespan(MILLISECONDS)
     @Label("TX lifetime")
     long storeTxLifetime;
 
@@ -142,7 +144,7 @@ public interface EventsJfr {
   public enum OperationType {PREPARE, COMMIT, ROLLBACK}
 
   @Name("org.jacis.tx.StoreTransaction")
-  @Label("Prepare / Commit / Rollback")
+  @Label("JACIS Prepare / Commit / Rollback")
   @Category({"JACIS"})
   @Description("Represents a prepare, commit or rollback for a transaction on a Jacis Store")
   @StackTrace(false)
@@ -165,7 +167,7 @@ public interface EventsJfr {
   //===========================================================================================================================
 
   @Name("org.jacis.tx.DirtyCheck")
-  @Label("Dirty-Check")
+  @Label("JACIS Dirty-Check")
   @Category({"JACIS"})
   @Description("The dirty check for a transaction on a Jacis Store")
   @StackTrace(false)
@@ -187,7 +189,7 @@ public interface EventsJfr {
   //===========================================================================================================================
 
   @Name("org.jacis.PersistenceAdapter")
-  @Label("Persistence Adapter")
+  @Label("JACIS Persistence Adapter")
   @Category({"JACIS"})
   @Description("Actions of the persistence adapter on prepare, commit or rollback for a transaction on a Jacis Store")
   @StackTrace(false)
