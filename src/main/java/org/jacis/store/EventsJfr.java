@@ -6,8 +6,9 @@ import org.jacis.container.JacisTransactionHandle;
 
 public interface EventsJfr {
 
-  @Label("org.jacis.StoreStatistic")
-  @Category({"JACIS", "Statistic"})
+  @Name("org.jacis.StoreStatistic")
+  @Label("Store Statistic")
+  @Category({"JACIS"})
   @Description("Statistic regarding a JACIS store")
   @Period("10 s")
   @StackTrace(false)
@@ -48,8 +49,9 @@ public interface EventsJfr {
 
   //===========================================================================================================================
 
-  @Label("org.jacis.JacisContainerTx")
-  @Category({"JACIS", "TX"})
+  @Name("org.jacis.Transaction")
+  @Label("Transaction")
+  @Category({"JACIS"})
   @Description("Transaction on a JACIS container")
   @StackTrace(false)
   class JacisContainerTxJfrEvent extends Event {
@@ -64,9 +66,9 @@ public interface EventsJfr {
     int numberOfStores;
 
     public JacisContainerTxJfrEvent(String txId, String txDescription) {
+      super.begin();
       this.txId = txId;
       this.txDescription = txDescription;
-      super.begin();
     }
 
     public void trackCommit(int numberOfStores) {
@@ -130,8 +132,9 @@ public interface EventsJfr {
   //===========================================================================================================================
   public enum OperationType {PREPARE, COMMIT, ROLLBACK}
 
-  @Label("org.jacis.tx.Demarcation")
-  @Category({"JACIS", "TX"})
+  @Name("org.jacis.tx.StoreTransaction")
+  @Label("Prepare / Commit / Rollback")
+  @Category({"JACIS"})
   @Description("Represents a prepare, commit or rollback for a transaction on a Jacis Store")
   @StackTrace(false)
   class JacisTxJfrEvent extends JacisJfrEvent {
@@ -147,8 +150,9 @@ public interface EventsJfr {
 
   //===========================================================================================================================
 
-  @Label("org.jacis.tx.DirtyCheck")
-  @Category({"JACIS", "TX"})
+  @Name("org.jacis.tx.DirtyCheck")
+  @Label("Dirty-Check")
+  @Category({"JACIS"})
   @Description("The dirty check for a transaction on a Jacis Store")
   @StackTrace(false)
   class JacisDirtyCheckJfrEvent extends JacisJfrEvent {
@@ -162,8 +166,9 @@ public interface EventsJfr {
 
   //===========================================================================================================================
 
-  @Label("org.jacis.PersistenceAdapter")
-  @Category({"JACIS", "Persistence"})
+  @Name("org.jacis.PersistenceAdapter")
+  @Label("Persistence Adapter")
+  @Category({"JACIS"})
   @Description("Actions of the persistence adapter on prepare, commit or rollback for a transaction on a Jacis Store")
   @StackTrace(false)
   class PersistenceAdapterJfrEvent extends JacisTxJfrEvent {
@@ -188,6 +193,9 @@ public interface EventsJfr {
     Throwable exception = null;
     try {
       task.run();
+      Thread.sleep(10);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     } catch (Exception e) {
       exception = e;
       throw e;
