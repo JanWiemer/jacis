@@ -33,7 +33,8 @@ class StoreTxDemarcationExecutor {
     if (dirtyChecker == null) {
       return;
     }
-    EventsJfr.JacisDirtyCheckJfrEvent jfrEvent = new EventsJfr.JacisDirtyCheckJfrEvent().begin(store, txView, txView.getTransaction());
+    EventsJfr.JacisDirtyCheckJfrEvent jfrEvent = new EventsJfr.JacisDirtyCheckJfrEvent(store, txView, txView.getTransaction());
+    jfrEvent.begin();
     Throwable exception = null;
     try {
       int foundDirty = 0;
@@ -74,7 +75,8 @@ class StoreTxDemarcationExecutor {
       logger.warn("ignored prepare invalidated {} on {} (invalidated because {}) by Thread {}", txView, store, txView.getInvalidationReason(), Thread.currentThread().getName());
       return;
     }
-    EventsJfr.JacisTxJfrEvent jfrEvent = new EventsJfr.JacisTxJfrEvent().begin(EventsJfr.OperationType.PREPARE, store, txView, transaction);
+    EventsJfr.JacisTxJfrEvent jfrEvent = new EventsJfr.JacisTxJfrEvent(EventsJfr.OperationType.PREPARE, store, txView, transaction);
+    jfrEvent.begin();
     Throwable exception = null;
     try {
       executeDirtyCheck(store, txView);
@@ -137,7 +139,8 @@ class StoreTxDemarcationExecutor {
     if (trace) {
       logger.trace("internalCommit {} on {} by Thread {}", txView, store, Thread.currentThread().getName());
     }
-    EventsJfr.JacisTxJfrEvent jfrEvent = new EventsJfr.JacisTxJfrEvent().begin(EventsJfr.OperationType.COMMIT, store, txView, transaction);
+    EventsJfr.JacisTxJfrEvent jfrEvent = new EventsJfr.JacisTxJfrEvent(EventsJfr.OperationType.COMMIT, store, txView, transaction);
+    jfrEvent.begin();
     RuntimeException toThrow = null;
     try {
       if (txView.getNumberOfUpdatedEntries() > 0) {
@@ -199,7 +202,8 @@ class StoreTxDemarcationExecutor {
     if (trace) {
       logger.trace("rollback {} on {} by Thread {}", txView, store, Thread.currentThread().getName());
     }
-    EventsJfr.JacisTxJfrEvent jfrEvent = new EventsJfr.JacisTxJfrEvent().begin(EventsJfr.OperationType.ROLLBACK, store, txView, transaction);
+    EventsJfr.JacisTxJfrEvent jfrEvent = new EventsJfr.JacisTxJfrEvent(EventsJfr.OperationType.ROLLBACK, store, txView, transaction);
+    jfrEvent.begin();
     Throwable exception = null;
     try {
       if (txView.getNumberOfUpdatedEntries() > 0) {

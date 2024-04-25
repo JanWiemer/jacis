@@ -66,21 +66,20 @@ public interface EventsJfr {
     int numberOfStores;
 
     public JacisContainerTxJfrEvent(String txId, String txDescription) {
-      super.begin();
       this.txId = txId;
       this.txDescription = txDescription;
     }
 
-    public void trackCommit(int numberOfStores) {
+    public JacisContainerTxJfrEvent trackCommit(int numberOfStores) {
       this.numberOfStores = numberOfStores;
       this.committed = true;
-      commit();
+      return this;
     }
 
-    public void trackRollback(int numberOfStores) {
+    public JacisContainerTxJfrEvent trackRollback(int numberOfStores) {
       this.numberOfStores = numberOfStores;
       this.committed = false;
-      commit();
+      return this;
     }
   }
 
@@ -107,9 +106,7 @@ public interface EventsJfr {
     @Label("TX lifetime")
     long storeTxLifetime;
 
-
-    <T extends JacisJfrEvent> T begin(JacisStoreAdminInterface<?, ?, ?> store, JacisStoreTxView<?, ?, ?> txView, JacisTransactionHandle transaction) {
-      super.begin();
+    protected JacisJfrEvent(JacisStoreAdminInterface<?, ?, ?> store, JacisStoreTxView<?, ?, ?> txView, JacisTransactionHandle transaction) {
       if (isEnabled()) {
         storeId = store.getStoreIdentifier().toShortString();
         txId = transaction.getTxId();
@@ -119,8 +116,20 @@ public interface EventsJfr {
         readOnly = txView.isReadOnly();
         storeTxLifetime = System.currentTimeMillis() - txView.getCreationTimestamp();
       }
-      return (T) this;
     }
+
+    protected JacisJfrEvent(JacisTxJfrEvent src) {
+      if (isEnabled()) {
+        storeId = src.storeId;
+        txId = src.txId;
+        txDescription = src.txDescription;
+        numberOfClonedEntries = src.numberOfClonedEntries;
+        numberOfUpdatedEntries = src.numberOfUpdatedEntries;
+        readOnly = src.readOnly;
+        storeTxLifetime = src.storeTxLifetime;
+      }
+    }
+
 
     JacisJfrEvent setException(Throwable exception) {
       this.exception = exception == null ? null : String.valueOf(exception);
@@ -141,9 +150,14 @@ public interface EventsJfr {
     @Label("Operation")
     String operationType;
 
-    <T extends JacisTxJfrEvent> T begin(OperationType opType, JacisStoreAdminInterface<?, ?, ?> store, JacisStoreTxView<?, ?, ?> txView, JacisTransactionHandle transaction) {
+    public JacisTxJfrEvent(OperationType opType, JacisStoreAdminInterface<?, ?, ?> store, JacisStoreTxView<?, ?, ?> txView, JacisTransactionHandle transaction) {
+      super(store, txView, transaction);
       operationType = opType.name();
-      return super.begin(store, txView, transaction);
+    }
+
+    protected JacisTxJfrEvent(JacisTxJfrEvent src) {
+      super(src);
+      operationType = src.operationType;
     }
 
   }
@@ -156,11 +170,17 @@ public interface EventsJfr {
   @Description("The dirty check for a transaction on a Jacis Store")
   @StackTrace(false)
   class JacisDirtyCheckJfrEvent extends JacisJfrEvent {
+
     @Label("Number Of Dirty")
     int numberOfDirty;
 
-    public void setFoundDirty(int numberOfDirty) {
+    public JacisDirtyCheckJfrEvent(JacisStoreAdminInterface<?, ?, ?> store, JacisStoreTxView<?, ?, ?> txView, JacisTransactionHandle transaction) {
+      super(store, txView, transaction);
+    }
+
+    public JacisDirtyCheckJfrEvent setFoundDirty(int numberOfDirty) {
       this.numberOfDirty = numberOfDirty;
+      return this;
     }
   }
 
@@ -172,30 +192,18 @@ public interface EventsJfr {
   @Description("Actions of the persistence adapter on prepare, commit or rollback for a transaction on a Jacis Store")
   @StackTrace(false)
   class PersistenceAdapterJfrEvent extends JacisTxJfrEvent {
-    PersistenceAdapterJfrEvent begin(JacisTxJfrEvent src) {
-      super.begin(); // do not call special begin(...) method of JacisTxJfrEvent but set the inherited properties in this method:
-      if (isEnabled()) {
-        operationType = src.operationType;
-        storeId = src.storeId;
-        txId = src.txId;
-        txDescription = src.txDescription;
-        numberOfClonedEntries = src.numberOfClonedEntries;
-        numberOfUpdatedEntries = src.numberOfUpdatedEntries;
-        readOnly = src.readOnly;
-        storeTxLifetime = src.storeTxLifetime;
-      }
-      return this;
+
+    public PersistenceAdapterJfrEvent(JacisTxJfrEvent src) {
+      super(src);
     }
   }
 
   static void withPersistentAdapterEvent(JacisTxJfrEvent surroundingEvt, Runnable task) {
-    PersistenceAdapterJfrEvent jfrEvent = new EventsJfr.PersistenceAdapterJfrEvent().begin(surroundingEvt);
+    PersistenceAdapterJfrEvent jfrEvent = new EventsJfr.PersistenceAdapterJfrEvent(surroundingEvt);
+    jfrEvent.begin();
     Throwable exception = null;
     try {
       task.run();
-      Thread.sleep(10);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
     } catch (Exception e) {
       exception = e;
       throw e;

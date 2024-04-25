@@ -202,7 +202,7 @@ public class JacisContainer {
     transactionDemarcationLock.writeLock().lock();
     try {
       storeMap.values().forEach(JacisStore::clear);
-      periodicJfrEventHooks.forEach(h -> FlightRecorder.removePeriodicEvent(h));
+      periodicJfrEventHooks.forEach(FlightRecorder::removePeriodicEvent);
       periodicJfrEventHooks.clear();
     } finally {
       transactionDemarcationLock.writeLock().unlock();
@@ -386,7 +386,6 @@ public class JacisContainer {
     return handle;
   }
 
-  @SuppressWarnings("SpellCheckingInspection")
   public List<JacisTransactionInfo> getTransactionInfos() {
     Collection<JacisTransactionHandle> handles = txAdapter.getAllTransactionHandles();
     List<JacisTransactionInfo> res = new ArrayList<>(handles.size());
@@ -593,7 +592,7 @@ public class JacisContainer {
       if (executeSynchronized) {
         transactionDemarcationLock.writeLock().unlock();
       }
-      transaction.getJfrEvent().trackCommit(storeMap.size());
+      transaction.getJfrEvent().trackCommit(storeMap.size()).commit();
     }
   }
 
@@ -639,7 +638,7 @@ public class JacisContainer {
       if (executeSynchronized) {
         transactionDemarcationLock.writeLock().unlock();
       }
-      transaction.getJfrEvent().trackRollback(storeMap.size());
+      transaction.getJfrEvent().trackRollback(storeMap.size()).commit();
     }
   }
 

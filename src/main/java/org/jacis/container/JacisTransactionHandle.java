@@ -43,6 +43,7 @@ public class JacisTransactionHandle {
     this.externalTransaction = externalTransaction;
     this.creationTimestampMs = System.currentTimeMillis();
     jfrEvent = new EventsJfr.JacisContainerTxJfrEvent(txId, txDescription);
+    jfrEvent.begin();
   }
 
   /** @return The id of the transaction */
