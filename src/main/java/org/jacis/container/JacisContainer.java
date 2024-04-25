@@ -4,6 +4,7 @@
 
 package org.jacis.container;
 
+import jdk.jfr.FlightRecorder;
 import org.jacis.JacisApi;
 import org.jacis.exception.*;
 import org.jacis.plugin.JacisTransactionListener;
@@ -11,10 +12,7 @@ import org.jacis.plugin.persistence.JacisPersistenceAdapter;
 import org.jacis.plugin.txadapter.JacisTransactionAdapter;
 import org.jacis.plugin.txadapter.local.JacisLocalTransaction;
 import org.jacis.plugin.txadapter.local.JacisTransactionAdapterLocal;
-import org.jacis.store.JacisStore;
-import org.jacis.store.JacisStoreAdminInterface;
-import org.jacis.store.JacisStoreImpl;
-import org.jacis.store.JacisTransactionInfo;
+import org.jacis.store.*;
 import org.jacis.util.TransactionExecutor;
 
 import java.util.*;
@@ -58,6 +56,8 @@ public class JacisContainer {
   private final Map<StoreIdentifier, JacisStore<?, ?>> storeMap = new ConcurrentHashMap<>();
   /** List of transaction listeners / observers (type {@link JacisTransactionListener}) providing call-backs before / after prepare / internalCommit / rollback. */
   private final List<JacisTransactionListener> txListeners = new CopyOnWriteArrayList<>();
+  /** List of registered JFR periodic event hooks (stored to de-register at destroy) */
+  private final List<Runnable> periodicJfrEventHooks = new ArrayList<>();
   /** Lock object to synchronize the TX demarcation operations (prepare / commit / rollback) over all threads and stores. */
   private final ReadWriteLock transactionDemarcationLock = new ReentrantReadWriteLock(true);
 
@@ -117,6 +117,14 @@ public class JacisContainer {
       registerTransactionListener(persistenceAdapter);
     }
     storeMap.put(storeIdentifier, store);
+    transactionDemarcationLock.writeLock().lock();
+    try {
+      Runnable jfrEvtHook = () -> new EventsJfr.JacisStoreStatisticJfrEvent(store);
+      periodicJfrEventHooks.add(jfrEvtHook);
+      FlightRecorder.addPeriodicEvent(EventsJfr.JacisStoreStatisticJfrEvent.class, jfrEvtHook);
+    } finally {
+      transactionDemarcationLock.writeLock().unlock();
+    }
     return store;
   }
 
@@ -185,6 +193,17 @@ public class JacisContainer {
     transactionDemarcationLock.writeLock().lock();
     try {
       storeMap.values().forEach(JacisStore::clear);
+    } finally {
+      transactionDemarcationLock.writeLock().unlock();
+    }
+  }
+
+  public void destroy() {
+    transactionDemarcationLock.writeLock().lock();
+    try {
+      storeMap.values().forEach(JacisStore::clear);
+      periodicJfrEventHooks.forEach(h -> FlightRecorder.removePeriodicEvent(h));
+      periodicJfrEventHooks.clear();
     } finally {
       transactionDemarcationLock.writeLock().unlock();
     }

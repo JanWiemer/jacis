@@ -65,7 +65,7 @@ public class JacisTransactionHandle {
     return creationTimestampMs;
   }
 
-  
+
   public EventsJfr.JacisContainerTxJfrEvent getJfrEvent() {
     return jfrEvent;
   }

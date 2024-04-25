@@ -239,7 +239,6 @@ class StoreTxDemarcationExecutor {
     if (txView != null) {
       txView.destroy();
     }
-    new EventsJfr.JacisStoreStatisticJfrEvent().track(store);
   }
 
   private <K, TV, CV> void trackPrepareModification(JacisStoreImpl<K, TV, CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
