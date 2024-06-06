@@ -584,7 +584,7 @@ public class JacisContainer {
         }
       }
       txListeners.forEach(l -> l.afterCommit(this, transaction));
-      txAdapter.disjoinCurrentTransaction();
+      txAdapter.disjoinCurrentTransaction(transaction);
       if (exceptions != null && !exceptions.isEmpty()) {
         buildAndThrowException(transaction, true, exceptions);
       }
@@ -630,7 +630,7 @@ public class JacisContainer {
         }
       }
       txListeners.forEach(l -> l.afterRollback(this, transaction));
-      txAdapter.disjoinCurrentTransaction();
+      txAdapter.disjoinCurrentTransaction(transaction);
       if (exceptions != null && !exceptions.isEmpty()) {
         buildAndThrowException(transaction, false, exceptions);
       }

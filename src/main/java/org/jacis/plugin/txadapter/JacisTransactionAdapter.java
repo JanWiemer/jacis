@@ -4,11 +4,11 @@
 
 package org.jacis.plugin.txadapter;
 
-import java.util.Collection;
-
 import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
+
+import java.util.Collection;
 
 /**
  * Transaction adapter that can be registered to bind the Jacis Store to externally managed transactions.
@@ -21,7 +21,7 @@ import org.jacis.container.JacisTransactionHandle;
  * <li>let the container join the currently active transaction,</li>
  * <li>remove the association between the container and the external transaction (when the transaction is finished).</li>
  * </ul>
- * 
+ *
  * @author Jan Wiemer
  */
 @JacisApi
@@ -46,7 +46,7 @@ public interface JacisTransactionAdapter {
    * Remove the association between the container and the external transaction (when the transaction is finished).
    */
   @SuppressWarnings("SpellCheckingInspection")
-  void disjoinCurrentTransaction();
+  void disjoinCurrentTransaction(JacisTransactionHandle transaction);
 
   /**
    * @param externalTransaction The external (global or local transaction)

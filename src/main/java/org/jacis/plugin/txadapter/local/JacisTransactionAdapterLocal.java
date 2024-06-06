@@ -4,15 +4,15 @@
 
 package org.jacis.plugin.txadapter.local;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.exception.JacisTransactionAlreadyStartedException;
 import org.jacis.plugin.txadapter.JacisTransactionAdapter;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Default implementation of the transaction adapter using local transactions.
@@ -54,13 +54,12 @@ public class JacisTransactionAdapterLocal implements JacisTransactionAdapter {
   }
 
   @Override
-  public void disjoinCurrentTransaction() {
-    JacisTransactionHandle tx = transaction.get();
+  public void disjoinCurrentTransaction(JacisTransactionHandle activeTx) {
+    JacisTransactionHandle tx = this.transaction.get();
     if (tx != null) {
       txMap.remove(tx.getExternalTransaction());
     }
-    transaction.remove();
-
+    this.transaction.remove();
   }
 
   public JacisLocalTransaction startLocalTransaction(JacisContainer jacisContainer, String txDescription) {

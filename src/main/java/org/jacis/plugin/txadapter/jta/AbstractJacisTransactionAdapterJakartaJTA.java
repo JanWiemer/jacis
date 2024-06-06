@@ -4,6 +4,7 @@
 
 package org.jacis.plugin.txadapter.jta;
 
+import jakarta.transaction.*;
 import org.jacis.JacisApi;
 import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisTransactionHandle;
@@ -14,7 +15,6 @@ import org.jacis.store.JacisTransactionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.transaction.*;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,9 +27,9 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"}) // since this is an API of the library
 @JacisApi // because it is intended to be extended
-public abstract class AbstractJacisTransactionAdapterJTA implements JacisTransactionAdapter {
+public abstract class AbstractJacisTransactionAdapterJakartaJTA implements JacisTransactionAdapter {
 
-  private static final Logger log = LoggerFactory.getLogger(AbstractJacisTransactionAdapterJTA.class);
+  private static final Logger log = LoggerFactory.getLogger(AbstractJacisTransactionAdapterJakartaJTA.class);
 
   /** Map storing the transaction handles for the active JTA transactions. */
   private final Map<Transaction, JacisTransactionHandle> transactionMap = new ConcurrentHashMap<>();

@@ -25,3 +25,4 @@ ivysettings-local.xml
 /bin/
 .classpath
 .project
+/.profileconfig.json
