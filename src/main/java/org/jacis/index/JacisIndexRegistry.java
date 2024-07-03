@@ -285,17 +285,18 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     JacisIndexRegistryTxView<K, TV> regTxView = store.getIndexRegistryTransactionView(); // null if no TX
     String indexName = index.getIndexName();
     Map<Object, Set<K>> indexMap = nonUniqueIndexDataMap.get(indexName);
+    Object ik = index.wrapIndexKey(indexKey);
     if (regTxView != null) {
-      Set<K> add = regTxView.getPrimaryKeysAddedForNonUniqueIndex(indexName, indexKey);
-      Set<K> del = regTxView.getPrimaryKeysDeletedForNonUniqueIndex(indexName, indexKey);
+      Set<K> add = regTxView.getPrimaryKeysAddedForNonUniqueIndex(indexName, ik);
+      Set<K> del = regTxView.getPrimaryKeysDeletedForNonUniqueIndex(indexName, ik);
       if (!add.isEmpty() || !del.isEmpty()) {
-        Set<K> res = indexMap.getOrDefault(indexKey, new HashSet<>());
+        Set<K> res = indexMap.getOrDefault(ik, new HashSet<>());
         res.removeAll(del);
         res.addAll(add);
         return res;
       }
     }
-    return indexMap.getOrDefault(indexKey, Collections.emptySet());
+    return indexMap.getOrDefault(ik, Collections.emptySet());
   }
 
   <IK> Set<K> multiGetFromNonUniqueIndexPrimaryKeys(JacisNonUniqueIndex<IK, K, TV> index, Collection<IK> indexKeys) {

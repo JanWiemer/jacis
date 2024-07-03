@@ -73,6 +73,21 @@ public class JacisNonUniqueIndexTest {
   }
 
   @Test
+  public void testNonUniqueIndexTrackNullKeys() {
+    JacisTestHelper testHelper = new JacisTestHelper();
+    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
+    JacisContainer container = store.getContainer();
+    JacisNonUniqueIndex<Object, String, TestObject> index = store.createNonUniqueIndex("IDX-NAME", TestObject::getStrValue);
+    container.withLocalTx(() -> {
+      store.update("1", new TestObject("A1a").setValue(5).setStrValue(null));
+      store.update("2", new TestObject("A1b").setValue(5).setStrValue(null));
+      store.update("3", new TestObject("A2").setValue(5).setStrValue("IDX-2"));
+      store.update("4", new TestObject("A3").setValue(5).setStrValue("IDX-3"));
+    });
+    assertEquals(2, index.getReadOnly(null).size());
+  }
+
+  @Test
   public void testNonUniqueIndexClearedDuringClear() {
     JacisTestHelper testHelper = new JacisTestHelper();
     JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();

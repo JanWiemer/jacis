@@ -78,17 +78,17 @@ public class JacisIndexRegistryTxView<K, TV> {
   }
 
   @java.lang.SuppressWarnings("java:S2789")
-  public <IK> Optional<K> getPrimaryKeyFromUniqueIndex(String indexName, IK indexKey) {
+  public <IK> Optional<K> getPrimaryKeyFromUniqueIndex(String indexName, Object indexKey) {
     Map<Object, Optional<K>> indexMap = uniqueIndexDataMap.get(indexName);
     return indexMap == null ? null : indexMap.get(indexKey);
   }
 
-  public <IK> Set<K> getPrimaryKeysAddedForNonUniqueIndex(String indexName, IK indexKey) {
+  public <IK> Set<K> getPrimaryKeysAddedForNonUniqueIndex(String indexName, Object indexKey) {
     Map<Object, Set<K>> addMap = nonUniqueIndexAddMap.get(indexName);
     return addMap == null ? Collections.emptySet() : addMap.getOrDefault(indexKey, Collections.emptySet());
   }
 
-  public <IK> Set<K> getPrimaryKeysDeletedForNonUniqueIndex(String indexName, IK indexKey) {
+  public <IK> Set<K> getPrimaryKeysDeletedForNonUniqueIndex(String indexName, Object indexKey) {
     Map<Object, Set<K>> delMap = nonUniqueIndexDelMap.get(indexName);
     return delMap == null ? Collections.emptySet() : delMap.getOrDefault(indexKey, Collections.emptySet());
   }
