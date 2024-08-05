@@ -6,6 +6,7 @@ import org.jacis.exception.JacisUniqueIndexViolationException;
 import org.jacis.plugin.JacisModificationListener;
 import org.jacis.store.JacisStoreImpl;
 import org.jacis.store.KeyValuePair;
+import org.jacis.util.ConcurrentHashSet;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -230,7 +231,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
       }
     }
     if (newIndexKey != null) {
-      Set<K> primaryKeySet = indexMap.computeIfAbsent(newIndexKey, k -> new HashSet<>());
+      Set<K> primaryKeySet = indexMap.computeIfAbsent(newIndexKey, k -> new ConcurrentHashSet<>());
       primaryKeySet.add(key);
     }
   }
@@ -252,7 +253,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     }
     for (Object newIndexKey : newIndexKeySet) {
       if (newIndexKey != null) {
-        Set<K> primaryKeySet = indexMap.computeIfAbsent(newIndexKey, k -> new HashSet<>());
+        Set<K> primaryKeySet = indexMap.computeIfAbsent(newIndexKey, k -> new ConcurrentHashSet<>());
         primaryKeySet.add(key);
       }
     }
