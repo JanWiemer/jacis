@@ -148,6 +148,19 @@ class StoreTxDemarcationExecutor {
         try {
           storeAccessLock.writeLock().lock();
           store.getIndexRegistry().unlockUniqueIndexKeysForTx(txView.getTransaction());
+          // ---------- UPDATE COMMITTED ENTRIES -----------------
+          for (StoreEntryTxView<K, TV, CV> entryTxView : updatedEntries) {
+            K key = entryTxView.getKey();
+            if (trace) {
+              logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
+            }
+            store.updateCommittedEntry(key, (k, entryCommitted) -> {
+              entryCommitted.update(entryTxView, txView);
+              entryCommitted.releaseLockedFor(txView);
+              return entryCommitted;
+            });
+          }
+          // ---------- TRACK MODIFICATIONS -----------------
           for (StoreEntryTxView<K, TV, CV> entryTxView : updatedEntries) {
             K key = entryTxView.getKey();
             try {
@@ -159,17 +172,6 @@ class StoreTxDemarcationExecutor {
                 toThrow.addSuppressed(e);
               }
             }
-          }
-          for (StoreEntryTxView<K, TV, CV> entryTxView : updatedEntries) {
-            K key = entryTxView.getKey();
-            if (trace) {
-              logger.trace("... internalCommit {}, Store: {}", store.getObjectInfo(key), store);
-            }
-            store.updateCommittedEntry(key, (k, entryCommitted) -> {
-              entryCommitted.update(entryTxView, txView);
-              entryCommitted.releaseLockedFor(txView);
-              return entryCommitted;
-            });
           }
         } finally {
           storeAccessLock.writeLock().unlock();
