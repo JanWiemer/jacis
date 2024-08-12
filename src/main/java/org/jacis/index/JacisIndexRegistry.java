@@ -11,6 +11,7 @@ import org.jacis.util.ConcurrentHashSet;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * The index registry stores all indices registered for the corresponding store.
@@ -291,7 +292,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
       Set<K> add = regTxView.getPrimaryKeysAddedForNonUniqueIndex(indexName, ik);
       Set<K> del = regTxView.getPrimaryKeysDeletedForNonUniqueIndex(indexName, ik);
       if (!add.isEmpty() || !del.isEmpty()) {
-        Set<K> res = indexMap.getOrDefault(ik, new HashSet<>());
+        Set<K> res = new HashSet(indexMap.getOrDefault(ik, Collections.emptySet()));
         res.removeAll(del);
         res.addAll(add);
         return res;
@@ -311,6 +312,11 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     return res;
   }
 
+  <IK> Stream<TV> streamFromNonUniqueIndex(JacisNonUniqueIndex<IK, K, TV> index, IK indexKey) {
+    Set<K> primaryKeys = getFromNonUniqueIndexPrimaryKeys(index, indexKey);
+    return primaryKeys.stream().map(primaryKey -> store.get(primaryKey));
+  }
+
   <IK> Collection<TV> getFromNonUniqueIndex(JacisNonUniqueIndex<IK, K, TV> index, IK indexKey) {
     Set<K> primaryKeys = getFromNonUniqueIndexPrimaryKeys(index, indexKey);
     Collection<TV> res = new ArrayList<>(primaryKeys.size());
@@ -327,6 +333,11 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
       res.add(store.get(primaryKey));
     }
     return res;
+  }
+
+  <IK> Stream<TV> streamFromNonUniqueIndexReadOnly(JacisNonUniqueIndex<IK, K, TV> index, IK indexKey) {
+    Set<K> primaryKeys = getFromNonUniqueIndexPrimaryKeys(index, indexKey);
+    return primaryKeys.stream().map(primaryKey -> store.getReadOnly(primaryKey));
   }
 
   <IK> Collection<TV> getFromNonUniqueIndexReadOnly(JacisNonUniqueIndex<IK, K, TV> index, IK indexKey) {
@@ -359,7 +370,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
       Set<K> add = regTxView.getPrimaryKeysAddedForNonUniqueIndex(indexName, indexKey);
       Set<K> del = regTxView.getPrimaryKeysDeletedForNonUniqueIndex(indexName, indexKey);
       if (!add.isEmpty() || !del.isEmpty()) {
-        Set<K> res = indexMap.getOrDefault(indexKey, new HashSet<>());
+        Set<K> res = new HashSet<>(indexMap.getOrDefault(indexKey, Collections.emptySet()));
         res.removeAll(del);
         res.addAll(add);
         return res;
@@ -379,6 +390,11 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     return res;
   }
 
+  <IK> Stream<TV> streamFromNonUniqueMultiIndex(JacisNonUniqueMultiIndex<IK, K, TV> index, IK indexKey) {
+    Set<K> primaryKeys = getFromNonUniqueMultiIndexPrimaryKeys(index, indexKey);
+    return primaryKeys.stream().map(primaryKey -> store.get(primaryKey));
+  }
+
   <IK> Collection<TV> getFromNonUniqueMultiIndex(JacisNonUniqueMultiIndex<IK, K, TV> index, IK indexKey) {
     Set<K> primaryKeys = getFromNonUniqueMultiIndexPrimaryKeys(index, indexKey);
     Collection<TV> res = new ArrayList<>(primaryKeys.size());
@@ -395,6 +411,11 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
       res.add(store.get(primaryKey));
     }
     return res;
+  }
+
+  <IK> Stream<TV> streamFromNonUniqueMultiIndexReadOnly(JacisNonUniqueMultiIndex<IK, K, TV> index, IK indexKey) {
+    Set<K> primaryKeys = getFromNonUniqueMultiIndexPrimaryKeys(index, indexKey);
+    return primaryKeys.stream().map(primaryKey -> store.getReadOnly(primaryKey));
   }
 
   <IK> Collection<TV> getFromNonUniqueMultiIndexReadOnly(JacisNonUniqueMultiIndex<IK, K, TV> index, IK indexKey) {
