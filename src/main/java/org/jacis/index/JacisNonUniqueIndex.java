@@ -28,6 +28,17 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
   }
 
   /**
+   * Returns a stream of the primary keys for the passed index key.
+   * The primary keys are the keys used to store the object in the store.
+   *
+   * @param indexKey The index key of the desired entry.
+   * @return a stream of the primary keys for the passed index key.
+   */
+  public Stream<K> streamPrimaryKeys(IK indexKey) {
+    return indexRegistry.streamFromNonUniqueIndexPrimaryKeys(this, indexKey);
+  }
+
+  /**
    * Returns the primary keys for the passed index key.
    * The primary keys are the keys used to store the object in the store.
    *
@@ -51,17 +62,6 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
   }
 
   /**
-   * Returns a stream of the read only values for the passed index key.
-   * For details see the {@link JacisStore#getReadOnly(Object)} method.
-   *
-   * @param indexKey The index key of the desired entry.
-   * @return a stream of the read only values for the passed key.
-   */
-  public Stream<TV> streamReadOnly(IK indexKey) {
-    return indexRegistry.streamFromNonUniqueIndexReadOnly(this, indexKey);
-  }
-
-  /**
    * Returns the values for the passed index key.
    * For details see the {@link JacisStore#get(Object)} method.
    *
@@ -70,6 +70,17 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
    */
   public Collection<TV> get(IK indexKey) {
     return indexRegistry.getFromNonUniqueIndex(this, indexKey);
+  }
+
+  /**
+   * Returns a stream of the read only values for the passed index key.
+   * For details see the {@link JacisStore#getReadOnly(Object)} method.
+   *
+   * @param indexKey The index key of the desired entry.
+   * @return a stream of the read only values for the passed key.
+   */
+  public Stream<TV> streamReadOnly(IK indexKey) {
+    return indexRegistry.streamFromNonUniqueIndexReadOnly(this, indexKey);
   }
 
   /**
@@ -83,6 +94,18 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
     return indexRegistry.getFromNonUniqueIndexReadOnly(this, indexKey);
   }
 
+
+  /**
+   * Returns a stream of the values for the passed index keys.
+   * For details see the {@link JacisStore#get(Object)} method.
+   *
+   * @param indexKeys The index keys of the desired entries.
+   * @return a stream of the values for the passed index keys.
+   */
+  public Stream<TV> stream(Collection<IK> indexKeys) {
+    return indexRegistry.streamFromNonUniqueIndex(this, indexKeys);
+  }
+
   /**
    * Returns the values for the passed index keys.
    * For details see the {@link JacisStore#get(Object)} method.
@@ -92,6 +115,18 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
    */
   public Collection<TV> multiGet(Collection<IK> indexKeys) {
     return indexRegistry.multiGetFromNonUniqueIndex(this, indexKeys);
+  }
+
+
+  /**
+   * Returns a stream of the read only values for the passed index keys.
+   * For details see the {@link JacisStore#getReadOnly(Object)} method.
+   *
+   * @param indexKeys The index keys of the desired entries.
+   * @return a stream of the read only values for the passed keys.
+   */
+  public Stream<TV> streamReadOnly(Collection<IK> indexKeys) {
+    return indexRegistry.streamFromNonUniqueIndexReadOnly(this, indexKeys);
   }
 
   /**

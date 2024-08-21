@@ -6,6 +6,7 @@ import org.jacis.store.JacisStore;
 
 import java.util.Collection;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Represents an index providing access to the values stored in the JACIS store by an index key.
@@ -62,6 +63,17 @@ public class JacisUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV> {
   }
 
   /**
+   * Returns a stream of the unique values for the passed index keys.
+   * For details see the {@link JacisStore#get(Object)} method.
+   *
+   * @param indexKeys The index keys of the desired entrys.
+   * @return a stream of the unique values for the passed index keys.
+   */
+  public Stream<TV> stream(Collection<IK> indexKeys) {
+    return indexRegistry.streamFromUniqueIndex(this, indexKeys);
+  }
+
+  /**
    * Returns the unique values for the passed index keys.
    * For details see the {@link JacisStore#get(Object)} method.
    *
@@ -70,6 +82,17 @@ public class JacisUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV> {
    */
   public Collection<TV> multiGet(Collection<IK> indexKeys) {
     return indexRegistry.multiGetFromUniqueIndex(this, indexKeys);
+  }
+
+  /**
+   * Returns a stream of the unique read only values for the passed index keys.
+   * For details see the {@link JacisStore#getReadOnly(Object)} method.
+   *
+   * @param indexKeys The index keys of the desired entries.
+   * @return a stream  of the unique read only values for the passed keys.
+   */
+  public Stream<TV> streamReadOnly(Collection<IK> indexKeys) {
+    return indexRegistry.streamFromUniqueIndexReadOnly(this, indexKeys);
   }
 
   /**
