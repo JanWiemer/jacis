@@ -292,7 +292,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     if (regTxView != null) {
       Set<K> add = regTxView.getPrimaryKeysAddedForNonUniqueIndex(indexName, ik);
       Set<K> del = regTxView.getPrimaryKeysDeletedForNonUniqueIndex(indexName, ik);
-      resultStream = resultStream.filter(del::contains);
+      resultStream = resultStream.filter(key -> !del.contains(key));
       resultStream = Stream.concat(resultStream, add.stream());
     }
     return resultStream;
@@ -406,7 +406,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     if (regTxView != null) {
       Set<K> add = regTxView.getPrimaryKeysAddedForNonUniqueIndex(indexName, indexKey);
       Set<K> del = regTxView.getPrimaryKeysDeletedForNonUniqueIndex(indexName, indexKey);
-      resultStream = resultStream.filter(del::contains);
+      resultStream = resultStream.filter(key -> !del.contains(key));
       resultStream = Stream.concat(resultStream, add.stream());
     }
     return resultStream;
@@ -523,7 +523,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     if (indexKeys == null) {
       return Stream.of();
     }
-    return indexKeys.stream().map(key -> getFromUniqueIndexPrimaryKey(index, key)).distinct();
+    return indexKeys.stream().map(key -> getFromUniqueIndexPrimaryKey(index, key)).filter(Objects::nonNull).distinct();
   }
 
   <IK> Set<K> multiGetFromUniqueIndexPrimaryKeys(JacisUniqueIndex<IK, K, TV> index, Collection<IK> indexKeys) {
@@ -532,7 +532,10 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     }
     Set<K> res = new HashSet<>();
     for (IK indexKey : indexKeys) {
-      res.add(getFromUniqueIndexPrimaryKey(index, indexKey));
+      K key = getFromUniqueIndexPrimaryKey(index, indexKey);
+      if (key != null) {
+        res.add(key);
+      }
     }
     return res;
   }
@@ -543,14 +546,17 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
   }
 
   <IK> Stream<TV> streamFromUniqueIndex(JacisUniqueIndex<IK, K, TV> index, Collection<IK> indexKeys) {
-    return streamFromUniqueIndexPrimaryKeys(index, indexKeys).map(store::get);
+    return streamFromUniqueIndexPrimaryKeys(index, indexKeys).map(store::get).filter(Objects::nonNull);
   }
 
   <IK> Collection<TV> multiGetFromUniqueIndex(JacisUniqueIndex<IK, K, TV> index, Collection<IK> indexKeys) {
     Set<K> primaryKeys = multiGetFromUniqueIndexPrimaryKeys(index, indexKeys);
     Collection<TV> res = new ArrayList<>(primaryKeys.size());
     for (K primaryKey : primaryKeys) {
-      res.add(store.get(primaryKey));
+      TV obj = store.get(primaryKey);
+      if (obj != null) {
+        res.add(obj);
+      }
     }
     return res;
   }
@@ -561,14 +567,17 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
   }
 
   <IK> Stream<TV> streamFromUniqueIndexReadOnly(JacisUniqueIndex<IK, K, TV> index, Collection<IK> indexKeys) {
-    return streamFromUniqueIndexPrimaryKeys(index, indexKeys).map(store::getReadOnly);
+    return streamFromUniqueIndexPrimaryKeys(index, indexKeys).map(store::getReadOnly).filter(Objects::nonNull);
   }
 
   <IK> Collection<TV> multiGetFromUniqueIndexReadOnly(JacisUniqueIndex<IK, K, TV> index, Collection<IK> indexKeys) {
     Set<K> primaryKeys = multiGetFromUniqueIndexPrimaryKeys(index, indexKeys);
     Collection<TV> res = new ArrayList<>(primaryKeys.size());
     for (K primaryKey : primaryKeys) {
-      res.add(store.getReadOnly(primaryKey));
+      TV obj = store.getReadOnly(primaryKey);
+      if (obj != null) {
+        res.add(obj);
+      }
     }
     return res;
   }

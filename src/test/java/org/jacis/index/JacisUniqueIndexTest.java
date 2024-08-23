@@ -16,6 +16,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 public class JacisUniqueIndexTest {
@@ -57,11 +59,36 @@ public class JacisUniqueIndexTest {
     assertEquals("A2", index.getReadOnly("IDX-2").getName());
     assertEquals("A3", index.getReadOnly("IDX-3").getName());
     assertEquals("A4", index.getReadOnly("IDX-4").getName());
+    assertEquals(0, index.multiGetReadOnly(List.of("IDX-0")).size());
+    assertEquals(1, index.multiGetReadOnly(List.of("IDX-1")).size());
+    assertEquals(1, index.multiGetReadOnly(List.of("IDX-2")).size());
+    assertEquals(1, index.multiGetReadOnly(List.of("IDX-3")).size());
+    assertEquals(1, index.multiGetReadOnly(List.of("IDX-4")).size());
+    assertEquals(4, index.multiGetReadOnly(List.of("IDX-1", "IDX-2", "IDX-3", "IDX-4")).size());
+    assertEquals(0, index.streamReadOnly(List.of("IDX-0")).count());
+    assertEquals(1, index.streamReadOnly(List.of("IDX-1")).count());
+    assertEquals(1, index.streamReadOnly(List.of("IDX-2")).count());
+    assertEquals(1, index.streamReadOnly(List.of("IDX-3")).count());
+    assertEquals(1, index.streamReadOnly(List.of("IDX-4")).count());
+    assertEquals(4, index.streamReadOnly(List.of("IDX-1", "IDX-2", "IDX-3", "IDX-4")).count());
     container.withLocalTx(() -> {
       assertEquals("A1", index.get("IDX-1").getName());
       assertEquals("A2", index.get("IDX-2").getName());
       assertEquals("A3", index.get("IDX-3").getName());
       assertEquals("A4", index.get("IDX-4").getName());
+      assertEquals(0, index.multiGet(List.of("IDX-0")).size());
+      assertEquals(1, index.multiGet(List.of("IDX-1")).size());
+      assertEquals(1, index.multiGet(List.of("IDX-2")).size());
+      assertEquals(1, index.multiGet(List.of("IDX-3")).size());
+      assertEquals(1, index.multiGet(List.of("IDX-4")).size());
+      assertEquals(4, index.multiGet(List.of("IDX-1", "IDX-2", "IDX-3", "IDX-4")).size());
+
+      assertEquals(0, index.stream(List.of("IDX-0")).count());
+      assertEquals(1, index.stream(List.of("IDX-1")).count());
+      assertEquals(1, index.stream(List.of("IDX-2")).count());
+      assertEquals(1, index.stream(List.of("IDX-3")).count());
+      assertEquals(1, index.stream(List.of("IDX-4")).count());
+      assertEquals(4, index.stream(List.of("IDX-1", "IDX-2", "IDX-3", "IDX-4")).count());
     });
   }
 
@@ -105,20 +132,45 @@ public class JacisUniqueIndexTest {
       assertEquals("A1", index.getReadOnly("IDX-1a").getName());
       assertNull(index.getReadOnly("IDX-1b"));
       assertNull(index.getReadOnly("IDX-1c"));
+      assertEquals(1, index.multiGetReadOnly(List.of("IDX-1a", "IDX-1b", "IDX-1c")).size());
+      assertEquals(1, index.multiGetReadOnly(List.of("IDX-1a")).size());
+      assertEquals(0, index.multiGetReadOnly(List.of("IDX-1b", "IDX-1c")).size());
+      assertEquals(1, index.streamReadOnly(List.of("IDX-1a", "IDX-1b", "IDX-1c")).count());
+      assertEquals(1, index.streamReadOnly(List.of("IDX-1a")).count());
+      assertEquals(0, index.streamReadOnly(List.of("IDX-1b", "IDX-1c")).count());
       //
       store.update("1", new TestObject("A1").setStrValue("IDX-1b"));
-      assertEquals("A1", index.getReadOnly("IDX-1b").getName());
       assertNull(index.getReadOnly("IDX-1a"));
+      assertEquals("A1", index.getReadOnly("IDX-1b").getName());
       assertNull(index.getReadOnly("IDX-1c"));
+      assertEquals(1, index.multiGetReadOnly(List.of("IDX-1a", "IDX-1b", "IDX-1c")).size());
+      assertEquals(1, index.multiGetReadOnly(List.of("IDX-1b")).size());
+      assertEquals(0, index.multiGetReadOnly(List.of("IDX-1a", "IDX-1c")).size());
+      assertEquals(1, index.streamReadOnly(List.of("IDX-1a", "IDX-1b", "IDX-1c")).count());
+      assertEquals(1, index.streamReadOnly(List.of("IDX-1b")).count());
+      assertEquals(0, index.streamReadOnly(List.of("IDX-1a", "IDX-1c")).count());
       //
       store.update("1", new TestObject("A1").setStrValue("IDX-1c"));
       assertNull(index.getReadOnly("IDX-1a"));
       assertNull(index.getReadOnly("IDX-1b"));
       assertEquals("A1", index.getReadOnly("IDX-1c").getName());
+      assertEquals(1, index.multiGetReadOnly(List.of("IDX-1a", "IDX-1b", "IDX-1c")).size());
+      assertEquals(1, index.multiGetReadOnly(List.of("IDX-1c")).size());
+      assertEquals(0, index.multiGetReadOnly(List.of("IDX-1a", "IDX-1b")).size());
+      assertEquals(1, index.streamReadOnly(List.of("IDX-1a", "IDX-1b", "IDX-1c")).count());
+      assertEquals(1, index.streamReadOnly(List.of("IDX-1c")).count());
+      assertEquals(0, index.streamReadOnly(List.of("IDX-1a", "IDX-1b")).count());
+      //
       store.update("1", new TestObject("A1").setStrValue("IDX-1b"));
       assertNull(index.getReadOnly("IDX-1a"));
       assertEquals("A1", index.getReadOnly("IDX-1b").getName());
       assertNull(index.getReadOnly("IDX-1c"));
+      assertEquals(1, index.multiGetReadOnly(List.of("IDX-1a", "IDX-1b", "IDX-1c")).size());
+      assertEquals(1, index.multiGetReadOnly(List.of("IDX-1b")).size());
+      assertEquals(0, index.multiGetReadOnly(List.of("IDX-1a", "IDX-1c")).size());
+      assertEquals(1, index.streamReadOnly(List.of("IDX-1a", "IDX-1b", "IDX-1c")).count());
+      assertEquals(1, index.streamReadOnly(List.of("IDX-1b")).count());
+      assertEquals(0, index.streamReadOnly(List.of("IDX-1a", "IDX-1c")).count());
     });
     assertNull(index.getReadOnly("IDX-1a"));
     assertEquals("A1", index.getReadOnly("IDX-1b").getName());
@@ -302,27 +354,5 @@ public class JacisUniqueIndexTest {
     });
     assertEquals(3, index.getReadOnly("IDX-0").size());
   }
-
-  @Test
-  public void testUniqueIndexAddAndDelDuringTx() {
-    JacisTestHelper testHelper = new JacisTestHelper();
-    JacisStore<String, TestObject> store = testHelper.createTestStoreWithCloning();
-    JacisContainer container = store.getContainer();
-    container.withLocalTx(() -> {
-      store.update("1", new TestObject("A1").setValue(5).setStrValue("IDX-0"));
-      store.update("2", new TestObject("A2").setValue(5).setStrValue("IDX-0"));
-    });
-    JacisNonUniqueIndex<Object, String, TestObject> index = store.createNonUniqueIndex("IDX-NAME", TestObject::getStrValue);
-    container.withLocalTx(() -> {
-      store.update("3", new TestObject("A3").setValue(5).setStrValue("IDX-0"));
-      assertEquals(3, index.getReadOnly("IDX-0").size());
-      store.update("3", new TestObject("A3").setValue(5).setStrValue("OTHER"));
-      assertEquals(2, index.getReadOnly("IDX-0").size());
-      store.update("3", new TestObject("A3").setValue(5).setStrValue("IDX-0"));
-      assertEquals(3, index.getReadOnly("IDX-0").size());
-    });
-    assertEquals(3, index.getReadOnly("IDX-0").size());
-  }
-
 
 }
