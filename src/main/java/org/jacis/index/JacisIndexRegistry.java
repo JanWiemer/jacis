@@ -401,7 +401,7 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
   <IK> Stream<K> nonDistinctStreamFromNonUniqueMultiIndexPrimaryKeys(JacisNonUniqueMultiIndex<IK, K, TV> index, IK indexKey) {
     JacisIndexRegistryTxView<K, TV> regTxView = store.getIndexRegistryTransactionView(); // null if no TX
     String indexName = index.getIndexName();
-    Map<Object, Set<K>> indexMap = nonUniqueIndexDataMap.get(indexName);
+    Map<Object, Set<K>> indexMap = nonUniqueMultiIndexDataMap.get(indexName);
     Stream<K> resultStream = indexMap.getOrDefault(indexKey, Collections.emptySet()).stream();
     if (regTxView != null) {
       Set<K> add = regTxView.getPrimaryKeysAddedForNonUniqueIndex(indexName, indexKey);
