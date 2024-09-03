@@ -6,6 +6,7 @@ import org.jacis.store.JacisStore;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -51,7 +52,7 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
 
 
   /**
-   * Returns a stream of the values for the passed index key.
+   * Returns a stream of the (writable) values for the passed index key.
    * For details see the {@link JacisStore#get(Object)} method.
    *
    * @param indexKey The index key of the desired entry.
@@ -62,7 +63,21 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
   }
 
   /**
-   * Returns the values for the passed index key.
+   * Returns a stream of the (writable) values for the passed index key.
+   * For details see the {@link JacisStore#get(Object)} method.
+   * Before cloning the stored read-only instances into the transaction view
+   * the passed filter is applied on the read-only instances.
+   *
+   * @param indexKey The index key of the desired entry.
+   * @param filter   A filter applied to the read-only instances before cloning and returning them.
+   * @return a stream of the values for the passed index key.
+   */
+  public Stream<TV> stream(IK indexKey, Predicate<TV> filter) {
+    return indexRegistry.streamFromNonUniqueIndex(this, indexKey, filter);
+  }
+
+  /**
+   * Returns the (writable) values for the passed index key.
    * For details see the {@link JacisStore#get(Object)} method.
    *
    * @param indexKey The index key of the desired entry.
@@ -70,6 +85,20 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
    */
   public Collection<TV> get(IK indexKey) {
     return indexRegistry.getFromNonUniqueIndex(this, indexKey);
+  }
+
+  /**
+   * Returns the (writable) values for the passed index key.
+   * For details see the {@link JacisStore#get(Object)} method.
+   * Before cloning the stored read-only instances into the transaction view
+   * the passed filter is applied on the read-only instances.
+   *
+   * @param indexKey The index key of the desired entry.
+   * @param filter   A filter applied to the read-only instances before cloning and returning them.
+   * @return the values for the passed index key.
+   */
+  public Collection<TV> get(IK indexKey, Predicate<TV> filter) {
+    return indexRegistry.getFromNonUniqueIndex(this, indexKey, filter);
   }
 
   /**
@@ -96,7 +125,7 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
 
 
   /**
-   * Returns a stream of the values for the passed index keys.
+   * Returns a stream of the /writable) values for the passed index keys.
    * For details see the {@link JacisStore#get(Object)} method.
    *
    * @param indexKeys The index keys of the desired entries.
@@ -107,7 +136,21 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
   }
 
   /**
-   * Returns the values for the passed index keys.
+   * Returns a stream of the /writable) values for the passed index keys.
+   * For details see the {@link JacisStore#get(Object)} method.
+   * Before cloning the stored read-only instances into the transaction view
+   * the passed filter is applied on the read-only instances.
+   *
+   * @param indexKeys The index keys of the desired entries.
+   * @param filter    A filter applied to the read-only instances before cloning and returning them.
+   * @return a stream of the values for the passed index keys.
+   */
+  public Stream<TV> stream(Collection<IK> indexKeys, Predicate<TV> filter) {
+    return indexRegistry.streamFromNonUniqueIndex(this, indexKeys, filter);
+  }
+
+  /**
+   * Returns the (writable) values for the passed index keys.
    * For details see the {@link JacisStore#get(Object)} method.
    *
    * @param indexKeys The index keys of the desired entries.
@@ -115,6 +158,20 @@ public class JacisNonUniqueIndex<IK, K, TV> extends AbstractJacisIndex<IK, K, TV
    */
   public Collection<TV> multiGet(Collection<IK> indexKeys) {
     return indexRegistry.multiGetFromNonUniqueIndex(this, indexKeys);
+  }
+
+  /**
+   * Returns the (writable) values for the passed index keys.
+   * For details see the {@link JacisStore#get(Object)} method.
+   * Before cloning the stored read-only instances into the transaction view
+   * the passed filter is applied on the read-only instances.
+   *
+   * @param indexKeys The index keys of the desired entries.
+   * @param filter    A filter applied to the read-only instances before cloning and returning them.
+   * @return the values for the passed index keys.
+   */
+  public Collection<TV> multiGet(Collection<IK> indexKeys, Predicate<TV> filter) {
+    return indexRegistry.multiGetFromNonUniqueIndex(this, indexKeys, filter);
   }
 
 
