@@ -458,14 +458,33 @@ public class JacisContainer {
     return false;
   }
 
-  protected boolean hasAnyTransactionListenersNeedingSynchronousExecution() {
+  protected boolean hasAnyTransactionListenersNeedingSynchronousExecutionForPrepare() {
     for (JacisTransactionListener txListener : txListeners) {
-      if (txListener.isSynchronizedExcecutionRequired()) {
+      if (txListener.isSynchronizedExcecutionRequiredForPrepare()) {
         return true;
       }
     }
     return false;
   }
+
+  protected boolean hasAnyTransactionListenersNeedingSynchronousExecutionForCommit() {
+    for (JacisTransactionListener txListener : txListeners) {
+      if (txListener.isSynchronizedExcecutionRequiredForCommit()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  protected boolean hasAnyTransactionListenersNeedingSynchronousExecutionForRollback() {
+    for (JacisTransactionListener txListener : txListeners) {
+      if (txListener.isSynchronizedExcecutionRequiredForRollback()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 
   /**
    * Prepare the transaction represented by the passed transaction handle.
@@ -479,7 +498,7 @@ public class JacisContainer {
   public void internalPrepare(JacisTransactionHandle transaction) {
     boolean executeSynchronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize
         || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
-        || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
+        || hasAnyTransactionListenersNeedingSynchronousExecutionForPrepare(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSynchronized) {
       transactionDemarcationLock.writeLock().lock();
     }
@@ -556,7 +575,7 @@ public class JacisContainer {
   public void internalCommit(JacisTransactionHandle transaction) { // NO-API
     boolean executeSynchronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize
         || hasStoreWithPendingDirtyCheck() // if any store has a dirty check pending (may causing updated entries) we need to synchronize
-        || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
+        || hasAnyTransactionListenersNeedingSynchronousExecutionForCommit(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSynchronized) {
       transactionDemarcationLock.writeLock().lock();
     }
@@ -607,7 +626,7 @@ public class JacisContainer {
    */
   public void internalRollback(JacisTransactionHandle transaction) { // NO-API
     boolean executeSynchronized = hasAnyUpdatesPendingForTx() // if any store has updated entries we need to synchronize (dirty check can be ignored here)
-        || hasAnyTransactionListenersNeedingSynchronousExecution(); // if any transaction listener requires sync. execution we need to synchronize
+        || hasAnyTransactionListenersNeedingSynchronousExecutionForRollback(); // if any transaction listener requires sync. execution we need to synchronize
     if (executeSynchronized) {
       transactionDemarcationLock.writeLock().lock();
     }

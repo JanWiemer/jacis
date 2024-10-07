@@ -22,10 +22,32 @@ import org.jacis.container.JacisTransactionHandle;
 public interface JacisTransactionListener {
 
   /**
-   * @return if this transaction listener has to be executed synchronized together with the prepare / commit / rollback.
+   * @return if this transaction listener has to be executed synchronized together with the prepare / commit / rollback (for callbacks on prepare / commit).
    */
   default boolean isSynchronizedExcecutionRequired() {
     return true;
+  }
+
+  /**
+   * @return if this transaction listener has to be executed synchronized together with the prepare / commit / rollback (for callbacks on prepare).
+   */
+  default boolean isSynchronizedExcecutionRequiredForPrepare() {
+    return isSynchronizedExcecutionRequired();
+  }
+
+  /**
+   * @return if this transaction listener has to be executed synchronized together with the prepare / commit / rollback (for callbacks on commit).
+   */
+  default boolean isSynchronizedExcecutionRequiredForCommit() {
+    return isSynchronizedExcecutionRequired();
+  }
+
+  /**
+   * @return if this transaction listener has to be executed synchronized together with the prepare / commit / rollback (for callbacks on rollback).
+   * Note: Usually on rollback the callbacks do nothing (no changes) and therefore no synchronization is required.
+   */
+  default boolean isSynchronizedExcecutionRequiredForRollback() {
+    return false;
   }
 
   /**
@@ -40,7 +62,7 @@ public interface JacisTransactionListener {
 
   /**
    * Callback method called after the prepare phase of a transaction is executed for the stores of the container.
-   * 
+   *
    * @param container Reference to the corresponding container instance.
    * @param tx        Handle for the transaction for which the callback method is invoked.
    */
@@ -50,7 +72,7 @@ public interface JacisTransactionListener {
 
   /**
    * Callback method called before the commit phase of a transaction is executed for the stores of the container.
-   * 
+   *
    * @param container Reference to the corresponding container instance.
    * @param tx        Handle for the transaction for which the callback method is invoked.
    */
@@ -60,7 +82,7 @@ public interface JacisTransactionListener {
 
   /**
    * Callback method called after the commit phase of a transaction is executed for the stores of the container.
-   * 
+   *
    * @param container Reference to the corresponding container instance.
    * @param tx        Handle for the transaction for which the callback method is invoked.
    */
@@ -70,7 +92,7 @@ public interface JacisTransactionListener {
 
   /**
    * Callback method called before a rollback for a transaction is executed for the stores of the container.
-   * 
+   *
    * @param container Reference to the corresponding container instance.
    * @param tx        Handle for the transaction for which the callback method is invoked.
    */
@@ -80,7 +102,7 @@ public interface JacisTransactionListener {
 
   /**
    * Callback method called after a rollback for a transaction is executed for the stores of the container.
-   * 
+   *
    * @param container Reference to the corresponding container instance.
    * @param tx        Handle for the transaction for which the callback method is invoked.
    */
