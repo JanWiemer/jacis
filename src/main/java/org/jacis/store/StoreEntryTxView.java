@@ -6,6 +6,7 @@ package org.jacis.store;
 
 import org.jacis.exception.JacisStaleObjectException;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
+import org.jacis.plugin.readonly.object.JacisReadonlyModeSupport;
 
 import java.util.Objects;
 
@@ -17,8 +18,8 @@ import java.util.Objects;
  * @param <CV> Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
  * @author Jan Wiemer
  */
-class StoreEntryTxView<K, TV, CV> implements Comparable<StoreEntryTxView<K, TV, CV>>{
- 
+class StoreEntryTxView<K, TV, CV> implements Comparable<StoreEntryTxView<K, TV, CV>> {
+
   /** link to the committed entry (note this is the real committed instance that might be changed by other TXs) */
   private final StoreEntry<K, TV, CV> committedEntry;
   /** current value of the entry in this TX */
@@ -40,6 +41,9 @@ class StoreEntryTxView<K, TV, CV> implements Comparable<StoreEntryTxView<K, TV, 
     this.origVersion = committedEntry.getVersion();
     if (trackOriginal) {
       origValue = ca.cloneCommitted2WritableTxView(committedEntry.getValue());
+      if (origValue instanceof JacisReadonlyModeSupport) {
+        ((JacisReadonlyModeSupport) origValue).switchToReadOnlyMode();
+      }
     } else {
       origValue = null;
     }

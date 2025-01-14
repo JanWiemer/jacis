@@ -29,12 +29,26 @@ import org.jacis.store.JacisStoreImpl;
 public interface JacisModificationListener<K, V> {
 
   /**
+   * Callback method called before the prepare phase of a transaction for value modified during the transaction.
+   * Implementations of this method may do further modifications on the passes value to commit, based on the tracked modifications.
+   * This is done before the prepare phase of the transaction is actually started for the store.
+   *
+   * @param key           The key of the modified object
+   * @param oldValue      The original value of the modified object when it was copied to the transactional view (read only).
+   * @param valueToCommit The new modified value that was updated during the transaction and may be adjusted in this method (writable).
+   * @param tx            The transaction that is currently committed.
+   */
+  default void onAdjustBeforePrepare(K key, V oldValue, V valueToCommit, JacisTransactionHandle tx) {
+    // default implementation empty
+  }
+
+  /**
    * Callback method called during the prepare phase of a transaction for each modified value.
    * Note that implementing methods can throw an {@link JacisModificationVetoException} to deny the modification and rollback the transaction.
    *
    * @param key      The key of the modified object
-   * @param oldValue The original value of the modified object when it was copied to the transactional view.
-   * @param newValue The new modified value that is written back to the committed values.
+   * @param oldValue The original value of the modified object when it was copied to the transactional view (read only).
+   * @param newValue The new modified value that is written back to the committed values (read only).
    * @param tx       The transaction that is currently committed.
    * @throws JacisModificationVetoException to deny the modification and rollback the transaction
    */
@@ -48,8 +62,8 @@ public interface JacisModificationListener<K, V> {
    * Note that implementing methods should not throw an exception since the original transaction could be broken by this.
    *
    * @param key      The key of the modified object
-   * @param oldValue The original value of the modified object when it was copied to the transactional view.
-   * @param newValue The new modified value that is written back to the committed values.
+   * @param oldValue The original value of the modified object when it was copied to the transactional view (read only).
+   * @param newValue The new modified value that is written back to the committed values (read only).
    * @param tx       The transaction that is currently committed.
    */
   void onModification(K key, V oldValue, V newValue, JacisTransactionHandle tx);

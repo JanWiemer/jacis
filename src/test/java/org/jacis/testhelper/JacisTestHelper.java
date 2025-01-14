@@ -34,6 +34,7 @@ public class JacisTestHelper {
   public JacisStore<String, TestObject> createTestStoreWithCloning(JacisContainer container) {
     JacisCloningObjectAdapter<TestObject> cloningAdapter = new JacisCloningObjectAdapter<>();
     JacisObjectTypeSpec<String, TestObject, TestObject> objectTypeSpec = new JacisObjectTypeSpec<>(String.class, TestObject.class, cloningAdapter);
+    objectTypeSpec.setSwitchToReadOnlyModeInPrepare(true);
     container.createStore(objectTypeSpec);
     return container.getStore(String.class, TestObject.class);
   }

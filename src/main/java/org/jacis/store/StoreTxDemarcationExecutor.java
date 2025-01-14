@@ -96,11 +96,16 @@ class StoreTxDemarcationExecutor {
             }
           }
           for (StoreEntryTxView<K, TV, CV> entryTxView : txView.getUpdatedEntriesForCommit()) {
-            StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
             K key = entryTxView.getKey();
+            if (entryTxView.getValue() != null) {
+              trackBeforePrepareModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
+            }
+            StoreEntry<K, TV, CV> entryCommitted = entryTxView.getCommittedEntry();
             entryTxView.assertNotStale(txView);
             entryCommitted.lockedFor(txView);
-            if (entryTxView.getValue() != null && store.getObjectTypeSpec().isSwitchToReadOnlyModeInPrepare()) {
+            if (entryTxView.getValue() != null //
+                && entryTxView.getValue() instanceof JacisReadonlyModeSupport //
+                && store.getObjectTypeSpec().isSwitchToReadOnlyModeInPrepare()) {
               ((JacisReadonlyModeSupport) entryTxView.getValue()).switchToReadOnlyMode();
             }
             trackPrepareModification(store, key, entryTxView.getOrigValue(), entryTxView.getValue(), txView.getTransaction());
@@ -244,6 +249,13 @@ class StoreTxDemarcationExecutor {
     JacisStoreTxView<K, TV, CV> txView = store.getTxView(transaction, false);
     if (txView != null) {
       txView.destroy();
+    }
+  }
+
+  private <K, TV, CV> void trackBeforePrepareModification(JacisStoreImpl<K, TV, CV> store, K key, TV oldValue, TV newValue, JacisTransactionHandle tx) {
+    assert store.getObjectTypeSpec().isTrackOriginalValueEnabled() : "Tracking prepared modification is only possible if original value is tracked";
+    for (JacisModificationListener<K, TV> listener : store.getModificationListeners()) {
+      listener.onAdjustBeforePrepare(key, oldValue, newValue, tx);
     }
   }
 
