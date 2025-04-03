@@ -758,7 +758,7 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     for (StoreEntryTxView<K, TV, CV> entryTxView : finishedTxView.getAllEntryTxViews()) {
       K key = entryTxView.getKey();
       updateCommittedEntry(key, (k, entryCommitted) -> {
-        if (entryCommitted.unreferencedByTxViewAnCheckIfGarbage()) {
+        if (entryCommitted != null && entryCommitted.unreferencedByTxViewAnCheckIfGarbage()) {
           return null;
         }
         return entryCommitted;
