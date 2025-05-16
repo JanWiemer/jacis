@@ -41,25 +41,45 @@ import java.util.stream.Stream;
  */
 public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransactionAdapter implements JacisStore<K, TV>, JacisStoreAdminInterface<K, TV, CV> {
 
-  /** Reference to the JACIS container this store belongs to */
+  /**
+   * Reference to the JACIS container this store belongs to
+   */
   private final JacisContainer container;
-  /** The store identifier uniquely identifying this store inside the container */
+  /**
+   * The store identifier uniquely identifying this store inside the container
+   */
   private final StoreIdentifier storeIdentifier;
-  /** The object type specification for the objects stored in this store */
+  /**
+   * The object type specification for the objects stored in this store
+   */
   private final JacisObjectTypeSpec<K, TV, CV> spec;
-  /** The map containing the committed values of the objects (the core store) */
+  /**
+   * The map containing the committed values of the objects (the core store)
+   */
   private final ConcurrentHashMap<K, StoreEntry<K, TV, CV>> store = new ConcurrentHashMap<>();
-  /** A Map assigning each active transaction handle the transactional view on this store */
+  /**
+   * A Map assigning each active transaction handle the transactional view on this store
+   */
   private final Map<JacisTransactionHandle, JacisStoreTxView<K, TV, CV>> txViewMap = new ConcurrentWeakHashMap<>();
-  /** Mutex / Lock to synchronize changes on the committed entries of the store (specially during internalCommit) */
+  /**
+   * Mutex / Lock to synchronize changes on the committed entries of the store (specially during internalCommit)
+   */
   private final ReadWriteLock storeAccessLock;
-  /** The object adapter defining how to copy objects from the committed view to a transactional view and back */
+  /**
+   * The object adapter defining how to copy objects from the committed view to a transactional view and back
+   */
   private final JacisObjectAdapter<TV, CV> objectAdapter;
-  /** The registry of (unique or not unique) indexes for this store */
+  /**
+   * The registry of (unique or not unique) indexes for this store
+   */
   private final JacisIndexRegistry<K, TV> indexRegistry;
-  /** The registry of tracked views for this store that are kept up to date on each commit automatically */
+  /**
+   * The registry of tracked views for this store that are kept up to date on each commit automatically
+   */
   private final TrackedViewRegistry<K, TV> trackedViewRegistry;
-  /** List of listeners notified on each modification on the committed values in the store */
+  /**
+   * List of listeners notified on each modification on the committed values in the store
+   */
   private final List<JacisModificationListener<K, TV>> modificationListeners = new CopyOnWriteArrayList<>();
 
   public JacisStoreImpl(JacisContainer container, StoreIdentifier storeIdentifier, JacisObjectTypeSpec<K, TV, CV> spec) {
@@ -154,6 +174,11 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
   @Override
   public <IK> JacisUniqueIndex<IK, K, TV> getUniqueIndex(String indexName) {
     return indexRegistry.getUniqueIndex(indexName);
+  }
+
+  @Override
+  public List<String> getAllIndexDefinitions() {
+    return indexRegistry.getAllIndexDefinitions();
   }
 
   @Override
@@ -261,7 +286,9 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     return projection.apply(getReadOnly(key));
   }
 
-  /** @return a stream of all keys currently stored in the store. Note that the keys added by any pending transactions are contained (with null values if not yet committed). */
+  /**
+   * @return a stream of all keys currently stored in the store. Note that the keys added by any pending transactions are contained (with null values if not yet committed).
+   */
   private Stream<K> keyStream() {
     return store.keySet().stream(); // store contains also new entries (with null value)! Therefore, iterating the keys is usually enough
   }
@@ -643,6 +670,11 @@ public class JacisStoreImpl<K, TV, CV> extends JacisContainer.JacisStoreTransact
     StoreEntry<K, TV, CV> committedEntry = getCommittedEntry(key);
     StoreEntryTxView<K, TV, CV> entryTxView = txView == null ? null : txView.getEntryTxView(key);
     return new StoreEntryInfo<>(key, committedEntry, entryTxView, txView);
+  }
+
+  @Override
+  public List<JacisTransactionInfo.StoreTxInfo> getTransactionInfos() {
+    return safeGetAllTxViews().stream().map(txView -> new JacisTransactionInfo.StoreTxInfo(this, txView)).collect(Collectors.toList());
   }
 
   @Override

@@ -100,6 +100,14 @@ public class JacisIndexRegistry<K, TV> implements JacisModificationListener<K, T
     return uniqueIndexDefinitionMap.values();
   }
 
+  public List<String> getAllIndexDefinitions() {
+    List<String> res = new ArrayList<>();
+    getNonUniqueIndexDefinitions().stream().map(i->i.getIndexName() +"[NU]").forEach(i->res.add(i));
+    getNonUniqueMultiIndexDefinitions().stream().map(i->i.getIndexName() +"[NUM]").forEach(i->res.add(i));
+    getUniqueIndexDefinitions().stream().map(i->i.getIndexName() +"[U]").forEach(i->res.add(i));
+    return res;
+  }
+
   @SuppressWarnings("unchecked")
   public <IK> JacisNonUniqueIndex<IK, K, TV> getNonUniqueIndex(String indexName) {
     return (JacisNonUniqueIndex<IK, K, TV>) nonUniqueIndexDefinitionMap.get(indexName);

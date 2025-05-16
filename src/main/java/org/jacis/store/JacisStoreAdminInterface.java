@@ -9,6 +9,8 @@ import org.jacis.container.JacisContainer;
 import org.jacis.container.JacisObjectTypeSpec;
 import org.jacis.plugin.objectadapter.JacisObjectAdapter;
 
+import java.util.List;
+
 /**
  * Administration interface for a JACIS store.
  * <p>
@@ -42,4 +44,8 @@ public interface JacisStoreAdminInterface<K, TV, CV> {
    * @return a info object /type {@link StoreEntryInfo}) containing information regarding the current state of the object.
    */
   StoreEntryInfo<K, TV> getObjectInfo(K key);
+
+  public List<String> getAllIndexDefinitions();
+
+  public List<JacisTransactionInfo.StoreTxInfo> getTransactionInfos();
 }

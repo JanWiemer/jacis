@@ -120,6 +120,12 @@ public class JacisTransactionInfo implements Serializable {
 
     /** The store identifier uniquely identifying this store inside the container */
     private final StoreIdentifier storeIdentifier;
+    /** The id of the transaction */
+    private final String txId;
+    /** Description for the transaction giving some more information about the purpose of the transaction (for logging and debugging) */
+    private final String txDescription;
+    /** Creation timestamp in milliseconds (<code>System.currentTimeMillis()</code>) */
+    private final long txCreationTimestampMs;
     /** Indicates if the transaction is a read only transaction */
     private boolean readOnly;
     /** the number of entries cloned to this TX view */
@@ -135,8 +141,11 @@ public class JacisTransactionInfo implements Serializable {
     /** gives the reason (null means valid) why the tx has been invalidated. Attempts to internalCommit the tx will be ignored. */
     private String invalidationReason = null;
 
-    private StoreTxInfo(JacisStoreImpl<?, ?, ?> storeImpl, JacisStoreTxView<?, ?, ?> txView) {
+    StoreTxInfo(JacisStoreImpl<?, ?, ?> storeImpl, JacisStoreTxView<?, ?, ?> txView) {
       this.storeIdentifier = storeImpl.getStoreIdentifier();
+      this.txId = txView.getTransaction().getTxId();
+      this.txDescription = txView.getTransaction().getTxDescription();
+      this.txCreationTimestampMs = txView.getCreationTimestamp();
       numberOfTxViewEntries = txView.getNumberOfEntries();
       numberOfUpdatedTxViewEntries = txView.getNumberOfUpdatedEntries();
       commitPending = txView.isCommitPending();
@@ -181,27 +190,34 @@ public class JacisTransactionInfo implements Serializable {
     public String toString() {
       StringBuilder b = new StringBuilder();
       b.append(getClass().getSimpleName()).append("(");
-      b.append(storeIdentifier.toShortString());
-      b.append(": cloned: ").append(numberOfTxViewEntries);
-      b.append(", updated ").append(numberOfUpdatedTxViewEntries);
-      if (commitPending) {
-        b.append("[COMMIT-PENDING]");
-      }
-      if (committed) {
-        b.append("[COMMITTED]");
-      }
-      if (rolledBack) {
-        b.append("[ROLLED-BACK]");
-      }
-      if (readOnly) {
-        b.append("[READ-ONLY]");
-      }
-      if (invalidationReason != null) {
-        b.append("[INVALIDATED because ").append(getInvalidationReason()).append("]");
-      }
-      b.append(")");
+      b.append(storeIdentifier.toShortString()).append(":");
+      b.append(toShortString());
       return b.toString();
     }
+
+    public String toShortString() {
+      StringBuilder b = new StringBuilder();
+      b.append("TX:").append(txId).append("[").append(txDescription).append("]");
+      b.append(" cloned: ").append(numberOfTxViewEntries);
+      b.append(", updated ").append(numberOfUpdatedTxViewEntries);
+      if (commitPending) {
+        b.append(" [COMMIT-PENDING]");
+      }
+      if (committed) {
+        b.append(" [COMMITTED]");
+      }
+      if (rolledBack) {
+        b.append(" [ROLLED-BACK]");
+      }
+      if (readOnly) {
+        b.append(" [READ-ONLY]");
+      }
+      if (invalidationReason != null) {
+        b.append(" [INVALIDATED because ").append(getInvalidationReason()).append("]");
+      }
+      return b.toString();
+    }
+
   } // end of public static class StoreTxInfo
 
 }
