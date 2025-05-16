@@ -39,8 +39,8 @@ public class JacisContainerTest {
     JacisStoreAdminInterface<String, TestObject, TestObject> store = container.getStoreAdminInterface(String.class, TestObject.class);
     assertEquals(String.class, store.getObjectTypeSpec().getKeyClass());
     assertEquals(TestObject.class, store.getObjectTypeSpec().getValueClass());
-    assertEquals(String.class, store.getObjectTypeSpec().getStoreIdentifier().getKeyClass());
-    assertEquals(TestObject.class, store.getObjectTypeSpec().getStoreIdentifier().getValueClass());
+    assertEquals(String.class, store.getObjectTypeSpec().getKeyClass());
+    assertEquals(TestObject.class, store.getObjectTypeSpec().getValueClass());
     assertNotNull(store);
   }
 

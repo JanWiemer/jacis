@@ -145,6 +145,10 @@ public class JacisTransactionInfo implements Serializable {
       invalidationReason = txView.getInvalidationReason();
     }
 
+    public boolean readOnly() {
+      return readOnly;
+    }
+
     public boolean isCommitPending() {
       return commitPending;
     }

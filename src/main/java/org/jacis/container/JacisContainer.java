@@ -41,11 +41,16 @@ import java.util.stream.Stream;
  * Transactions are managed by the container and are valid for all stores in the container.
  * This class provides methods to create stores for different object types and provides access to those stores.
  *
+ * Note that the stores created inside a container are organized in namespaces.
+ * In a single namespace there can be only one store for a given pair of key- and value-classes.
+ *
  * @author Jan Wiemer
  */
 @SuppressWarnings("unused") // since this is an API of the library
 @JacisApi
 public class JacisContainer {
+
+  public static final String DEFAULT_STORE_NAMESPACE = "DEFAULT";
 
   /** ThreadLocal storing the transaction info object for the last finished transaction */
   private final static ThreadLocal<JacisTransactionInfo> lastFinishedTransactionInfo = new ThreadLocal<>();
@@ -98,7 +103,7 @@ public class JacisContainer {
   }
 
   /**
-   * Create a store for the passed object type specification (type {@link JacisObjectTypeSpec}).
+   * Create a store in the default namespace for the passed object type specification (type {@link JacisObjectTypeSpec}).
    * The passed specification determines the type of the keys and the type of the values stored in the created store.
    *
    * @param objectTypeSpec object type specification describing the objects to be stored.
@@ -108,7 +113,22 @@ public class JacisContainer {
    * @return A reference to the created store (type {@link JacisStoreImpl})
    */
   public <K, TV, CV> JacisStoreAdminInterface<K, TV, CV> createStore(JacisObjectTypeSpec<K, TV, CV> objectTypeSpec) {
-    StoreIdentifier storeIdentifier = new StoreIdentifier(objectTypeSpec.getKeyClass(), objectTypeSpec.getValueClass());
+    return createStore(DEFAULT_STORE_NAMESPACE, objectTypeSpec);
+  }
+
+  /**
+   * Create a store in the given namespace for the passed object type specification (type {@link JacisObjectTypeSpec}).
+   * The passed specification determines the type of the keys and the type of the values stored in the created store.
+   *
+   * @param objectTypeSpec object type specification describing the objects to be stored.
+   * @param storeNamespace The namespace where ths store lives. In one namespace there may only be one store for a key and value class combination.
+   * @param <K>            Key type of the store entry
+   * @param <TV>           Type of the objects in the transaction view. This is the type visible from the outside.
+   * @param <CV>           Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
+   * @return A reference to the created store (type {@link JacisStoreImpl})
+   */
+  public <K, TV, CV> JacisStoreAdminInterface<K, TV, CV> createStore(String storeNamespace, JacisObjectTypeSpec<K, TV, CV> objectTypeSpec) {
+    StoreIdentifier storeIdentifier = new StoreIdentifier(storeNamespace, objectTypeSpec.getKeyClass(), objectTypeSpec.getValueClass());
     JacisStoreImpl<K, TV, CV> store = new JacisStoreImpl<>(this, storeIdentifier, objectTypeSpec);
     JacisPersistenceAdapter<K, TV> persistenceAdapter = objectTypeSpec.getPersistenceAdapter();
     if (persistenceAdapter != null) {
@@ -129,18 +149,34 @@ public class JacisContainer {
   }
 
   /**
-   * Get the store (type {@link JacisStore}) for the passed key and value type.
+   * Get the store (type {@link JacisStore}) for the passed key and value type from the default namespace.
    *
-   * @param keyClass   Class of the keys that should be stored in the searched store
-   * @param valueClass Class of the values that should be stored in the searched store
-   * @param <K>        Key type of the store entry
-   * @param <TV>       Type of the objects in the transaction view. This is the type visible from the outside.
-   * @param <CV>       Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
+   * @param keyClass       Class of the keys that should be stored in the searched store
+   * @param valueClass     Class of the values that should be stored in the searched store
+   * @param <K>            Key type of the store entry
+   * @param <TV>           Type of the objects in the transaction view. This is the type visible from the outside.
+   * @param <CV>           Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
    * @return A reference to the found store (type {@link JacisStore}) (null if not found)
    */
   @SuppressWarnings("unchecked")
   public <K, TV, CV> JacisStore<K, TV> getStore(Class<K> keyClass, Class<TV> valueClass) {
-    StoreIdentifier storeIdentifier = new StoreIdentifier(keyClass, valueClass);
+    return this.getStore(DEFAULT_STORE_NAMESPACE, keyClass, valueClass);
+  }
+
+  /**
+   * Get the store (type {@link JacisStore}) for the passed key and value type.
+   *
+   * @param storeNamespace The namespace where ths store lives. In one namespace there may only be one store for a key and value class combination.
+   * @param keyClass       Class of the keys that should be stored in the searched store
+   * @param valueClass     Class of the values that should be stored in the searched store
+   * @param <K>            Key type of the store entry
+   * @param <TV>           Type of the objects in the transaction view. This is the type visible from the outside.
+   * @param <CV>           Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
+   * @return A reference to the found store (type {@link JacisStore}) (null if not found)
+   */
+  @SuppressWarnings("unchecked")
+  public <K, TV, CV> JacisStore<K, TV> getStore(String storeNamespace, Class<K> keyClass, Class<TV> valueClass) {
+    StoreIdentifier storeIdentifier = new StoreIdentifier(storeNamespace, keyClass, valueClass);
     return (JacisStoreImpl<K, TV, CV>) storeMap.get(storeIdentifier);
   }
 
@@ -179,7 +215,23 @@ public class JacisContainer {
    */
   @SuppressWarnings("unchecked")
   public <K, TV, CV> JacisStoreAdminInterface<K, TV, CV> getStoreAdminInterface(Class<K> keyClass, Class<TV> valueClass) {
-    StoreIdentifier storeIdentifier = new StoreIdentifier(keyClass, valueClass);
+    return getStoreAdminInterface(DEFAULT_STORE_NAMESPACE, keyClass, valueClass);
+  }
+
+  /**
+   * Get the store (type {@link JacisStoreAdminInterface}) for the passed key and value type.
+   *
+   * @param storeNamespace The namespace where ths store lives. In one namespace there may only be one store for a key and value class combination.
+   * @param keyClass       Class of the keys that should be stored in the searched store
+   * @param valueClass     Class of the values that should be stored in the searched store
+   * @param <K>            Key type of the store entry
+   * @param <TV>           Type of the objects in the transaction view. This is the type visible from the outside.
+   * @param <CV>           Type of the objects as they are stored in the internal map of committed values. This type is not visible from the outside.
+   * @return A reference to the found store (type {@link JacisStoreAdminInterface}) (null if not found)
+   */
+  @SuppressWarnings("unchecked")
+  public <K, TV, CV> JacisStoreAdminInterface<K, TV, CV> getStoreAdminInterface(String storeNamespace, Class<K> keyClass, Class<TV> valueClass) {
+    StoreIdentifier storeIdentifier = new StoreIdentifier(storeNamespace, keyClass, valueClass);
     return (JacisStoreImpl<K, TV, CV>) storeMap.get(storeIdentifier);
   }
 
@@ -689,6 +741,8 @@ public class JacisContainer {
   @JacisApi
   public static class StoreIdentifier {
 
+    /** The namespace where ths store lives. In one namespace there may only be one store for a key and value class combination. */
+    private final String storeNamespace;
     /** Type of the keys in the store */
     private final Class<?> keyClass;
     /** Type of the values in the store */
@@ -697,12 +751,20 @@ public class JacisContainer {
     /**
      * Create a store identifier with the passed types for the keys and values.
      *
-     * @param keyClass   Type of the keys in the store
-     * @param valueClass Type of the values in the store
+     * @param storeNamespace   Namespace of the store
+     * @param keyClass         Type of the keys in the store
+     * @param valueClass       Type of the values in the store
      */
-    StoreIdentifier(Class<?> keyClass, Class<?> valueClass) {
+    StoreIdentifier(String storeNamespace, Class<?> keyClass, Class<?> valueClass) {
+      this.storeNamespace = storeNamespace;
       this.keyClass = keyClass;
       this.valueClass = valueClass;
+    }
+
+
+    /** @return The namespace of the store. */
+    public String storeNamespace() {
+        return storeNamespace;
     }
 
     /** @return The type of the keys in the store. */
@@ -716,18 +778,19 @@ public class JacisContainer {
     }
 
     public String toShortString() {
-      return keyClass.getSimpleName() + "->" + valueClass.getSimpleName();
+      return storeNamespace +"|"+ keyClass.getSimpleName() + "->" + valueClass.getSimpleName();
     }
 
     @Override
     public String toString() {
-      return getClass().getSimpleName() + "(keyClass=" + keyClass + ", valueClass=" + valueClass + ")";
+      return getClass().getSimpleName() + "(namespace= "+storeNamespace+", keyClass=" + keyClass + ", valueClass=" + valueClass + ")";
     }
 
     @Override
     public int hashCode() {
       final int prime = 31;
       int result = 1;
+      result = prime * result + ((storeNamespace == null) ? 0 : storeNamespace.hashCode());
       result = prime * result + ((keyClass == null) ? 0 : keyClass.hashCode());
       result = prime * result + ((valueClass == null) ? 0 : valueClass.hashCode());
       return result;
@@ -743,10 +806,9 @@ public class JacisContainer {
         return false;
       }
       StoreIdentifier that = (StoreIdentifier) obj;
-      if (Objects.equals(keyClass, that.keyClass)) {
-        return Objects.equals(valueClass, that.valueClass);
-      }
-      return false;
+      return Objects.equals(this.storeNamespace, that.storeNamespace)
+         && Objects.equals(this.keyClass, that.keyClass) //
+         && Objects.equals(this.valueClass, that.valueClass);
     }
 
   } // END OF: public static class StoreIdentifier {

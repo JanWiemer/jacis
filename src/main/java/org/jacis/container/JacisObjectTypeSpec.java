@@ -235,11 +235,6 @@ public class JacisObjectTypeSpec<K, TV, CV> {
     return this;
   }
 
-  /** @return The store identifier (containing key and value class) for this object type specification. */
-  public StoreIdentifier getStoreIdentifier() {
-    return new StoreIdentifier(keyClass, valueClass);
-  }
-
   @Override
   public String toString() {
     return getClass().getSimpleName() + "(keyClass=" + keyClass.getSimpleName() + ", valueClass=" + valueClass.getSimpleName() + ")";
