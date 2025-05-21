@@ -20,6 +20,7 @@ import org.jacis.container.JacisTransactionHandle;
  *
  * @author Jan Wiemer
  */
+@SuppressWarnings("unused")
 @JacisApi
 public class JacisTransactionInfo implements Serializable {
 
@@ -148,13 +149,39 @@ public class JacisTransactionInfo implements Serializable {
       this.txCreationTimestampMs = txView.getCreationTimestamp();
       numberOfTxViewEntries = txView.getNumberOfEntries();
       numberOfUpdatedTxViewEntries = txView.getNumberOfUpdatedEntries();
+      readOnly = txView.isReadOnly();
       commitPending = txView.isCommitPending();
       committed = txView.isCommitted();
       rolledBack = txView.isRolledBack();
       invalidationReason = txView.getInvalidationReason();
     }
 
-    public boolean readOnly() {
+    public StoreIdentifier getStoreIdentifier() {
+      return storeIdentifier;
+    }
+
+
+    public String getTxId() {
+      return txId;
+    }
+
+    public String getTxDescription() {
+      return txDescription;
+    }
+
+    public long getTxCreationTimestampMs() {
+      return txCreationTimestampMs;
+    }
+
+    public int getNumberOfTxViewEntries() {
+      return numberOfTxViewEntries;
+    }
+
+    public int getNumberOfUpdatedTxViewEntries() {
+      return numberOfUpdatedTxViewEntries;
+    }
+
+    public boolean isReadOnly() {
       return readOnly;
     }
 
@@ -174,23 +201,11 @@ public class JacisTransactionInfo implements Serializable {
       return invalidationReason;
     }
 
-    public StoreIdentifier getStoreIdentifier() {
-      return storeIdentifier;
-    }
-
-    public int getNumberOfTxViewEntries() {
-      return numberOfTxViewEntries;
-    }
-
-    public int getNumberOfUpdatedTxViewEntries() {
-      return numberOfUpdatedTxViewEntries;
-    }
-
     @Override
     public String toString() {
       StringBuilder b = new StringBuilder();
       b.append(getClass().getSimpleName()).append("(");
-      b.append(storeIdentifier.toShortString()).append(":");
+      b.append(getStoreIdentifier().toShortString()).append(":");
       b.append(toShortString());
       return b.toString();
     }
@@ -200,19 +215,19 @@ public class JacisTransactionInfo implements Serializable {
       b.append("TX:").append(txId).append("[").append(txDescription).append("]");
       b.append(" cloned: ").append(numberOfTxViewEntries);
       b.append(", updated ").append(numberOfUpdatedTxViewEntries);
-      if (commitPending) {
+      if (isCommitPending()) {
         b.append(" [COMMIT-PENDING]");
       }
-      if (committed) {
+      if (isCommitted()) {
         b.append(" [COMMITTED]");
       }
-      if (rolledBack) {
+      if (isRolledBack()) {
         b.append(" [ROLLED-BACK]");
       }
-      if (readOnly) {
+      if (isReadOnly()) {
         b.append(" [READ-ONLY]");
       }
-      if (invalidationReason != null) {
+      if (getInvalidationReason() != null) {
         b.append(" [INVALIDATED because ").append(getInvalidationReason()).append("]");
       }
       return b.toString();
