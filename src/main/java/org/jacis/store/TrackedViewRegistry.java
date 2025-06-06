@@ -144,8 +144,14 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
     return (VT) view.clone();
   }
 
-  @SuppressWarnings("unchecked")
+  /* @deprecated Use {@link #getLiveView} instead */
+  @Deprecated
   public <VT extends TrackedView<TV>> VT getLifeView(String viewName) {
+    return getLiveView(viewName);
+  }
+
+  @SuppressWarnings("unchecked")
+  public <VT extends TrackedView<TV>> VT getLiveView(String viewName) {
     return (VT) viewMap.get(viewName);
   }
 
@@ -219,8 +225,14 @@ public class TrackedViewRegistry<K, TV> implements JacisModificationListener<K, 
     return getView(getDefaultNameForViewClass(viewType));
   }
 
+  /* @deprecated Use {@link #getLiveView} instead */
+  @Deprecated
   public <VT extends TrackedView<TV>> VT getLifeView(Class<VT> viewType) {
-    return getLifeView(getDefaultNameForViewClass(viewType));
+    return getLiveView(viewType);
+  }
+
+  public <VT extends TrackedView<TV>> VT getLiveView(Class<VT> viewType) {
+    return getLiveView(getDefaultNameForViewClass(viewType));
   }
 
   public <SVK> Collection<SVK> getSubViewKeys(Class<? extends TrackedViewClustered<TV, SVK, ? extends TrackedView<TV>>> viewType) {
