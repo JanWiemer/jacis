@@ -279,7 +279,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   }
 
   public Map<K, Long> getOptimisticLockVersionMap() {
-    return optimisticLockVersionMap != null ? optimisticLockVersionMap : Collections.emptyMap();
+    return optimisticLockVersionMap;
   }
 
   private boolean isTrackingAtIndicesRequired() {

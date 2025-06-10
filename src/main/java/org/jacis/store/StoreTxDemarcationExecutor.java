@@ -147,8 +147,9 @@ class StoreTxDemarcationExecutor {
     EventsJfr.JacisTxJfrEvent jfrEvent = new EventsJfr.JacisTxJfrEvent(EventsJfr.OperationType.COMMIT, store, txView, transaction);
     jfrEvent.begin();
     RuntimeException toThrow = null;
+    Map<K, Long> optimisticLockVersionMap = txView.getOptimisticLockVersionMap();
     try {
-      if (txView.getNumberOfUpdatedEntries() > 0) {
+      if (txView.getNumberOfUpdatedEntries() > 0 || optimisticLockVersionMap != null) {
         Collection<StoreEntryTxView<K, TV, CV>> updatedEntries = txView.getUpdatedEntriesForCommit();
         try {
           storeAccessLock.writeLock().lock();
@@ -166,10 +167,12 @@ class StoreTxDemarcationExecutor {
             });
           }
           // ---------- RELEASE LOCKS FOR OPTIMISTIC LOCKS -----------------
-          for (K lockedKey : txView.getOptimisticLockVersionMap().keySet()) {
-            StoreEntry<K, TV, CV> entryCommitted = store.getCommittedEntry(lockedKey);
-            if(entryCommitted.isLocked()) {
-              entryCommitted.releaseLockedFor(txView);
+          if (optimisticLockVersionMap != null) {
+            for (K lockedKey : optimisticLockVersionMap.keySet()) {
+              StoreEntry<K, TV, CV> entryCommitted = store.getCommittedEntry(lockedKey);
+              if (entryCommitted.isLocked()) {
+                entryCommitted.releaseLockedFor(txView);
+              }
             }
           }
           // ---------- TRACK MODIFICATIONS -----------------
@@ -219,8 +222,9 @@ class StoreTxDemarcationExecutor {
     EventsJfr.JacisTxJfrEvent jfrEvent = new EventsJfr.JacisTxJfrEvent(EventsJfr.OperationType.ROLLBACK, store, txView, transaction);
     jfrEvent.begin();
     Throwable exception = null;
+    Map<K, Long> optimisticLockVersionMap = txView.getOptimisticLockVersionMap();
     try {
-      if (txView.getNumberOfUpdatedEntries() > 0) {
+      if (txView.getNumberOfUpdatedEntries() > 0 || optimisticLockVersionMap != null) {
         try {
           storeAccessLock.writeLock().lock();
           store.getIndexRegistry().unlockUniqueIndexKeysForTx(txView.getTransaction());
@@ -235,10 +239,12 @@ class StoreTxDemarcationExecutor {
             });
           }
           // ---------- RELEASE LOCKS FOR OPTIMISTIC LOCKS -----------------
-          for (K lockedKey : txView.getOptimisticLockVersionMap().keySet()) {
-            StoreEntry<K, TV, CV> entryCommitted = store.getCommittedEntry(lockedKey);
-            if(entryCommitted.isLocked()) {
-              entryCommitted.releaseLockedFor(txView);
+          if (optimisticLockVersionMap != null) {
+            for (K lockedKey : optimisticLockVersionMap.keySet()) {
+              StoreEntry<K, TV, CV> entryCommitted = store.getCommittedEntry(lockedKey);
+              if (entryCommitted.isLocked()) {
+                entryCommitted.releaseLockedFor(txView);
+              }
             }
           }
         } finally {
