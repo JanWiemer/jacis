@@ -4,19 +4,14 @@
 
 package org.jacis.store;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
-
 import org.jacis.container.JacisTransactionHandle;
 import org.jacis.index.JacisIndexRegistryTxView;
 import org.jacis.trackedviews.TrackedView;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * Representing the transactional view on the store entries for one transaction.
@@ -30,37 +25,69 @@ import org.jacis.trackedviews.TrackedView;
  */
 class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
 
-  /** the handle for the transaction this view belongs to */
+  /**
+   * the handle for the transaction this view belongs to
+   */
   private final JacisTransactionHandle tx;
-  /** the creation timestamp in system milliseconds (timestamp usually set at first access returning a TX view) */
+  /**
+   * the creation timestamp in system milliseconds (timestamp usually set at first access returning a TX view)
+   */
   private final long creationTimestamp;
-  /** the entries with an own view in this TX */
+  /**
+   * the entries with an own view in this TX
+   */
   private final Map<K, StoreEntryTxView<K, TV, CV>> storeTxView;
-  /** map of optimistic locks created for entries of the store */
+  /**
+   * map of optimistic locks created for entries of the store
+   */
   private Map<K, Long> optimisticLockVersionMap;
-  /** the name of the TX if this is a read only snapshot (null <-> writable) */
+  /**
+   * the name of the TX if this is a read only snapshot (null <-> writable)
+   */
   private final String readOnlyTxId;
-  /** reference to the main store */
+  /**
+   * reference to the main store
+   */
   private final JacisStoreImpl<K, TV, CV> store;
-  /** flag indicating if for the transaction a commit is pending, that means a prepare has already been called */
+  /**
+   * flag indicating if for the transaction a commit is pending, that means a prepare has already been called
+   */
   private boolean commitPending = false;
-  /** flag indicating if the transaction is already committed */
+  /**
+   * flag indicating if the transaction is already committed
+   */
   private boolean committed = false;
-  /** flag indicating if the transaction is rolled back */
+  /**
+   * flag indicating if the transaction is rolled back
+   */
   private boolean rolledBack = false;
-  /** gives the reason (null means valid) why the tx has been invalidated. Attempts to internalCommit the tx will be ignored. */
+  /**
+   * gives the reason (null means valid) why the tx has been invalidated. Attempts to internalCommit the tx will be ignored.
+   */
   private String invalidationReason = null;
-  /** the number of entries of this TX view */
+  /**
+   * the number of entries of this TX view
+   */
   private int numberOfEntries = 0;
-  /** updated sequence */
+  /**
+   * updated sequence
+   */
   private int updateSequence = 0;
-  /** the number of updated entries of this TX view */
+  /**
+   * the number of updated entries of this TX view
+   */
   private int numberOfUpdatedEntries = 0;
-  /** tracked views by this transaction view. The tracked views in this map are kept up-to-date during the current TX */
+  /**
+   * tracked views by this transaction view. The tracked views in this map are kept up-to-date during the current TX
+   */
   private final Map<String, TrackedViewTransactionLocal<K, TV>> trackedViews;
-  /** transaction view of the index values */
+  /**
+   * transaction view of the index values
+   */
   private final JacisIndexRegistryTxView<K, TV> indexRegistryTxView;
-  /** cached list of updated entries that have to be committed */
+  /**
+   * cached list of updated entries that have to be committed
+   */
   private List<StoreEntryTxView<K, TV, CV>> updatedEntries;
 
   JacisStoreTxView(JacisStoreImpl<K, TV, CV> store, JacisTransactionHandle transaction) {
@@ -252,7 +279,7 @@ class JacisStoreTxView<K, TV, CV> implements JacisReadOnlyTransactionContext {
   }
 
   public Map<K, Long> getOptimisticLockVersionMap() {
-    return optimisticLockVersionMap;
+    return optimisticLockVersionMap != null ? optimisticLockVersionMap : Collections.emptyMap();
   }
 
   private boolean isTrackingAtIndicesRequired() {

@@ -152,7 +152,7 @@ class StoreEntryTxView<K, TV, CV> implements Comparable<StoreEntryTxView<K, TV, 
     String otherThreadId;
     if (lockedFor != null) {
       otherTxId = lockedFor.getTxId();
-      otherThreadId = "???";
+      otherThreadId = theCommittedEntry.getLockedForThread();
     } else {
       otherTxId = committedEntry.getUpdatedByTxId();
       otherThreadId = committedEntry.getUpdatedByThread();
@@ -163,8 +163,9 @@ class StoreEntryTxView<K, TV, CV> implements Comparable<StoreEntryTxView<K, TV, 
       msg.append(" was already updated by other TX ");
     }
     msg.append(otherTxId == null ? "?" : otherTxId);
-    msg.append(" (Thread: ").append(otherThreadId).append(")!");
-    msg.append(" (store: ").append(store).append(")");
+    msg.append(" (to v. ").append(theCommittedEntry.getVersion()).append(")");
+    msg.append(" (Store: ").append(store.getStoreIdentifier().toShortString());
+    msg.append(", Thread: ").append(otherThreadId).append(")!");
     StringBuilder details = new StringBuilder();
     details.append("// Details: \n");
     details.append(" - value changed by this TX: ").append(getValue()).append("\n");

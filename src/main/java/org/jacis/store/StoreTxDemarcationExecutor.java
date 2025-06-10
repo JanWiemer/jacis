@@ -165,6 +165,13 @@ class StoreTxDemarcationExecutor {
               return entryCommitted;
             });
           }
+          // ---------- RELEASE LOCKS FOR OPTIMISTIC LOCKS -----------------
+          for (K lockedKey : txView.getOptimisticLockVersionMap().keySet()) {
+            StoreEntry<K, TV, CV> entryCommitted = store.getCommittedEntry(lockedKey);
+            if(entryCommitted.isLocked()) {
+              entryCommitted.releaseLockedFor(txView);
+            }
+          }
           // ---------- TRACK MODIFICATIONS -----------------
           for (StoreEntryTxView<K, TV, CV> entryTxView : updatedEntries) {
             K key = entryTxView.getKey();
@@ -226,6 +233,13 @@ class StoreTxDemarcationExecutor {
               entryCommitted.releaseLockedFor(txView);
               return entryCommitted;
             });
+          }
+          // ---------- RELEASE LOCKS FOR OPTIMISTIC LOCKS -----------------
+          for (K lockedKey : txView.getOptimisticLockVersionMap().keySet()) {
+            StoreEntry<K, TV, CV> entryCommitted = store.getCommittedEntry(lockedKey);
+            if(entryCommitted.isLocked()) {
+              entryCommitted.releaseLockedFor(txView);
+            }
           }
         } finally {
           storeAccessLock.writeLock().unlock();
