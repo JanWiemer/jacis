@@ -53,7 +53,7 @@ public class MicrostreamPersistenceAdapter<K, V> implements JacisPersistenceAdap
   /** A map storing the Microstream entity objects stored by the Microstream storage manager for each key in the store. */
   private final Map<K, MicrostreamStoreEntity<K, V>> key2entity;
   /** Set of Microstream entity objects modified during the transaction. */
-  private Set<Object> objectsToStore = null;
+  private Set<Object> objectsToStore = null; // no need to sync access since the methods called by the TX demarcation methods and those are synchronized.
   /** Number of threads used to initialize the JACIS store with the initial (already stored) elements */
   private int initStoreThreads = 4;
 
