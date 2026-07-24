@@ -234,7 +234,9 @@ class StoreTxDemarcationExecutor {
               logger.trace("... rollback {}, Store: {}", store.getObjectInfo(key), this);
             }
             store.updateCommittedEntry(key, (k, entryCommitted) -> {
-              entryCommitted.releaseLockedFor(txView);
+              if (entryCommitted != null) {
+                entryCommitted.releaseLockedFor(txView);
+              }
               return entryCommitted;
             });
           }
@@ -242,7 +244,7 @@ class StoreTxDemarcationExecutor {
           if (optimisticLockVersionMap != null) {
             for (K lockedKey : optimisticLockVersionMap.keySet()) {
               StoreEntry<K, TV, CV> entryCommitted = store.getCommittedEntry(lockedKey);
-              if (entryCommitted.isLocked()) {
+              if (entryCommitted != null && entryCommitted.isLocked()) {
                 entryCommitted.releaseLockedFor(txView);
               }
             }
