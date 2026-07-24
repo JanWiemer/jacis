@@ -56,7 +56,14 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
       - name: Build and deploy the project (to https://maven.pkg.github.com/janwiemer/jacis )
-        run: ./gradlew publish -Dreleasebuild=${{ github.event.inputs.release }} -Dusedateversion=true -DdeployUser=JanWiemer -DdeployPw=${{secrets.GITHUB_TOKEN}} -DdeployRepoRelease=https://maven.pkg.github.com/janwiemer/jacis -DdeployRepoSnapshot=https://maven.pkg.github.com/janwiemer/jacis
+        run: |
+          ./gradlew publish \
+            -Dreleasebuild=${{ github.event.inputs.release }} \
+            -Dusedateversion=true \
+            -DdeployUser=JanWiemer \
+            -DdeployPw=${{secrets.GITHUB_TOKEN}} \
+            -DdeployRepoRelease=https://maven.pkg.github.com/janwiemer/jacis \
+            -DdeployRepoSnapshot=https://maven.pkg.github.com/janwiemer/jacis
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Determine Release versions
