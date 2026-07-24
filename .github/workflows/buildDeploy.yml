@@ -31,10 +31,10 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           distribution: 'temurin'
-      - name: Test
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
-        with:
-          arguments: build --scan -Dreleasebuild=${{ github.event.inputs.release }}
+      - name: Build the project
+          run: ./gradlew build --scan -Dreleasebuild=${{ github.event.inputs.release }}
 
   deploy:
     name: Deploy JACIS
@@ -51,12 +51,12 @@ jobs:
         with:
           java-version: 25
           distribution: 'temurin'
-      - name: Deploy ( to https://maven.pkg.github.com/janwiemer/jacis )
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
-        with:
-          arguments: publish --scan -Dreleasebuild=${{ github.event.inputs.release }} -Dusedateversion=true -DdeployUser=JanWiemer -DdeployPw=${{secrets.GITHUB_TOKEN}} -DdeployRepoRelease=https://maven.pkg.github.com/janwiemer/jacis -DdeployRepoSnapshot=https://maven.pkg.github.com/janwiemer/jacis
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and deploy the project (to https://maven.pkg.github.com/janwiemer/jacis )
+          run: ./gradlew publish --scan -Dreleasebuild=${{ github.event.inputs.release }} -Dusedateversion=true -DdeployUser=JanWiemer -DdeployPw=${{secrets.GITHUB_TOKEN}} -DdeployRepoRelease=https://maven.pkg.github.com/janwiemer/jacis -DdeployRepoSnapshot=https://maven.pkg.github.com/janwiemer/jacis
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Determine Release versions
         if: ${{ github.event.inputs.release }} == true
         uses: HardNorth/github-version-generate@v1.4.1
