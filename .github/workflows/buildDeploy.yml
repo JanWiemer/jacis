@@ -55,10 +55,23 @@ jobs:
           distribution: 'temurin'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
-      - name: Build and deploy the project (to https://maven.pkg.github.com/janwiemer/jacis )
+      - name: Build and deploy project (to https://maven.pkg.github.com/janwiemer/jacis )
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.release != 'true' }}
         run: |
           ./gradlew publish \
-            -Dreleasebuild=${{ github.event.inputs.release }} \
+            -Dreleasebuild=false \
+            -Dusedateversion=true \
+            -DdeployUser=JanWiemer \
+            -DdeployPw=${{secrets.GITHUB_TOKEN}} \
+            -DdeployRepoRelease=https://maven.pkg.github.com/janwiemer/jacis \
+            -DdeployRepoSnapshot=https://maven.pkg.github.com/janwiemer/jacis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and deploy RELEASE for the project (to https://maven.pkg.github.com/janwiemer/jacis )
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
+        run: |
+          ./gradlew publish \
+            -Dreleasebuild=true \
             -Dusedateversion=true \
             -DdeployUser=JanWiemer \
             -DdeployPw=${{secrets.GITHUB_TOKEN}} \
