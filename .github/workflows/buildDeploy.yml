@@ -59,6 +59,14 @@ jobs:
         run: ./gradlew publish --scan -Dreleasebuild=${{ github.event.inputs.release }} -Dusedateversion=true -DdeployUser="JanWiemer" -DdeployPw="${{ secrets.GITHUB_TOKEN }}" -DdeployRepoRelease=https://maven.pkg.github.com/janwiemer/jacis -DdeployRepoSnapshot=https://maven.pkg.github.com/janwiemer/jacis
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish release to Maven Central
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
+        run: ./gradlew publishToMavenCentralPortal -Dreleasebuild=true -Dcentralpublish=true
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
       - name: Determine Release versions
         if: ${{ github.event.inputs.release }} == true
         uses: HardNorth/github-version-generate@v1.4.1
@@ -86,7 +94,15 @@ jobs:
           tag_name: "v${{ env.RELEASE_VERSION }}"
           release_name: Release ${{ env.RELEASE_VERSION }}
           body: |
-            To use this JACIS version add the following dependency to your project:
+            Maven Central dependency:
+
+                <dependency>
+                  <groupId>io.github.janwiemer</groupId>
+                  <artifactId>jacis</artifactId>
+                  <version>${{ env.RELEASE_VERSION }}</version>
+                </dependency>
+
+            The existing GitHub Packages dependency is:
 
                 <dependency>
                   <groupId>org.jacis</groupId>
@@ -94,7 +110,13 @@ jobs:
                   <version>${{ env.RELEASE_VERSION }}</version>
                 </dependency>
 
-            For Gradle the dependency looks like:
+            For Gradle, use the Maven Central dependency:
+
+                dependencies {
+                  implementation 'io.github.janwiemer:jacis:${{ env.RELEASE_VERSION }}'
+                }
+
+            For the GitHub Packages coordinate:
 
                 dependencies {
                   implementation group: 'org.jacis', name: 'jacis', version: '${{ env.RELEASE_VERSION }}'

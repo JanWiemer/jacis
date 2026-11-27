@@ -5,10 +5,14 @@
 plugins {
     id 'java'
     id 'maven-publish'
+    id 'signing'
     id 'org.cyclonedx.bom' version '1.8.0'
 }
 
-group = "org.jacis"
+def centralPublish = Boolean.getBoolean("centralpublish")
+def centralSigningKey = centralPublish ? findProperty('signingKey') : null
+def centralSigningPassword = centralPublish ? findProperty('signingPassword') : null
+group = centralPublish ? "io.github.janwiemer" : "org.jacis"
 version = Boolean.getBoolean("releasebuild") ? "$version" : Boolean.getBoolean("usedateversion") ? "$version" + "-build" + getDate() + "-SNAPSHOT" : "$version-SNAPSHOT"
 
 def getDate() {
@@ -109,9 +113,6 @@ test {
 publishing {
     publications {
         jacisPublication(MavenPublication) {
-            groupId "$group"
-            artifactId "$projectName"
-            version "$version"
             from components.java
             pom {
                 name = projectName
@@ -130,21 +131,185 @@ publishing {
                         email = authorMail
                     }
                 }
+                scm {
+                    url = projectURL
+                    connection = 'scm:git:git://github.com/JanWiemer/jacis.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/JanWiemer/jacis.git'
+                }
             }
         }
     }
     repositories {
-        maven {
-            credentials {
-                username deploy_user
-                password deploy_pw
+        if (centralPublish) {
+            maven {
+                name = 'centralStaging'
+                url = layout.buildDirectory.dir('central-staging')
             }
-            if (isReleaseVersion) {
-                url deploy_repo_release
-            } else {
-                url deploy_repo_snapshot
+        } else {
+            maven {
+                name = 'githubPackages'
+                credentials {
+                    username deploy_user
+                    password deploy_pw
+                }
+                if (isReleaseVersion) {
+                    url deploy_repo_release
+                } else {
+                    url deploy_repo_snapshot
+                }
+                allowInsecureProtocol = true
             }
-            allowInsecureProtocol = true
+        }
+    }
+}
+
+if (centralPublish) {
+    if (centralSigningKey && centralSigningPassword) {
+        signing {
+            useInMemoryPgpKeys(centralSigningKey.toString(), centralSigningPassword.toString())
+            sign publishing.publications.jacisPublication
+        }
+    }
+}
+
+if (centralPublish) {
+    def stagingDirectory = layout.buildDirectory.dir('central-staging')
+    def cleanCentralStaging = tasks.register('cleanCentralStaging') {
+        doLast {
+            if (version.toString().endsWith('-SNAPSHOT')) {
+                throw new GradleException('Maven Central only accepts release versions; remove -SNAPSHOT.')
+            }
+            delete stagingDirectory
+        }
+    }
+
+    tasks.configureEach {
+        if (name == 'publishJacisPublicationPublicationToCentralStagingRepository') {
+            dependsOn cleanCentralStaging
+        }
+    }
+
+    tasks.register('prepareCentralBundle') {
+        dependsOn 'publishJacisPublicationPublicationToCentralStagingRepository'
+        doLast {
+            def stagedFiles = fileTree(stagingDirectory.get().asFile).files
+            stagedFiles.findAll {
+                it.name ==~ /.+\.(md5|sha1|sha256|sha512)/
+            }.each { delete(it) }
+
+            def dataFiles = stagedFiles.findAll {
+                !it.name.endsWith('.asc') &&
+                        !(it.name ==~ /.+\.(md5|sha1|sha256|sha512)/) &&
+                        !it.name.contains('.module') &&
+                        !it.name.startsWith('maven-metadata.xml')
+            }
+            dataFiles.findAll { !it.name.endsWith('.asc') }.each { artifact ->
+                ['md5', 'sha1'].each { algorithm ->
+                    def digest = java.security.MessageDigest.getInstance(algorithm.toUpperCase())
+                            .digest(artifact.bytes)
+                    def checksum = digest.collect { String.format('%02x', it & 0xff) }.join()
+                    new File(artifact.parentFile, "${artifact.name}.${algorithm}").text = checksum + '\n'
+                }
+            }
+
+            def missingSignatures = dataFiles.findAll { artifact ->
+                !artifact.name.endsWith('.asc') &&
+                        !new File(artifact.parentFile, "${artifact.name}.asc").isFile()
+            }
+            if (!dataFiles || missingSignatures) {
+                throw new GradleException("Maven Central bundle is missing signed publication files: ${missingSignatures*.name}")
+            }
+        }
+    }
+
+    tasks.register('centralBundle', Zip) {
+        dependsOn tasks.named('prepareCentralBundle')
+        from(stagingDirectory)
+        exclude '**/*.module*', '**/maven-metadata.xml*'
+        archiveFileName = "${projectName}-${version}-central-bundle.zip"
+        destinationDirectory = layout.buildDirectory.dir('distributions')
+    }
+
+    tasks.register('publishToMavenCentralPortal') {
+        group = 'publishing'
+        description = 'Uploads the signed publication bundle to the Maven Central Portal and waits for publication.'
+        dependsOn tasks.named('centralBundle')
+        doLast {
+            def centralUsername = findProperty('mavenCentralUsername')
+            def centralPassword = findProperty('mavenCentralPassword')
+            if (!centralUsername || !centralPassword || !centralSigningKey || !centralSigningPassword) {
+                throw new GradleException('Maven Central credentials and signingKey/signingPassword Gradle properties are required.')
+            }
+
+            def bundle = tasks.named('centralBundle').get().archiveFile.get().asFile
+            def boundary = "----JacisCentral${UUID.randomUUID().toString().replace('-', '')}"
+            def token = "${centralUsername}:${centralPassword}".bytes.encodeBase64().toString()
+            def connection = new URL("https://central.sonatype.com/api/v1/publisher/upload?name=${projectName}-${version}&publishingType=AUTOMATIC")
+                    .openConnection() as java.net.HttpURLConnection
+            connection.requestMethod = 'POST'
+            connection.doOutput = true
+            connection.setChunkedStreamingMode(8192)
+            connection.connectTimeout = 30000
+            connection.readTimeout = 60000
+            connection.setRequestProperty('Authorization', "Bearer ${token}")
+            connection.setRequestProperty('Content-Type', "multipart/form-data; boundary=${boundary}")
+
+            connection.outputStream.withCloseable { output ->
+                output.write("--${boundary}\r\n".bytes)
+                output.write("Content-Disposition: form-data; name=\"bundle\"; filename=\"${bundle.name}\"\r\n".bytes)
+                output.write("Content-Type: application/octet-stream\r\n\r\n".bytes)
+                bundle.withInputStream { input -> input.transferTo(output) }
+                output.write("\r\n--${boundary}--\r\n".bytes)
+            }
+
+            def uploadStatus = connection.responseCode
+            def uploadResponse = (uploadStatus < 400 ? connection.inputStream : connection.errorStream)?.getText('UTF-8')
+            if (uploadStatus != 201) {
+                throw new GradleException("Maven Central bundle upload failed (HTTP ${uploadStatus}): ${uploadResponse}")
+            }
+
+            def deploymentId = uploadResponse?.trim()
+            if (!deploymentId) {
+                throw new GradleException('Maven Central accepted the upload but returned no deployment ID.')
+            }
+            logger.lifecycle("Maven Central deployment: ${deploymentId}")
+
+            def deadline = System.nanoTime() + java.util.concurrent.TimeUnit.MINUTES.toNanos(60)
+            while (System.nanoTime() < deadline) {
+                Thread.sleep(5000)
+                def statusConnection = new URL("https://central.sonatype.com/api/v1/publisher/status?id=${deploymentId}")
+                        .openConnection() as java.net.HttpURLConnection
+                statusConnection.requestMethod = 'POST'
+                statusConnection.connectTimeout = 30000
+                statusConnection.readTimeout = 60000
+                statusConnection.setRequestProperty('Authorization', "Bearer ${token}")
+
+                def statusCode = statusConnection.responseCode
+                def statusBody = (statusCode < 400 ? statusConnection.inputStream : statusConnection.errorStream)?.getText('UTF-8')
+                if (statusCode != 200) {
+                    throw new GradleException("Could not check Maven Central deployment status (HTTP ${statusCode}): ${statusBody}")
+                }
+                def deploymentState = statusBody =~ /"deploymentState"\s*:\s*"([^"]+)"/
+                if (!deploymentState.find()) {
+                    throw new GradleException("Maven Central returned an unrecognized deployment status: ${statusBody}")
+                }
+                switch (deploymentState.group(1)) {
+                    case 'PUBLISHED':
+                        logger.lifecycle("Maven Central published ${group}:${projectName}:${version}.")
+                        return
+                    case 'FAILED':
+                        throw new GradleException("Maven Central deployment failed: ${statusBody}")
+                    case 'PENDING':
+                    case 'VALIDATING':
+                    case 'VALIDATED':
+                    case 'PUBLISHING':
+                        logger.lifecycle("Maven Central deployment status: ${deploymentState.group(1)}")
+                        break
+                    default:
+                        throw new GradleException("Maven Central returned an unexpected deployment state: ${statusBody}")
+                }
+            }
+            throw new GradleException("Timed out waiting for Maven Central deployment ${deploymentId}.")
         }
     }
 }
