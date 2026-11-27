@@ -94,7 +94,7 @@ jobs:
           tag_name: "v${{ env.RELEASE_VERSION }}"
           release_name: Release ${{ env.RELEASE_VERSION }}
           body: |
-            Maven Central dependency:
+            Maven Central dependency (recommended for new projects):
 
                 <dependency>
                   <groupId>io.github.janwiemer</groupId>
@@ -102,7 +102,7 @@ jobs:
                   <version>${{ env.RELEASE_VERSION }}</version>
                 </dependency>
 
-            The existing GitHub Packages dependency is:
+            The legacy GitHub Packages dependency is still published for existing consumers:
 
                 <dependency>
                   <groupId>org.jacis</groupId>
@@ -110,13 +110,13 @@ jobs:
                   <version>${{ env.RELEASE_VERSION }}</version>
                 </dependency>
 
-            For Gradle, use the Maven Central dependency:
+            For Gradle, use the Maven Central dependency for new projects:
 
                 dependencies {
                   implementation 'io.github.janwiemer:jacis:${{ env.RELEASE_VERSION }}'
                 }
 
-            For the GitHub Packages coordinate:
+            The legacy GitHub Packages Gradle coordinate (for existing builds):
 
                 dependencies {
                   implementation group: 'org.jacis', name: 'jacis', version: '${{ env.RELEASE_VERSION }}'
