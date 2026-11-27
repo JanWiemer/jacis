@@ -295,7 +295,7 @@ if (centralPublish) {
                 }
                 switch (deploymentState.group(1)) {
                     case 'PUBLISHED':
-                        logger.lifecycle("Maven Central published ${group}:${projectName}:${version}.")
+                        logger.lifecycle("Maven Central published ${project.group}:${projectName}:${version}.")
                         return
                     case 'FAILED':
                         throw new GradleException("Maven Central deployment failed: ${statusBody}")
