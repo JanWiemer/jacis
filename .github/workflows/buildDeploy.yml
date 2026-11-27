@@ -68,7 +68,7 @@ jobs:
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
       - name: Determine Release versions
-        if: ${{ github.event.inputs.release }} == true
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
         uses: HardNorth/github-version-generate@v1.4.1
         with:
           version-source: file
